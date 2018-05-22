@@ -1,0 +1,22 @@
+{
+  "name": "pnwmousemeet",
+  "description": "Automated WordPress theme for the GenerateWP automation series.",
+  "main": "index.js",
+  "authors": [
+    "Karla Pollowitz <contact@karlarosedesign.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap-sass": "bootstrap-sass-official#^3.3.6",
+    "font-awesome": "fontawesome#^4.6.3",
+    "jquery": "jquery#2.0"
+  }
+}
