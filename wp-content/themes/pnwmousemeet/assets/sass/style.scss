@@ -1,1 +1,23 @@
-@import "bootstrap"
+@import "bootstrap.scss";
+@import "custom_variables";
+@import "sticky_footer";
+
+// footer
+.footer-secondary-links {
+  text-align: right;
+  ul {
+    margin: 0; padding: 0;
+    list-style-type: none; list-style-image: none;
+  }
+  li {
+    display: inline;
+    padding: 5px 20px 5px 20px
+  }
+  a {
+    text-decoration:none;
+    color: blue;
+  }
+  a:hover {
+    color: purple;
+  }
+}

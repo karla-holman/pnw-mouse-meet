@@ -7,7 +7,8 @@ var concat = require('gulp-concat');
 
 var config = {
      sassPath: './assets/sass',
-     bowerDir: './bower_components'
+     bowerDir: './bower_components',
+     jsPath: './assets/js'
 }
 
 gulp.task('css', function() {
@@ -18,7 +19,8 @@ gulp.task('css', function() {
                  sourceMap: true,
                  includePaths: [
                      './assets/sass',
-                     config.bowerDir + '/bootstrap-sass/assets/stylesheets',
+                     // config.bowerDir + '/bootstrap-sass/assets/stylesheets',
+                     config.bowerDir + '/scss',
                      config.bowerDir + '/font-awesome/scss',
                  ],
              }).on('error', sass.logError))
@@ -30,9 +32,10 @@ gulp.task('css', function() {
 
 // List all your JS files HERE
 var js_files = [
-    'bower_components/jquery/jquery.js',
-    'bower_components/bootstrap-sass/assets/javascripts/bootstrap.js',
-    'assets/js/**/*.js'
+    './bower_components/jquery/jquery.js',
+    // './bower_components/bootstrap-sass/assets/javascripts/bootstrap.js',
+    './bower_components/bootstrap-js/bootstrap.min.js',
+    './assets/js/**/*.js'
 ];
 
 gulp.task('scripts', function() {
@@ -66,3 +69,9 @@ gulp.task( 'images-min', function() {
 });
 
 gulp.task('default', [ 'css', 'scripts', 'images', 'images-min' ]);
+
+// watch tasks
+gulp.task('watch', function() {
+	gulp.watch(config.sassPath + '/**/*.scss', ['css']);
+	gulp.watch([ config.jsPath + '/**/*.js', '!' + config.jsPath + '/**/*.min.js' ], ['scripts']);
+});
