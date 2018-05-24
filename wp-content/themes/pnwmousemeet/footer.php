@@ -3,17 +3,29 @@
     <div class="row">
       <div class="col-md-4">
         Logo
+        <p class="small">
+          This website is not part of, endorsed or authorized by, or affiliated with the Walt Disney Company or it's affiliates. Visit the official Disney website at Disney.com
+        </p>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-4 footer-links">
+        <h5>Events & Partnerships</h5>
         <?php footer_nav(); ?>
       </div>
-    </div>
-    <div class="row">
-      <div class="col-md-6">
-        Copyright <?php echo date('Y'); ?>
+      <div class="col-md-4">
+        <h5>Newsletter Signup</h5>
+        <?php echo do_shortcode('[wpforms id="21" title="false" description="false"]');?>
       </div>
-      <div class="col-md-6">
-        <?php footer_secondary_nav(); ?>
+    </div>
+  </div>
+  <div class="footer-secondary d-flex align-items-center">
+    <div class="container">
+      <div class="row d-flex justify-content-between flex-wrap">
+        <div>
+          Copyright <?php echo date('Y'); ?>
+        </div>
+        <div>
+          <?php footer_secondary_nav(); ?>
+        </div>
       </div>
     </div>
   </div>

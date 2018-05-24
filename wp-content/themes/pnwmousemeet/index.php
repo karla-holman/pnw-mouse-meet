@@ -1,13 +1,16 @@
 <?php get_header(); ?>
 
 <main role="main">
-  <section class="jumbotron text-center">
+  <?php $hero = the_post_thumbnail(); ?>
+  <div class="hero-full"<?php echo(!empty($hero) ? ' style="background-image: url(' . $hero . ')"' : '') ?>>
     <div class="container">
-      <h1>Bootstrap starter template</h1>
-      <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+      <div class="text-overlay">
+        <div class="sparkle"></div>
+        <h1>Title Goes Here</h1>
+        <p>There would be a paragraph here</p>
+      </div>
     </div>
-  </section>
-
+  </div>
   <div class="container">
     <div class="row">
       <div class="col-md-12">
