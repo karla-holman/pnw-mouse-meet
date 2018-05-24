@@ -1,16 +1,6 @@
 <?php get_header(); ?>
 
 <main role="main">
-  <?php $hero = the_post_thumbnail(); ?>
-  <div class="hero-full"<?php echo(!empty($hero) ? ' style="background-image: url(' . $hero . ')"' : '') ?>>
-    <div class="container">
-      <div class="text-overlay">
-        <div class="sparkle"></div>
-        <h1>Title Goes Here</h1>
-        <p>There would be a paragraph here</p>
-      </div>
-    </div>
-  </div>
   <div class="container">
     <div class="row">
       <div class="col-md-12">
