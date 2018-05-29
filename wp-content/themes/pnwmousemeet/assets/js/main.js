@@ -2,6 +2,7 @@
 $( document ).ready(function() {
   var $main_nav = $(".main-nav").first(); //gets header
   var offset = $main_nav.offset();
+  var height = $(".secondary-nav").css( "height" );
 
   $(window).scroll(function(){
       if($(window).scrollTop() > offset.top){
@@ -10,7 +11,7 @@ $( document ).ready(function() {
          $(".navbar-circle").css("min-height", "150px");
       }
       else{
-         $(".fixed-top").css("top", offset.top + "px");
+         $(".fixed-top").css("top", height);
          $(".navbar-circle").css("min-width", "200px");
          $(".navbar-circle").css("min-height", "200px");
       }
