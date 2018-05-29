@@ -6,7 +6,7 @@
     <?php echo $hero ?>
     <div class="hero-full"<?php echo(!empty($hero) ? ' style="background-image: url(' . $hero . ')"' : '') ?>>
       <div class="container">
-        <div class="text-overlay">
+        <div class="text-overlay col-md-5">
           <div class="sparkle"></div>
           <h1><?php the_title(); ?></h1>
           <p>There would be a paragraph here</p>

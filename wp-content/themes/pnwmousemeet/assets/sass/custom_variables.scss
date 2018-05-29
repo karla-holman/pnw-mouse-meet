@@ -5,6 +5,13 @@ $brand-info:            #030F6A;
 $brand-warning:         #FFCC33;
 $brand-danger:          #FF2500;
 
+$primary:       $brand-primary;
+$secondary:     #333;
+$success:       $brand-success !default;
+$info:          $brand-info !default;
+$warning:       $brand-warning !default;
+$danger:        $brand-danger !default;
+
 // Typography
 $headings-font-family: 'Noto Sans', sans-serif;
 $font-family-sans-serif: 'Open Sans', sans-serif;

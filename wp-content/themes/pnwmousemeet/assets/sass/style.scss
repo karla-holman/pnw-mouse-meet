@@ -5,6 +5,11 @@
 body {
   min-height: 100%;
 }
+
+main {
+  margin-top: 120px;
+}
+
 // Links
 a {
   font-weight: 600;
@@ -15,9 +20,14 @@ a {
   }
 }
 
+.page-section {
+  margin-top: 80px;
+  margin-bottom: 80px;
+}
+
 // navigation
 .navbar.bg-light {
-  box-shadow: 0px 1px 11px rgba(201, 201, 201, 50);
+  box-shadow: 0px 1px 11px rgba(0, 0, 0, 0.2);
 }
 
 .navbar-light.main-nav {
@@ -27,14 +37,41 @@ a {
       color: $brand-success;
     }
   }
+  min-height: 80px;
+  #menu-primary-menu {
+    margin-left: auto;
+  }
 }
+
+.navbar-circle {
+  border-radius: 100%;
+  box-shadow: 0px 1px 11px rgba(0, 0, 0, 0.2);
+  min-width: 200px;
+  min-height: 200px;
+  position: fixed;
+  top: -50px;
+  left: 20px;
+  @media screen and (max-width: map-get($grid-breakpoints, lg)) {
+    right: 20px;
+    left: auto;
+  }
+  background-color: #fff;
+  z-index: 1050;
+  background-image: url("../images/logo.png");
+  background-position: 50% 70%;
+  background-repeat: no-repeat;
+  background-size: 70%;
+  transition: 1s;
+}
+
 .secondary-nav {
+  position: absolute;
   font-size: 14px;
   background-color: $brand-info;
   width: 100%;
   top: 0px;
   min-height: 40px;
-  z-index: 100;
+  z-index: 1040;
 
   a {
     color: #fff;
@@ -57,12 +94,21 @@ a {
   }
 }
 
+.fixed-top {
+  position: fixed;
+  top: 40px;
+  right: 0;
+  left: 0;
+  z-index: $zindex-fixed;
+}
+
 // footer
 footer.footer {
+  position: relative;
   padding-top: 50px;
   padding-bottom: 50px;
   background-color: #fff;
-  box-shadow: 0px -1px 11px rgba(201, 201, 201, 50);
+  box-shadow: 0px -1px 11px rgba(0, 0, 0, 0.2);
   min-height: 450px;
 
   .footer-links {
@@ -122,7 +168,6 @@ footer.footer {
     background: linear-gradient(to bottom right, $brand-success, $brand-primary);
     color: #fff;
     border-radius: 10px;
-    max-width: 400px;
     padding: 40px;
     position: relative;
   }
@@ -132,6 +177,19 @@ footer.footer {
   background-image: url("../images/sparkle.png");
   background-position: top;
   background-repeat: repeat-x;
+  // background-size: cover;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0.4;
+}
+
+.sparkle-side {
+  background-image: url("../images/sparkle-side.png");
+  background-position: right;
+  background-repeat: repeat-y;
   background-size: cover;
   position: absolute;
   width: 100%;
@@ -140,3 +198,53 @@ footer.footer {
   left: 0;
   opacity: 0.4;
 }
+
+//**************** Bootstrap Elements
+
+// forms
+div.wpforms-container-full .wpforms-form input[type=submit],
+div.wpforms-container-full .wpforms-form button[type=submit] {
+    background-color: $brand-primary;
+    border: none;
+}
+
+div.wpforms-container-full .wpforms-form input[type=submit]:hover,
+div.wpforms-container-full .wpforms-form input[type=submit]:active,
+div.wpforms-container-full .wpforms-form button[type=submit]:hover,
+div.wpforms-container-full .wpforms-form button[type=submit]:active,
+div.wpforms-container-full .wpforms-form .wpforms-page-button:hover,
+div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
+    background-color: $brand-info;
+    border: none;
+}
+
+// Cards
+.card {
+  border: none;
+  box-shadow: 0px 2px 11px rgba(0, 0, 0, 0.2);
+
+  .card-header {
+    position: relative;
+    background: linear-gradient(to bottom right, $brand-success, $brand-primary);
+    h1 {
+      margin-bottom: 0px;
+      color: #fff;
+    }
+  }
+}
+
+// Typography
+h2 {
+  color: $brand-primary;
+}
+
+.intro-paragraph {
+  margin-bottom: 50px;
+  text-align: center;
+  p.intro {
+    font-size: 24px;
+  }
+}
+
+
+// MEDIA QUERIES
