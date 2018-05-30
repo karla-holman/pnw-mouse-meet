@@ -4,6 +4,7 @@ $brand-success:         #01B8C0;
 $brand-info:            #030F6A;
 $brand-warning:         #FFCC33;
 $brand-danger:          #FF2500;
+$brand-primary-light:   #E5F7F8;
 
 $primary:       $brand-primary;
 $secondary:     #333;
@@ -15,5 +16,6 @@ $danger:        $brand-danger !default;
 // Typography
 $headings-font-family: 'Noto Sans', sans-serif;
 $font-family-sans-serif: 'Open Sans', sans-serif;
+$headings-font-weight: 700;
 
 $text-color: #333;
