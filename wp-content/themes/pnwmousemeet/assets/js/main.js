@@ -14,4 +14,8 @@ $( document ).ready(function() {
          $(".navbar-circle").css("min-height", "200px");
       }
   });
+
+  $(function () {
+    $('[data-toggle="popover"]').popover()
+  });
 });

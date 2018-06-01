@@ -34,6 +34,7 @@ gulp.task('css', function() {
 var js_files = [
     './bower_components/jquery/jquery.js',
     // './bower_components/bootstrap-sass/assets/javascripts/bootstrap.js',
+    './assets/js/popper.min.js',
     './bower_components/bootstrap-js/bootstrap.min.js',
     './assets/js/**/*.js'
 ];

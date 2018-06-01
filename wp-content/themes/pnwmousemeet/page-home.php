@@ -46,18 +46,54 @@
       </div>
     </div>
 
-
-     <div class="container">
-       <div class="row">
-         <div class="col-md-12">
-
-             <p><?php the_content(); ?></p>
-
-         </div><!-- col -->
-       </div><!-- row -->
-     </div>
-
      <!-- Events -->
+     <div class="container page-section">
+        <!-- Introduction -->
+        <div class="row intro-paragraph">
+         <div class="col-md-8 offset-md-2">
+           <h2>Mouse Meet Events</h2>
+           <p class="intro">
+             We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Hover over our guests to learn more.
+           </p>
+         </div>
+        </div>
+        <!-- Tiles -->
+        <div class="row">
+          <div class="col-md-4">
+            <div class="card event-card">
+              <div class="main-image" style="background-image: url('<?php echo the_field('pnw_mouse_meet_main_image'); ?>')"></div>
+              <div class="card-body">
+                <h5 class="card-title">PNW Mouse Meets</h5>
+                <p class="card-text"><?php the_field('pnw_mouse_meet_description'); ?></p>
+                <a href="<?php the_field('pnw_mouse_meet_link'); ?>" class="btn btn-info">Learn More</a>
+                <button type="button" class="btn btn-primary" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true"
+                  data-content="<div><h1>Test</h1></div>Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+                  Upcoming Events
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card event-card">
+              <div class="main-image" style="background-image: url('<?php echo the_field('mini_meet_ups_image'); ?>')"></div>
+              <div class="card-body">
+                <h5 class="card-title">Mini Meet Ups</h5>
+                <p class="card-text"><?php the_field('mini_meet_ups_description'); ?></p>
+                <a href="<?php the_field('mini_meet_ups_link'); ?>" class="btn btn-info">Learn More</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card event-card">
+              <div class="main-image" style="background-image: url('<?php echo the_field('pnw_mouse_trek_image'); ?>')"></div>
+              <div class="card-body">
+                <h5 class="card-title">PNW Mouse Treks</h5>
+                <p class="card-text"><?php the_field('pnw_mouse_treks_description'); ?></p>
+                <a href="<?php the_field('pnw_mouse_trek_link'); ?>"" class="btn btn-info">Learn More</a>
+              </div>
+            </div>
+          </div>
+        </div>
 
      <!-- Sponsors -->
      <?php

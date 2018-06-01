@@ -9,7 +9,7 @@
   add_action( 'wp_enqueue_scripts', 'pnw_theme_styles', 99 );
 
   function pnw_theme_js() {
-    wp_enqueue_script( 'main_js', get_template_directory_uri() . '/dist/scripts/main.js', array('jquery'), '', false );
+    wp_enqueue_script( 'main_js', get_template_directory_uri() . '/dist/scripts/main.js', '', false );
   }
 
   add_action( 'wp_enqueue_scripts', 'pnw_theme_js' );

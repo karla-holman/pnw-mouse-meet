@@ -2,7 +2,7 @@
   <div class="container">
     <div class="row">
       <div class="col-md-4">
-        Logo
+        <img class="footer-logo" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/logo.png">
         <p class="small">
           This website is not part of, endorsed or authorized by, or affiliated with the Walt Disney Company or it's affiliates. Visit the official Disney website at Disney.com
         </p>
@@ -35,9 +35,11 @@
 <!-- Bootstrap core JavaScript
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
+<!--
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script>window.jQuery || document.write('<script src="../../../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
-<script src="../../../../assets/js/vendor/popper.min.js"></script>
+-->
+
 <?php wp_footer(); ?>
 </body>
 </html>

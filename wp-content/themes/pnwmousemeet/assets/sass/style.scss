@@ -123,6 +123,10 @@ footer.footer {
       padding-left: 0;
     }
   }
+  .footer-logo {
+    max-width: 100%;
+    margin-bottom: 20px;
+  }
   .footer-secondary {
     position: absolute;
     bottom: 0;
@@ -254,6 +258,23 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
       color: #fff;
     }
   }
+
+  .card-title {
+    color: $brand-info;
+  }
+
+  .main-image {
+    min-height: 300px;
+    background-size:cover;
+    background-position:center center;
+    background-repeat:no-repeat;
+    background-image: url("../images/logo.png");;
+  }
+}
+
+// Popover
+.popover-header {
+  background: linear-gradient(to bottom right, $brand-success, $brand-primary);
 }
 
 // Typography
