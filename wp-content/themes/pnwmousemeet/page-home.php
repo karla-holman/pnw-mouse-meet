@@ -6,6 +6,37 @@
 
  <?php get_header(); ?>
 
+ <?php
+   $mouse_meet_html = "";
+   $today = date('Ymd');
+   $args = array(
+     'post_type' => 'pnw_mouse_meets',
+     'meta_key' => 'event_date',
+     'meta_query' => array(
+         array(
+             'key' => 'event_date',
+             'value' => $today,
+             'compare' => '>='
+         )
+     ),
+     'orderby' => 'meta_value',
+     'order' => 'ASC'
+   );
+
+   $upcoming_query = new WP_Query( $args );
+
+   if( $upcoming_query->have_posts() ) : while( $upcoming_query->have_posts() ) : $upcoming_query->the_post();
+     $title = get_the_title();
+     $date = get_field('event_date');
+     $date = new DateTime($date);
+     $mouse_meet_html .= "<h6>" . $title . " Pacific Northwest Mouse Meet!</h6>";
+     $mouse_meet_html .= "<p><i class=\"fa fa-calendar\"></i> " . $date->format('F j, Y') . "</p>";
+     $mouse_meet_html .= "<p><a href=\"#\" class=\"btn btn-info\">Learn More</a></p>";
+   endwhile; else :
+     $mouse_meet_html .= "No Mouse Meets Upcoming";
+   endif;
+ ?>
+
  <main role="main">
    <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
 
@@ -66,10 +97,12 @@
                 <h5 class="card-title">PNW Mouse Meets</h5>
                 <p class="card-text"><?php the_field('pnw_mouse_meet_description'); ?></p>
                 <a href="<?php the_field('pnw_mouse_meet_link'); ?>" class="btn btn-info">Learn More</a>
-                <button type="button" class="btn btn-primary" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true"
-                  data-content="<div><h1>Test</h1></div>Vivamus sagittis lacus vel augue laoreet rutrum faucibus.">
+                <button type="button" class="btn btn-primary" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="pnw-mouse-meet">
                   Upcoming Events
                 </button>
+              </div>
+              <div id="popover-content-pnw-mouse-meet" class="d-none">
+                  <?php echo $mouse_meet_html ?>
               </div>
             </div>
           </div>
