@@ -6,7 +6,7 @@
 
  <?php get_header(); ?>
 
- <?php
+ <?php // Get Mouse Meet Popover
    $mouse_meet_html = "";
    $today = date('Ymd');
    $args = array(
@@ -29,7 +29,7 @@
      $title = get_the_title();
      $date = get_field('event_date');
      $date = new DateTime($date);
-     $mouse_meet_html .= "<h6>" . $title . " Pacific Northwest Mouse Meet!</h6>";
+     $mouse_meet_html .= "<h5>" . $title . " Pacific Northwest Mouse Meet!</h5>";
      $mouse_meet_html .= "<p><i class=\"fa fa-calendar\"></i> " . $date->format('F j, Y') . "</p>";
      $mouse_meet_html .= "<p><a href=\"#\" class=\"btn btn-info\">Learn More</a></p>";
    endwhile; else :
@@ -97,7 +97,7 @@
                 <h5 class="card-title">PNW Mouse Meets</h5>
                 <p class="card-text"><?php the_field('pnw_mouse_meet_description'); ?></p>
                 <a href="<?php the_field('pnw_mouse_meet_link'); ?>" class="btn btn-info">Learn More</a>
-                <button type="button" class="btn btn-primary" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="pnw-mouse-meet">
+                <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="pnw-mouse-meet">
                   Upcoming Events
                 </button>
               </div>
@@ -113,6 +113,9 @@
                 <h5 class="card-title">Mini Meet Ups</h5>
                 <p class="card-text"><?php the_field('mini_meet_ups_description'); ?></p>
                 <a href="<?php the_field('mini_meet_ups_link'); ?>" class="btn btn-info">Learn More</a>
+                <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="mini-meet-ups">
+                  Upcoming Events
+                </button>
               </div>
             </div>
           </div>
@@ -122,11 +125,40 @@
               <div class="card-body">
                 <h5 class="card-title">PNW Mouse Treks</h5>
                 <p class="card-text"><?php the_field('pnw_mouse_treks_description'); ?></p>
-                <a href="<?php the_field('pnw_mouse_trek_link'); ?>"" class="btn btn-info">Learn More</a>
+                <a href="<?php the_field('pnw_mouse_trek_link'); ?>" class="btn btn-info">Learn More</a>
+                <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="pnw-mouse-treks">
+                  Upcoming Events
+                </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
+
+     <!-- About Us -->
+     <div class="wheel-background">
+       <img class="wheel" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/wheel.svg">
+       <div class="container">
+         <div class="row d-flex align-content-center">
+           <div class="col-md-9 offset-md-3 about-card card">
+             <div class="card-body">
+               <div class="row">
+                 <div class="col-md-6">
+                   <h2>About Us</h2>
+                   <p>
+                     <?php the_field('about_us_text'); ?>
+                   </p>
+                   <a href="<?php the_field(about_us_page); ?>" class="btn btn-info btn-float">Learn More</a>
+                 </div>
+                 <div class="col-md-6 card-img-bottom" style="background-image: url(<?php echo the_field('about_us_image'); ?>)">
+
+                 </div>
+              </div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
 
      <!-- Sponsors -->
      <?php

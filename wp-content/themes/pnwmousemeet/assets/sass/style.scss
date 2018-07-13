@@ -21,8 +21,13 @@ a {
 }
 
 .page-section {
-  margin-top: 80px;
-  margin-bottom: 80px;
+  padding-top: 80px;
+  padding-bottom: 80px;
+  z-index: 5;
+
+  .row {
+    position: relative;
+  }
 }
 
 // navigation
@@ -226,6 +231,56 @@ footer.footer {
   background-repeat: no-repeat;
 }
 
+.wheel-background {
+  background-color: $brand-primary-light;
+  min-height: 300px;
+  position: relative;
+  .wheel {
+    position: absolute;
+    bottom: 0;
+    left: -20px;
+    min-height: 150%;
+    opacity: 0.1;
+  }
+}
+
+.grizzly-background {
+  background-color: $brand-primary-light;
+  min-height: 500px;
+  position: relative;
+  .peak {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.about-card {
+  background: linear-gradient(to bottom right, $brand-success, $brand-primary);
+  color: #fff;
+  margin-top: 80px;
+  margin-bottom: 80px;
+
+  h2 {
+    color: #fff;
+  }
+
+  .card-img-bottom {
+    color: #fff;
+    min-height: 300px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+
+  .btn-float {
+    position: absolute;
+    bottom: -40px;
+  }
+}
+
 //**************** Bootstrap Elements
 
 // forms
@@ -249,6 +304,11 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
 .card {
   border: none;
   box-shadow: 0px 2px 11px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+
+  &.mouse-meet {
+    height: 100%;
+  }
 
   .card-header {
     position: relative;
@@ -268,13 +328,59 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
     background-size:cover;
     background-position:center center;
     background-repeat:no-repeat;
-    background-image: url("../images/logo.png");;
+    background-image: url("../images/logo.png");
+  }
+
+  .card-footer {
+    position: relative;
+    margin-top: 60px;
+    min-height: 75px;
+    border-top: none;
+    background-color: $brand-primary-light;
+
+    .sponsor-img {
+      border-radius: 100%;
+    }
+
+    &.speaker-container {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      justify-content: space-between;
+
+      .speaker-img {
+        width: 90px;
+        height: 90px;
+        @media(min-width: map-get($grid-breakpoints, md)) {
+          width: 80px;
+          height: 80px;
+        }
+        @media(min-width: map-get($grid-breakpoints, lg)) {
+          width: 90px;
+          height: 90px;
+        }
+        border-radius: 100%;
+        background-size: cover;
+        margin-top: -40px;
+
+        .speaker-btn {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        &.legend {
+          border: 5px solid $brand-primary;
+        }
+      }
+    }
   }
 }
 
 // Popover
 .popover-header {
   background: linear-gradient(to bottom right, $brand-success, $brand-primary);
+  color: #fff;
 }
 
 // Typography
@@ -282,8 +388,16 @@ h2 {
   color: $brand-primary;
 }
 
+h4 {
+  color: $brand-primary;
+}
+
 .intro-paragraph {
   margin-bottom: 50px;
+  text-align: center;
+}
+
+.align-center {
   text-align: center;
 }
 
@@ -325,4 +439,9 @@ p.intro {
       max-height: 80%;
     }
   }
+}
+
+.mouse-meets {
+  display: flex;
+  align-items: stretch;
 }
