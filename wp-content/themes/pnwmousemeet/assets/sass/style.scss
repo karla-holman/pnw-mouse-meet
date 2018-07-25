@@ -175,6 +175,9 @@ footer.footer {
   background-size: cover;
   position: relative;
 
+  display: flex;
+  align-items: center;
+
   background-image: url("../images/hero.png");
 
   .text-overlay {
@@ -444,4 +447,8 @@ p.intro {
 .mouse-meets {
   display: flex;
   align-items: stretch;
+
+  div[class^="col-"] {
+    margin-bottom: 30px;
+  }
 }
