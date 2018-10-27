@@ -7,7 +7,7 @@ body {
 }
 
 main {
-  margin-top: 120px;
+  margin-top: 95px;
 }
 
 // Links
@@ -18,6 +18,15 @@ a {
     color: $brand-success;
     text-decoration: none;
   }
+}
+
+.fa {
+  margin-right: 5px;
+}
+
+.fill-image {
+  min-height: 100%;
+  background-size: cover;
 }
 
 .page-section {
@@ -163,12 +172,15 @@ footer.footer {
 }
 
 // hero
-.hero-full {
+.hero {
   margin-top: 0;
   width: 100%;
   padding-top: 50px;
   padding-bottom: 50px;
-  min-height: 500px;
+  min-height: 300px;
+  &.full {
+    min-height: 500px;
+  }
 
   background-position: center;
   background-repeat: no-repeat;
@@ -179,6 +191,10 @@ footer.footer {
   align-items: center;
 
   background-image: url("../images/hero.png");
+
+  .row {
+    align-items: flex-start;
+  }
 
   .text-overlay {
     background: linear-gradient(to bottom right, $brand-success, $brand-primary);
@@ -242,7 +258,7 @@ footer.footer {
     position: absolute;
     bottom: 0;
     left: -20px;
-    min-height: 150%;
+    min-height: 120%;
     opacity: 0.1;
   }
 }
@@ -436,6 +452,26 @@ p.intro {
         background-color: $brand-warning;
       }
     }
+
+    .logo-image {
+      max-width: 80%;
+      max-height: 80%;
+    }
+  }
+}
+
+.to-do {
+  text-align: center;
+
+  margin-bottom: 20px;
+
+  .to-do-icon {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
 
     .logo-image {
       max-width: 80%;

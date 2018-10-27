@@ -41,9 +41,7 @@
    <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
 
      <!-- Hero -->
-     <?php $hero = wp_get_attachment_image_src( get_the_post_thumbnail() ); ?>
-     <?php echo $hero ?>
-     <div class="hero-full d-flex align-content-center"<?php echo(!empty($hero) ? ' style="background-image: url(' . $hero . ')"' : '') ?>>
+     <div class="hero full hero-video d-flex align-content-center"<?php echo(has_post_thumbnail() ? ' style="background-image: url(' . get_the_post_thumbnail_url() . ')"' : ''); ?>>
        <div class="container d-flex align-content-center">
          <div class="text-overlay col-lg-5 col-md-12 col-sm-12">
            <div class="content">
@@ -52,7 +50,7 @@
              <p><?php the_field('hero_text'); ?></p>
            </div>
            <div class="hero-buttons">
-            <a href="<?php the_field('hero_button_left_link'); ?>" target="_blank" class="btn btn-lg btn-info"><?php the_field('hero_button_left_label') ?></a>
+            <a href="<?php the_field('hero_button_left_link'); ?>" target="_blank" class="btn btn-lg btn-info sparkley"><?php the_field('hero_button_left_label') ?></a>
             <?php
               $right_label = get_field('hero_button_right_label');
               $right_link = get_field('hero_button_right_link');
