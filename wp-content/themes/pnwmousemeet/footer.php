@@ -21,7 +21,7 @@
     <div class="container">
       <div class="row d-flex justify-content-between flex-wrap">
         <div>
-          Copyright <?php echo date('Y'); ?>
+          &copy; <?php echo date('Y'); ?> Pacific Northwest Mouse Meet.
         </div>
         <div>
           <?php footer_secondary_nav(); ?>

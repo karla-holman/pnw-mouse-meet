@@ -14,11 +14,14 @@
 
   <body <?php body_class(); ?>>
     <header>
-      <div class="navbar-circle">
-        <a class="navbar-brand" href="#"><img src="<?php echo get_stylesheet_directory_uri(); ?>/images/logo.png"></a>
-      </div>
+      <a class="navbar-brand" href="<?php echo get_home_url(); ?>">
+        <div class="navbar-circle">
+          
+        </div>
+      </a>
       <nav class="navbar navbar-light justify-content-end align-items-center secondary-nav">
         <?php social_links(); ?>
+        <!--
         <div id="search-area" class="my-2 my-lg-0">
 
           <?php if (function_exists('dynamic_sidebar') && dynamic_sidebar('search-area')) : else : ?>
@@ -31,6 +34,7 @@
           <?php endif; ?>
 
         </div>
+        -->
       </nav>
       <nav class="navbar fixed-top navbar-expand-lg navbar-light bg-light main-nav">
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
