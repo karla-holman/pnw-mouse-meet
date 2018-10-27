@@ -134,7 +134,7 @@
       <div class="col-md-8 offset-md-2">
         <h2>Past Events</h2>
         <p class="intro">
-          We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Click on a guest to learn more.
+          We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Hover over a guest to learn more.
         </p>
       </div>
     </div>
@@ -158,7 +158,7 @@
                 <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_one->ID ), 'single-post-thumbnail' ); ?>
                 <?php $speaker_legend = $speaker_one->disney_legend ? 'legend' : ''; ?>
                 <div class="speaker-img <?php echo $speaker_legend ?>" style="background-image: url('<?php echo $speaker_image[0]; ?>')">
-                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="focus" title="<?php echo get_the_title($speaker_one->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_one->title; ?>"></a>
+                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="hover" title="<?php echo get_the_title($speaker_one->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_one->title; ?>"></a>
                 </div>
               <?php else : ?>
 
@@ -168,7 +168,7 @@
                 <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_two->ID ), 'single-post-thumbnail' ); ?>
                 <?php $speaker_legend = get_field('speaker_two')->disney_legend ? 'legend' : ''; ?>
                 <div class="speaker-img <?php echo $speaker_legend ?>" style="background-image: url('<?php echo $speaker_image[0]; ?>')">
-                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="focus" title="<?php echo get_the_title($speaker_two->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_two->title; ?>"></a>
+                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="hover" title="<?php echo get_the_title($speaker_two->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_two->title; ?>"></a>
                 </div>
               <?php else : ?>
 
@@ -178,7 +178,7 @@
                 <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_three->ID ), 'single-post-thumbnail' ); ?>
                 <?php $speaker_legend = get_field('speaker_three')->disney_legend ? 'legend' : ''; ?>
                 <div class="speaker-img <?php echo $speaker_legend ?>" style="background-image: url('<?php echo $speaker_image[0]; ?>')">
-                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="focus" title="<?php echo get_the_title($speaker_three->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_three->title; ?>"></a>
+                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="hover" title="<?php echo get_the_title($speaker_three->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_three->title; ?>"></a>
                 </div>
               <?php else : ?>
 
