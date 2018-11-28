@@ -5,33 +5,41 @@
   <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
 
     <!-- Hero -->
-    <?php $past = get_field('event_date') < date('Ymd'); ?>
+    <?php $date = get_field('event_date'); ?>
+    <?php $past = $date && $date < date('Ymd'); ?>
+    <?php $date_object = new DateTime($date); ?>
     <div class="hero full"<?php echo(has_post_thumbnail() ? ' style="background-image: url(' . get_the_post_thumbnail_url() . ')"' : ''); ?>>
       <div class="container">
         <div class="row">
           <div class="text-overlay col-md-5">
             <div class="sparkle"></div>
-            <h1><?php the_title(); ?> Pacific Northwest Mouse Meet!</h1>
-            <p><i class="fa fa-calendar"></i> January 1, 2018</p>
-            <p><i class="fa fa-map-marker"></i> <a href="<?php echo the_permalink(get_field('location')->ID) ?>">Lynnwood, WA</a></p>
-            <p>
-              <?php if ( $past ) {
+            <div class="content">
+              <h1><?php the_title(); ?> Pacific Northwest Mouse Meet!</h1>
+              <?php if ( $date ) : ?>
+                <p><i class="fa fa-calendar"></i> <?php echo $date_object->format('F j, Y') ?></p>
+              <?php endif; ?>
+              <p><i class="fa fa-map-marker"></i> <a href="<?php echo the_permalink(get_field('location')->ID) ?>"><?php echo get_the_title(get_field('location')) ?></a></p>
+            </div>
+            <div class="hero-buttons">
+              <?php if ( $past || !get_field('ticket_link') ) : ?>
 
-              } else {
-                echo '<a class="btn btn-primary" href="#">Get Tickets';
-              } ?>
-            </p>
-          </div>
-          <div class="col-md-7">
-            <div class="card">
-              <div class="card-header">
-                <h3>Schedule</h3>
-              </div>
-              <div class="card-body">
-                <?php the_field('schedule'); ?>
-              </div>
+              <?php else : ?>
+                <a class="btn btn-lg btn-info sparkley" href="<?php the_field('ticket_link') ?>" target="_blank">Get Tickets!</a>
+              <?php endif; ?>
             </div>
           </div>
+          <?php if( get_field('schedule') ) : ?>
+            <div class="col-md-7">
+              <div class="card">
+                <div class="card-header">
+                  <h3>Schedule</h3>
+                </div>
+                <div class="card-body">
+                  <?php the_field('schedule'); ?>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -45,13 +53,13 @@
             <a href="#guest-speakers">Guest Speakers</a>
             <a href="#guest-responses">Guest Responses</a>
             <a href="#resources">Videos & More</a>
-          <? else : ?>
+          <?php else : ?>
             <a href="#event-location">Event Location</a>
             <a href="#guest-speakers">Guest Speakers</a>
             <a href="#things-to-do">Things to Do</a>
             <a href="#mouse-meet-info">Mouse Meet Info</a>
             <a href="#event-hotel">Hotel Information</a>
-          <? endif; ?>
+          <?php endif; ?>
         </div>
       </div>
     </div>
@@ -120,58 +128,99 @@
         <div class="row">
           <!-- Speaker 1 -->
           <?php $speaker_one = get_field('speaker_one'); ?>
-          <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_one->ID ), 'single-post-thumbnail' ); ?>
-          <?php $speaker_legend = $speaker_one->disney_legend ? 'legend' : ''; ?>
 
-          <div class="col-md-4">
-            <div class="card event-card">
-              <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-              <div class="card-body">
-                <h5 class="card-title"><?php echo get_the_title($speaker_one); ?></h5>
-                <p class="card-text"><?php echo $speaker_one->title; ?></p>
-                <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info">Learn More</a>
+
+          <?php if($speaker_one) : ?>
+            <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_one->ID ), 'single-post-thumbnail' ); ?>
+            <?php $speaker_legend = $speaker_one->disney_legend ? 'legend' : ''; ?>
+
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title"><?php echo get_the_title($speaker_one); ?></h5>
+                  <p class="card-text"><?php echo $speaker_one->title; ?></p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info">Learn More</a>
+                </div>
               </div>
             </div>
-          </div>
+          <?php else : ?>
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title">Coming Soon</h5>
+                  <p class="card-text">Guest Speakers will be announced soon.</p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
 
           <!-- Speaker 2 -->
           <?php $speaker_two = get_field('speaker_two'); ?>
-          <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_two->ID ), 'single-post-thumbnail' ); ?>
-          <?php $speaker_legend = $speaker_two->disney_legend ? 'legend' : ''; ?>
+          <?php if($speaker_two) : ?>
+            <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_two->ID ), 'single-post-thumbnail' ); ?>
+            <?php $speaker_legend = $speaker_two->disney_legend ? 'legend' : ''; ?>
 
-          <div class="col-md-4">
-            <div class="card event-card">
-              <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-              <div class="card-body">
-                <h5 class="card-title"><?php echo get_the_title($speaker_two); ?></h5>
-                <p class="card-text"><?php echo $speaker_two->title; ?></p>
-                <a href="<?php the_permalink($speaker_two->ID); ?>" class="btn btn-info">Learn More</a>
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title"><?php echo get_the_title($speaker_two); ?></h5>
+                  <p class="card-text"><?php echo $speaker_two->title; ?></p>
+                  <a href="<?php the_permalink($speaker_two->ID); ?>" class="btn btn-info">Learn More</a>
+                </div>
               </div>
             </div>
-          </div>
+          <?php else : ?>
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title">Coming Soon</h5>
+                  <p class="card-text">Guest Speakers will be announced soon.</p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
 
           <!-- Speaker 3 -->
           <?php $speaker_three = get_field('speaker_three'); ?>
-          <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_three->ID ), 'single-post-thumbnail' ); ?>
-          <?php $speaker_legend = $speaker_three->disney_legend ? 'legend' : ''; ?>
+          <?php if($speaker_one) : ?>
+            <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_three->ID ), 'single-post-thumbnail' ); ?>
+            <?php $speaker_legend = $speaker_three->disney_legend ? 'legend' : ''; ?>
 
-          <div class="col-md-4">
-            <div class="card event-card">
-              <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-              <div class="card-body">
-                <h5 class="card-title"><?php echo get_the_title($speaker_three); ?></h5>
-                <p class="card-text"><?php echo $speaker_three->title; ?></p>
-                <a href="<?php the_permalink($speaker_three->ID); ?>" class="btn btn-info">Learn More</a>
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title"><?php echo get_the_title($speaker_three); ?></h5>
+                  <p class="card-text"><?php echo $speaker_three->title; ?></p>
+                  <a href="<?php the_permalink($speaker_three->ID); ?>" class="btn btn-info">Learn More</a>
+                </div>
               </div>
             </div>
-          </div>
+          <?php else : ?>
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title">Coming Soon</h5>
+                  <p class="card-text">Guest Speakers will be announced soon.</p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
         </div>
       </div>
     </div> <!-- End Speakers -->
 
     <!-- Things to Do -->
     <a name="things-to-do"></a>
-    <?php if ( $past ): ?>
+    <?php if ( !$past ): ?>
       <?php
         $args = array(
           'post_type' => 'things_to_do',
