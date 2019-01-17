@@ -141,12 +141,12 @@
            <div class="col-md-9 offset-md-3 about-card card">
              <div class="card-body">
                <div class="row">
-                 <div class="col-md-6">
+                 <div class="col-md-6 text-area">
                    <h2>About Us</h2>
                    <p>
                      <?php the_field('about_us_text'); ?>
                    </p>
-                   <a href="<?php the_field(about_us_page); ?>" class="btn btn-info btn-float">Learn More</a>
+                   <a href="<?php the_field('about_us_page'); ?>" class="btn btn-info btn-float">Learn More</a>
                  </div>
                  <div class="col-md-6 card-img-bottom" style="background-image: url(<?php echo the_field('about_us_image'); ?>)">
 
