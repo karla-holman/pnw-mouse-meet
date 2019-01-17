@@ -2,6 +2,8 @@
 $( document ).ready(function() {
   var height = $(".secondary-nav").css( "height" );
 
+  $('.carousel').carousel();
+
   $(window).scroll(function(){
       if($(window).scrollTop() > $(".secondary-nav").height()){
          $(".fixed-top").css("top", "0px");
