@@ -28,10 +28,11 @@
    if( $upcoming_query->have_posts() ) : while( $upcoming_query->have_posts() ) : $upcoming_query->the_post();
      $title = get_the_title();
      $date = get_field('event_date');
+     $link = get_permalink();
      $date = new DateTime($date);
      $mouse_meet_html .= "<h5>" . $title . " Pacific Northwest Mouse Meet!</h5>";
      $mouse_meet_html .= "<p><i class=\"fa fa-calendar\"></i> " . $date->format('F j, Y') . "</p>";
-     $mouse_meet_html .= "<p><a href=\"#\" class=\"btn btn-info\">Learn More</a></p>";
+     $mouse_meet_html .= "<p><a href=\"" . $link . "\" class=\"btn btn-info\">Learn More</a></p>";
    endwhile; else :
      $mouse_meet_html .= "No Mouse Meets Upcoming";
    endif;
