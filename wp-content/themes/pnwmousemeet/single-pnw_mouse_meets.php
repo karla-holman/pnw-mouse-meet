@@ -102,14 +102,16 @@
       <?php endif; ?><!-- END Location -->
     <?php else : ?>
       <!-- Image Gallery -->
+      <?php $past_gallery = get_field('past_gallery'); ?>
+      <a name="event-photos"></a>
       <div class="container page-section align-center">
         <div class="row">
           <div class="col-md-12">
             <h2>Photos From the Event</h2>
             <p class="intro_text">Check out some highlights from the event or view more on our SmugMug Gallery!</p>
-            <a href="<?php the_field('external_photo_gallery'); ?>" class="btn btn-info" style="margin-bottom: 40px;" target="_blank">View More</a>
+            <a href="<?php $past_gallery['external_photo_gallery']; ?>" class="btn btn-info" style="margin-bottom: 40px;" target="_blank">View More</a>
 
-            <?php the_field('photo_gallery'); ?>
+            <?php echo $past_gallery['photo_gallery']; ?>
           </div>
         </div>
       </div>
@@ -126,26 +128,25 @@
           </div>
         </div>
         <div class="row">
-          <!-- Speaker 1 -->
-          <?php $speaker_one = get_field('speaker_one'); ?>
-
-
-          <?php if($speaker_one) : ?>
-            <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_one->ID ), 'single-post-thumbnail' ); ?>
-            <?php $speaker_legend = $speaker_one->disney_legend ? 'legend' : ''; ?>
-
-            <div class="col-md-4">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title"><?php echo get_the_title($speaker_one); ?></h5>
-                  <p class="card-text"><?php echo $speaker_one->title; ?></p>
-                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info">Learn More</a>
+          <!-- Guest Speakers -->
+          <?php if( have_rows('event_speakers') ): ?>
+            <?php while ( have_rows('event_speakers') ) : ?>
+              <?php $guest = get_post(the_row()); ?>
+              <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $guest->ID ), 'single-post-thumbnail' ); ?>
+              <?php $speaker_legend = $guest->disney_legend ? 'legend' : ''; ?>
+              <div class="col-md-4">
+                <div class="card event-card">
+                  <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                  <div class="card-body">
+                    <h5 class="card-title"><?php echo get_the_title($guest); ?></h5>
+                    <p class="card-text"><?php echo $guest->title; ?></p>
+                    <a href="<?php the_permalink($guest->ID); ?>" class="btn btn-info">Learn More</a>
+                  </div>
                 </div>
               </div>
-            </div>
+            <?php endwhile; ?>
           <?php else : ?>
-            <div class="col-md-4">
+            <div class="col-md-4 offset-md-4">
               <div class="card event-card">
                 <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
                 <div class="card-body">
@@ -156,66 +157,8 @@
               </div>
             </div>
           <?php endif; ?>
-
-          <!-- Speaker 2 -->
-          <?php $speaker_two = get_field('speaker_two'); ?>
-          <?php if($speaker_two) : ?>
-            <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_two->ID ), 'single-post-thumbnail' ); ?>
-            <?php $speaker_legend = $speaker_two->disney_legend ? 'legend' : ''; ?>
-
-            <div class="col-md-4">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title"><?php echo get_the_title($speaker_two); ?></h5>
-                  <p class="card-text"><?php echo $speaker_two->title; ?></p>
-                  <a href="<?php the_permalink($speaker_two->ID); ?>" class="btn btn-info">Learn More</a>
-                </div>
-              </div>
-            </div>
-          <?php else : ?>
-            <div class="col-md-4">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title">Coming Soon</h5>
-                  <p class="card-text">Guest Speakers will be announced soon.</p>
-                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
-                </div>
-              </div>
-            </div>
-          <?php endif; ?>
-
-          <!-- Speaker 3 -->
-          <?php $speaker_three = get_field('speaker_three'); ?>
-          <?php if($speaker_one) : ?>
-            <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_three->ID ), 'single-post-thumbnail' ); ?>
-            <?php $speaker_legend = $speaker_three->disney_legend ? 'legend' : ''; ?>
-
-            <div class="col-md-4">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title"><?php echo get_the_title($speaker_three); ?></h5>
-                  <p class="card-text"><?php echo $speaker_three->title; ?></p>
-                  <a href="<?php the_permalink($speaker_three->ID); ?>" class="btn btn-info">Learn More</a>
-                </div>
-              </div>
-            </div>
-          <?php else : ?>
-            <div class="col-md-4">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title">Coming Soon</h5>
-                  <p class="card-text">Guest Speakers will be announced soon.</p>
-                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
-                </div>
-              </div>
-            </div>
-          <?php endif; ?>
-        </div>
-      </div>
+        </div><!-- Row -->
+      </div><!-- Container -->
     </div> <!-- End Speakers -->
 
     <!-- Things to Do -->
@@ -348,9 +291,9 @@
 
             <div id="carouselTestimonial" class="carousel slide" data-ride="carousel">
               <ol class="carousel-indicators">
-                <li data-target="#carouselTestimonial" data-slide-to="0" class="active"></li>
-                <li data-target="#carouselTestimonial" data-slide-to="1"></li>
-                <li data-target="#carouselTestimonial" data-slide-to="2"></li>
+                <?php for( $i = 0; $i < $testimonial_query->post_count; $i++ ): ?>
+                  <li data-target="#carouselTestimonial" data-slide-to="0" class="<?php echo ($i == 0 ? 'active' : '') ?>"></li>
+                <?php endfor; ?>
               </ol>
               <div class="carousel-inner row w-75 mx-auto">
                 <?php $first_iteration = true; ?>
@@ -384,6 +327,62 @@
           </div>
 
       </div>
+
+      <!-- Resources -->
+      <a name="resources"></a>
+      <div class="container page-section align-center">
+        <div class="row intro-paragraph">
+          <div class="col-md-12">
+            <h2>Videos & More</h2>
+          </div>
+        </div>
+        <div class="row">
+          <!-- Resources -->
+          <?php if( have_rows('resources') ): ?>
+            <?php while ( have_rows('resources') ) : ?>
+              <?php $resource = get_post(the_row()); ?>
+              <?php $resource_image = wp_get_attachment_image_src( get_post_thumbnail_id( $resource->ID ), 'single-post-thumbnail' ); ?>
+              <div class="col-md-4">
+                <div class="card resource-card">
+                  <?php if($resource->video_embed): ?>
+                    <div class="main-image">
+                      <?php echo $resource->video_embed ?>
+                    </div>
+                  <?php else: ?>
+                    <div class="main-image" style="background-image: url('<?php echo $resource_image[0]; ?>')"></div>
+                  <?php endif; ?>
+                  <div class="card-body">
+                    <!-- Header -->
+                    <?php if($resource->external_link): ?>
+                      <h5 class="card-title"><a href="<?php echo $resource->external_link ?>"><?php echo get_the_title($resource); ?></a></h5>
+                    <?php elseif($resource->file_upload): ?>
+                      <h5 class="card-title"><a target="_blank" href="<?php echo wp_get_attachment_url( $resource->file_upload ) ?>"><?php echo get_the_title($resource); ?></a></h5>
+                    <?php else: ?>
+                      <h5 class="card-title"><?php echo get_the_title($resource); ?></h5>
+                    <?php endif; ?>
+
+                    <!-- Content -->
+                    <?php if (get_post_field('post_content', $resource->ID)): ?>
+                      <p><?php echo get_post_field('post_content', $resource->ID);?></p>
+                    <?php endif; ?>
+                  </div>
+                </div>
+              </div>
+            <?php endwhile; ?>
+          <?php else : ?>
+            <div class="col-md-4 offset-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title">Coming Soon</h5>
+                  <p class="card-text">Guest Speakers will be announced soon.</p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
+        </div><!-- Row -->
+      </div><!-- Container -->
     <?php endif; ?>
 
   <?php endwhile; else : ?>

@@ -37,6 +37,7 @@ a {
 
   .row {
     position: relative;
+    justify-content: center;
   }
 }
 
@@ -381,6 +382,7 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
   border: none;
   box-shadow: 0px 2px 11px rgba(0, 0, 0, 0.2);
   z-index: 5;
+  margin-bottom: 10px;
 
   &.mouse-meet {
     height: 100%;
@@ -397,6 +399,15 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
 
   .card-title {
     color: $brand-info;
+  }
+
+  &.resource-card {
+    iframe {
+      max-width: 100%;
+    }
+    .main-image {
+      background-image: none;
+    }
   }
 
   .main-image {
@@ -420,7 +431,7 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
 
     &.speaker-container {
       display: flex;
-      flex-flow: row nowrap;
+      flex-flow: row wrap;
       align-items: center;
       justify-content: space-between;
 

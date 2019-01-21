@@ -153,36 +153,16 @@
               <a href="<?php the_permalink(); ?>" class="btn btn-success">Learn More</a>
             </div>
             <div class="card-footer speaker-container">
-              <?php $speaker_one = get_field('speaker_one'); ?>
-              <?php if($speaker_one) : ?>
-                <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_one->ID ), 'single-post-thumbnail' ); ?>
-                <?php $speaker_legend = $speaker_one->disney_legend ? 'legend' : ''; ?>
-                <div class="speaker-img <?php echo $speaker_legend ?>" style="background-image: url('<?php echo $speaker_image[0]; ?>')">
-                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="hover" title="<?php echo get_the_title($speaker_one->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_one->title; ?>"></a>
-                </div>
-              <?php else : ?>
-
-              <?php endif ?>
-              <?php $speaker_two = get_field('speaker_two'); ?>
-              <?php if($speaker_two) : ?>
-                <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_two->ID ), 'single-post-thumbnail' ); ?>
-                <?php $speaker_legend = get_field('speaker_two')->disney_legend ? 'legend' : ''; ?>
-                <div class="speaker-img <?php echo $speaker_legend ?>" style="background-image: url('<?php echo $speaker_image[0]; ?>')">
-                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="hover" title="<?php echo get_the_title($speaker_two->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_two->title; ?>"></a>
-                </div>
-              <?php else : ?>
-
-              <?php endif ?>
-              <?php $speaker_three = get_field('speaker_three'); ?>
-              <?php if($speaker_three) : ?>
-                <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $speaker_three->ID ), 'single-post-thumbnail' ); ?>
-                <?php $speaker_legend = get_field('speaker_three')->disney_legend ? 'legend' : ''; ?>
-                <div class="speaker-img <?php echo $speaker_legend ?>" style="background-image: url('<?php echo $speaker_image[0]; ?>')">
-                  <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="hover" title="<?php echo get_the_title($speaker_three->ID); ?>" data-placement="bottom" data-content="<?php echo $speaker_three->title; ?>"></a>
-                </div>
-              <?php else : ?>
-
-              <?php endif ?>
+              <?php if( have_rows('event_speakers') ): ?>
+                <?php while ( have_rows('event_speakers') ) : ?>
+                  <?php $guest = get_post(the_row()); ?>
+                  <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $guest->ID ), 'single-post-thumbnail' ); ?>
+                  <?php $speaker_legend = $guest->disney_legend ? 'legend' : ''; ?>
+                  <div class="speaker-img <?php echo $speaker_legend ?>" style="background-image: url('<?php echo $speaker_image[0]; ?>')">
+                    <a tabindex="0" class="speaker-btn" role="button" data-toggle="popover" data-trigger="hover" title="<?php echo get_the_title($guest->ID); ?>" data-placement="bottom" data-content="<?php echo $guest->title; ?>"></a>
+                  </div>
+                <?php endwhile; ?>
+              <?php endif; ?>
             </div>
           </div>
         </div>

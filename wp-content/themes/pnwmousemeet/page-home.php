@@ -80,7 +80,7 @@
      <div class="container page-section">
         <!-- Introduction -->
         <div class="row intro-paragraph">
-         <div class="col-md-8 offset-md-2">
+         <div class="col-md-8">
            <h2>Mouse Meet Events</h2>
            <p class="intro">
              We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Hover over our guests to learn more.
@@ -173,7 +173,7 @@
       <div class="container page-section">
         <!-- Introduction -->
         <div class="row intro-paragraph">
-          <div class="col-md-8 offset-md-2">
+          <div class="col-md-8">
             <h2>Our Sponsors</h2>
             <p class="intro">
               We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Hover over our guests to learn more.
