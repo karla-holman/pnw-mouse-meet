@@ -50,15 +50,6 @@
 				}
 			});
 
-			// WPForms upgrade template modal
-			$(document).on('click', '.wpforms-template-select', function(e) {
-				if ($(this).closest('.wpforms-template').hasClass('upgrade-modal')){
-					e.preventDefault();
-					e.stopImmediatePropagation();
-					WPFormsBuilderLite.upgradeModal($(this).data('template-name'));
-				}
-			});
-
 			// WPForms upgrade providers modal
 			$(document).on('click', '.wpforms-panel-sidebar-section', function(e) {
 				if ($(this).hasClass('upgrade-modal')){
@@ -66,6 +57,20 @@
 					e.stopImmediatePropagation();
 					WPFormsBuilderLite.upgradeModal($(this).data('name'));
 				}
+			});
+
+			// WPForms upgrade notifications/confirmation modeal
+			$(document).on('click', '.wpforms-builder-settings-block-add', function(e) {
+				if ($(this).hasClass('upgrade-modal')){
+					e.preventDefault();
+					e.stopImmediatePropagation();
+					WPFormsBuilderLite.upgradeModal($(this).data('name'));
+				}
+			});
+
+			// Warn users if they disable email notifications.
+			$( document ).on( 'change', '#wpforms-panel-field-settings-notification_enable', function() {
+				WPFormsBuilderLite.formBuilderNotificationAlert( $( this ).val() );
 			});
 		},
 
@@ -76,18 +81,24 @@
 		 */
 		upgradeModal: function(feature) {
 
-			var message = wpforms_builder_lite.upgrade_message.replace(/%name%/g,feature)
+			var message    = wpforms_builder_lite.upgrade_message.replace(/%name%/g, feature),
+				upgradeURL = encodeURI( wpforms_builder_lite.upgrade_url + '&utm_content=' + feature.trim() );
 			$.alert({
-				title: feature+' '+wpforms_builder_lite.upgrade_title,
+				title: feature+ ' ' + wpforms_builder_lite.upgrade_title,
 				icon: 'fa fa-lock',
 				content: message,
+				boxWidth: '550px',
+				onOpenBefore: function () {
+					this.$btnc.after( '<div class="discount-note">' + wpforms_builder_lite.upgrade_bonus + wpforms_builder_lite.upgrade_doc + '</div>');
+					this.$body.find( '.jconfirm-content' ).addClass( 'lite-upgrade' );
+				},
 				buttons: {
 					confirm: {
 						text: wpforms_builder_lite.upgrade_button,
 						btnClass: 'btn-confirm',
 						keys: ['enter'],
 						action: function () {
-							window.open(wpforms_builder_lite.upgrade_url,'_blank');
+							window.open( upgradeURL,'_blank' );
 							$.alert({
 								title: false,
 								content: wpforms_builder_lite.upgrade_modal,
@@ -103,13 +114,38 @@
 								}
 							});
 						}
-					},
-					cancel: {
-						text: wpforms_builder.ok
 					}
 				}
 			});
 		},
+
+		/**
+		 * Warn users if they disable email notifications.
+		 *
+		 * @since 1.5.0
+		 */
+		formBuilderNotificationAlert: function( value ) {
+
+			if ( '0' !== value ) {
+				return;
+			}
+
+			$.alert({
+				title: wpforms_builder.heads_up,
+				content: wpforms_builder_lite.disable_notifications,
+				backgroundDismiss: false,
+				closeIcon: false,
+				icon: 'fa fa-exclamation-circle',
+				type: 'orange',
+				buttons: {
+					confirm: {
+						text: wpforms_builder.ok,
+						btnClass: 'btn-confirm',
+						keys: [ 'enter' ]
+					}
+				}
+			});
+		}
 	};
 
 	WPFormsBuilderLite.init();

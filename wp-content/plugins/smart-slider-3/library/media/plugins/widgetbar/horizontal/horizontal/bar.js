@@ -5,44 +5,31 @@ N2D('SmartSliderWidgetBarHorizontal', function ($, undefined) {
      * @memberOf N2Classes
      *
      * @param slider
-     * @param bars
      * @param parameters
      * @constructor
      */
-    function SmartSliderWidgetBarHorizontal(slider, bars, parameters) {
+    function SmartSliderWidgetBarHorizontal(slider, parameters) {
+
         this.slider = slider;
 
-        this.slider.started($.proxy(this.start, this, bars, parameters));
+        this.slider.started($.proxy(this.start, this, parameters));
     }
 
-    SmartSliderWidgetBarHorizontal.prototype.start = function (bars, parameters) {
+    SmartSliderWidgetBarHorizontal.prototype.start = function (parameters) {
+
         if (this.slider.sliderElement.data('bar')) {
             return false;
         }
+
         this.slider.sliderElement.data('bar', this);
+
+        this.parameters = parameters;
 
         this.offset = 0;
         this.tween = null;
 
-
-        if (this.slider.isShuffled) {
-            var _bars = [];
-            for (var i = 0; this.slider.realSlides.length > i; i++) {
-                var slide = this.slider.realSlides[i];
-                _bars.push(bars[slide.originalIndex]);
-            }
-
-            bars = _bars;
-        }
-
-        this.originalBars = this.bars = bars;
-
         this.bar = this.slider.sliderElement.find('.nextend-bar');
         this.innerBar = this.bar.find('> div');
-
-        this.slider.sliderElement.on({
-            slideCountChanged: $.proxy(this.onSlideCountChanged, this)
-        });
 
         this.slider.firstSlideReady.done($.proxy(this.onFirstSlideSet, this));
 
@@ -52,8 +39,7 @@ N2D('SmartSliderWidgetBarHorizontal', function ($, undefined) {
             this.slider.sliderElement.on('sliderSwitchTo', $.proxy(this.onSliderSwitchTo, this));
         }
 
-
-        if (parameters.overlay == 0) {
+        if (!parameters.overlay) {
             var side = false;
             switch (parameters.area) {
                 case 1:
@@ -84,12 +70,26 @@ N2D('SmartSliderWidgetBarHorizontal', function ($, undefined) {
         this.onSliderSwitchTo(null, slide.index);
     };
 
-    SmartSliderWidgetBarHorizontal.prototype.onSliderSwitchTo = function (e, targetSlideIndex) {
-        var html = this.bars[targetSlideIndex].html;
-        this.innerBar.html(html);
-        this.setCursor(this.bars[targetSlideIndex].hasLink);
+    SmartSliderWidgetBarHorizontal.prototype.renderBarContent = function (slide) {
+        var html = '';
+        if (this.parameters.showTitle && slide.getTitle() !== undefined) {
+            html += '<span class="' + this.parameters.fontTitle + ' n2-ow">' + slide.getTitle() + '</span>';
+        }
+        if (this.parameters.showDescription && slide.getDescription() !== undefined) {
+            html += '<span class="' + this.parameters.fontDescription + ' n2-ow">' + (html === '' ? '' : this.parameters.separator) + slide.getDescription() + '</span>';
+        }
 
-        this.slider.widgets.setState('hide.bar', html == '');
+        return html;
+    };
+
+    SmartSliderWidgetBarHorizontal.prototype.onSliderSwitchTo = function (e, targetSlideIndex) {
+        var targetSlide = this.slider.slides[targetSlideIndex],
+            html = this.renderBarContent(targetSlide);
+
+        this.innerBar.html(html);
+        this.setCursor(targetSlide.hasLink());
+
+        this.slider.widgets.setState('hide.bar', html === '');
     };
 
     SmartSliderWidgetBarHorizontal.prototype.onSliderSwitchToAnimateStart = function () {
@@ -103,32 +103,31 @@ N2D('SmartSliderWidgetBarHorizontal', function ($, undefined) {
             onComplete: function () {
                 deferred.resolve();
             }
-        }).play();
+        });
     };
 
     SmartSliderWidgetBarHorizontal.prototype.onSliderSwitchToAnimateEnd = function (deferred, e, animation, currentSlideIndex, targetSlideIndex) {
         this.slider.sliderElement.off('.n2Bar');
+
+        var targetSlide = this.slider.slides[targetSlideIndex];
+
         deferred.done($.proxy(function () {
             var innerBar = this.innerBar.clone();
             this.innerBar.remove();
             this.innerBar = innerBar.css('opacity', 0)
-                .html(this.bars[targetSlideIndex].html)
+                .html(this.renderBarContent(targetSlide))
                 .appendTo(this.bar);
 
-            this.setCursor(this.bars[targetSlideIndex].hasLink);
+            this.setCursor(targetSlide.hasLink());
 
             this.tween = NextendTween.to(this.innerBar, 0.3, {
                 opacity: 1
-            }).play();
+            });
         }, this));
     };
 
     SmartSliderWidgetBarHorizontal.prototype.setCursor = function (hasLink) {
-        if (hasLink) {
-            this.innerBar.css('cursor', 'pointer');
-        } else {
-            this.innerBar.css('cursor', 'inherit');
-        }
+        this.innerBar.css('cursor', hasLink ? 'pointer' : 'inherit');
     };
 
     SmartSliderWidgetBarHorizontal.prototype.isVisible = function () {
@@ -137,15 +136,6 @@ N2D('SmartSliderWidgetBarHorizontal', function ($, undefined) {
 
     SmartSliderWidgetBarHorizontal.prototype.getSize = function () {
         return this.bar.height() + this.offset;
-    };
-
-    SmartSliderWidgetBarHorizontal.prototype.onSlideCountChanged = function (e, newCount, slidesInGroup) {
-        this.bars = [];
-        for (var i = 0; this.originalBars.length > i; i++) {
-            if (i % slidesInGroup == 0) {
-                this.bars.push(this.originalBars[i]);
-            }
-        }
     };
 
     return SmartSliderWidgetBarHorizontal;

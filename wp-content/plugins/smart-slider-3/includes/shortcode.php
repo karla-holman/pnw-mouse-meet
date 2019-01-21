@@ -13,9 +13,17 @@ class N2SS3Shortcode {
 
     public static function doShortcode($parameters) {
 
+        if (self::$shortcodeMode == 'noop') {
+            return '';
+        }
+
+        if (is_admin() && isset($_GET['nextendajax'])) {
+            return '';
+        }
+
         if (!empty($parameters['alias'])) {
-		    $parameters['slider'] = $parameters['alias'];
-	    }
+            $parameters['slider'] = $parameters['alias'];
+        }
 
         if (self::$iframe) {
             if (isset($parameters['slider'])) {
@@ -29,8 +37,8 @@ class N2SS3Shortcode {
     }
 
     public static function renderIframe($sliderIDorAlias) {
-
-        $script = file_get_contents(dirname(__FILE__) . '/iframe.js');
+        $script = file_get_contents(dirname(__FILE__) . '/iframe.min.js');
+    
 
         $attributes = array(
             'class'       => "n2-ss-slider-frame",
@@ -69,29 +77,29 @@ class N2SS3Shortcode {
 
     public static function render($parameters, $usage = 'WordPress Shortcode') {
         if (isset($parameters['logged_in'])) {
-            $logged_in = boolval($parameters['logged_in']);
+            $logged_in = !!$parameters['logged_in'];
             if (is_user_logged_in() !== $logged_in) {
-				return '';
-			}
+                return '';
+            }
         }
 
         if (isset($parameters['role']) || isset($parameters['cap'])) {
-			$current_user = wp_get_current_user();
+            $current_user = wp_get_current_user();
 
             if (isset($parameters['role'])) {
-				$current_user_roles = $current_user->roles;
+                $current_user_roles = $current_user->roles;
                 if (!in_array($parameters['role'], $current_user_roles)) {
-					return '';
-				}
-			}
+                    return '';
+                }
+            }
 
             if (isset($parameters['cap'])) {
-				$current_user_caps = $current_user->allcaps;
+                $current_user_caps = $current_user->allcaps;
                 if (!isset($current_user_caps[$parameters['cap']]) || !$current_user_caps[$parameters['cap']]) {
-					return '';
-				}
-			}
-		}
+                    return '';
+                }
+            }
+        }
 
         if (isset($parameters['slide'])) {
             $slideTo = intval($parameters['slide']);
@@ -140,33 +148,75 @@ class N2SS3Shortcode {
         return '';
     }
 
-    public static function addShortCode() {
-	    add_shortcode('smartslider3', 'N2SS3Shortcode::doShortcode');
+    private static $shortcodeMode = 'shortcode';
+
+    public static function changeShortcodeMode($mode) {
+        if (self::$shortcodeMode != $mode) {
+            self::$shortcodeMode = $mode;
+        }
     }
 
-    public static function addNoopShortCode() {
-		add_shortcode('smartslider3', 'N2SS3Shortcode::doNoopShortcode');
-	}
+    public static function shortcodeModeToNormal() {
+        self::changeShortcodeMode('shortcode');
+    }
 
-    public static function doNoopShortcode() {
-		return '';
-	}
+    public static function shortcodeModeToNoop() {
+        self::changeShortcodeMode('noop');
+    }
 
-    public static function removeShortcode() {
-		remove_shortcode('smartslider3');
-	}
+    public static function shortcodeModeToSkip() {
+        self::removeShortcode();
+    }
+
+    public static function shortcodeModeRestore() {
+        self::addShortCode();
+    }
+
+    public static function addShortCode() {
+        add_shortcode('smartslider3', 'N2SS3Shortcode::doShortcode');
+    }
+
+    private static function removeShortcode() {
+        remove_shortcode('smartslider3');
+    }
 }
 
 N2SS3Shortcode::addShortCode();
 
 if (defined('DOING_AJAX') && DOING_AJAX) {
     if (isset($_POST['action']) && ($_POST['action'] == 'stpb_preview_builder_item' || $_POST['action'] == 'stpb_load_builder_templates' || $_POST['action'] == 'stpb_load_template')) {
-	    N2SS3Shortcode::removeShortcode();
+        N2SS3Shortcode::shortcodeModeToSkip();
     }
 }
 
-add_action('woocommerce_shop_loop', 'N2SS3Shortcode::addNoopShortCode', 9);
-add_action('woocommerce_shop_loop', 'N2SS3Shortcode::addShortCode', 11);
+add_action('woocommerce_shop_loop', 'N2SS3Shortcode::shortcodeModeToNoop', 9);
+add_action('woocommerce_shop_loop', 'N2SS3Shortcode::shortcodeModeToNormal', 11);
 
-add_action('woocommerce_single_product_summary', 'N2SS3Shortcode::addNoopShortCode', 59);
-add_action('woocommerce_single_product_summary', 'N2SS3Shortcode::addShortCode', 61);
+add_action('woocommerce_single_product_summary', 'N2SS3Shortcode::shortcodeModeToNoop', 59);
+add_action('woocommerce_single_product_summary', 'N2SS3Shortcode::shortcodeModeToNormal', 61);
+
+/**
+ * Remove Smart Slider from feeds
+ */
+add_action('do_feed_rdf', 'N2SS3Shortcode::shortcodeModeToNoop', 0);
+add_action('do_feed_rss', 'N2SS3Shortcode::shortcodeModeToNoop', 0);
+add_action('do_feed_rss2', 'N2SS3Shortcode::shortcodeModeToNoop', 0);
+add_action('do_feed_atom', 'N2SS3Shortcode::shortcodeModeToNoop', 0);
+
+/**
+ * Remove sliders from the AMP version of the site
+ * @url https://wordpress.org/plugins/amp/
+ */
+add_action('pre_amp_render_post', 'N2SS3Shortcode::shortcodeModeToNoop', 0);
+
+
+add_action('after_setup_theme', function () {
+    if (function_exists('KTT_share_args_for_posts')) {
+        /**
+         * Theme: Narratium
+         * @url https://themeforest.net/item/narratium-simplicity-for-authors/20844434
+         */
+        add_action('wp', 'N2SS3Shortcode::shortcodeModeToNoop', 0);
+        add_action('wp', 'N2SS3Shortcode::shortcodeModeToNormal', 11);
+    }
+});

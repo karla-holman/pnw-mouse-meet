@@ -252,12 +252,17 @@ N2D('SmartSliderMainAnimationSimple', ['SmartSliderMainAnimationAbstract'], func
             }
 
             if (this._currentBackgroundAnimation && needShift) {
-                this.timeline.shiftChildren(adjustedTiming.outDuration - adjustedTiming.extraDelay);
+                var shift = adjustedTiming.outDuration - adjustedTiming.extraDelay;
+                if (shift > 0) {
+                    this.timeline.shiftChildren(shift);
+                }
                 if (this._currentBackgroundAnimation.shiftedPreSetup) {
                     this._currentBackgroundAnimation._preSetup();
                 }
             } else if (resetShift) {
-                this.timeline.shiftChildren(adjustedTiming.extraDelay);
+                if (adjustedTiming.extraDelay > 0) {
+                    this.timeline.shiftChildren(adjustedTiming.extraDelay);
+                }
                 if (this._currentBackgroundAnimation.shiftedPreSetup) {
                     this._currentBackgroundAnimation._preSetup();
                 }
@@ -341,12 +346,17 @@ N2D('SmartSliderMainAnimationSimple', ['SmartSliderMainAnimationAbstract'], func
             }
 
             if (this._currentBackgroundAnimation && needShift) {
-                this.timeline.shiftChildren(adjustedTiming.outDuration - adjustedTiming.extraDelay);
+                var shift = adjustedTiming.outDuration - adjustedTiming.extraDelay;
+                if (shift > 0) {
+                    this.timeline.shiftChildren(shift);
+                }
                 if (this._currentBackgroundAnimation.shiftedPreSetup) {
                     this._currentBackgroundAnimation._preSetup();
                 }
             } else if (resetShift) {
-                this.timeline.shiftChildren(adjustedTiming.extraDelay);
+                if (adjustedTiming.extraDelay > 0) {
+                    this.timeline.shiftChildren(adjustedTiming.extraDelay);
+                }
                 if (this._currentBackgroundAnimation.shiftedPreSetup) {
                     this._currentBackgroundAnimation._preSetup();
                 }
@@ -586,12 +596,17 @@ N2D('SmartSliderMainAnimationSimple', ['SmartSliderMainAnimationAbstract'], func
             }
 
             if (this._currentBackgroundAnimation && needShift) {
-                this.timeline.shiftChildren(adjustedTiming.outDuration - adjustedTiming.extraDelay);
+                var shift = adjustedTiming.outDuration - adjustedTiming.extraDelay;
+                if (shift > 0) {
+                    this.timeline.shiftChildren(shift);
+                }
                 if (this._currentBackgroundAnimation.shiftedPreSetup) {
                     this._currentBackgroundAnimation._preSetup();
                 }
             } else if (resetShift) {
-                this.timeline.shiftChildren(adjustedTiming.extraDelay);
+                if (adjustedTiming.extraDelay > 0) {
+                    this.timeline.shiftChildren(adjustedTiming.extraDelay);
+                }
                 if (this._currentBackgroundAnimation.shiftedPreSetup) {
                     this._currentBackgroundAnimation._preSetup();
                 }
@@ -799,8 +814,7 @@ N2D('SmartSliderResponsiveSimple', ['SmartSliderResponsive'], function ($, undef
 
         var video = this.sliderElement.find('.n2-ss-slider-background-video');
         if (video.length) {
-            var isVideoAutoplaySupported = !(/Mobi/.test(navigator.userAgent)) || ('playsInline' in document.createElement('video') || ('webkit-playsinline' in document.createElement('video'))) || (navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./) && parseInt(navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./)[2]) >= 53);
-            if (isVideoAutoplaySupported) {
+            if (n2const.isVideoAutoplayAllowed()) {
 
                 this._videoPlayerReady = $.proxy(this.videoPlayerReady, this, video);
 
@@ -810,6 +824,8 @@ N2D('SmartSliderResponsiveSimple', ['SmartSliderResponsive'], function ($, undef
                     video[0].addEventListener('error', $.proxy(this.videoPlayerError, this, video), true);
                     video[0].addEventListener('canplay', this._videoPlayerReady);
                 }
+                video[0].load();
+                video[0].play();
             } else {
                 this.videoPlayerError(video);
             }

@@ -60,10 +60,6 @@ class acf_field_smart_slider_3 extends acf_field {
         return $field;
     }
 
-    function update_field($field, $post_id) {
-        return $field;
-    }
-
     public function create_field($field) {
         $this->render_field($field);
     }

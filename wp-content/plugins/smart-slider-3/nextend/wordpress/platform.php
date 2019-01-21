@@ -29,7 +29,17 @@ class N2Platform {
     }
 
     public static function getPlatformName() {
-        return 'Wordpress';
+        return 'WordPress';
+    }
+
+    public static function getPlatformVersion() {
+        global $wp_version;
+
+        return $wp_version;
+    }
+
+    public static function getCharset() {
+        return get_option('blog_charset');
     }
 
     public static function getDate() {
@@ -48,6 +58,20 @@ class N2Platform {
 
     public static function getUserEmail() {
         return wp_get_current_user()->user_email;
+    }
+
+    public static function needStrongerCSS() {
+        static $need = null;
+        if ($need === null) {
+            if (!N2Platform::$isAdmin && function_exists('et_is_builder_plugin_active') && et_is_builder_plugin_active()) {
+                $need = true;
+            }
+            if ($need === null) {
+                $need = false;
+            }
+        }
+
+        return $need;
     }
 
     public static function adminHideCSS() {
@@ -146,6 +170,56 @@ class N2Platform {
         self::$needCredentials = true;
 
         return $types;
+    }
+
+    public static function getDebug() {
+        $debug = array('');
+
+
+        $debug[] = 'Path to uri:';
+        $uris    = N2Uri::getUris();
+        $paths   = N2Filesystem::getPaths();
+        foreach ($uris AS $i => $uri) {
+            $debug[] = $paths[$i] . ' => ' . $uri;
+        }
+
+        $debug[] = '';
+        $debug[] = 'wp_upload_dir() => ';
+        foreach (wp_upload_dir() AS $k => $v) {
+            $debug[] = $k . ': ' . $v;
+        }
+        $debug[] = '<=';
+        $debug[] = '';
+
+        $theme       = wp_get_theme();
+        $parentTheme = $theme->parent();
+        if ($parentTheme) {
+            $debug[] = 'Parent theme: ' . $theme->get('Name') . " is version " . $theme->get('Version');
+        }
+        $debug[] = 'Theme: ' . $theme->get('Name') . " is version " . $theme->get('Version');
+
+
+        $plugins   = get_plugins();
+        $notActive = array();
+
+        $debug[] = '';
+        $debug[] = 'Activated Plugins:';
+        foreach ($plugins AS $plugin => $pluginData) {
+            if (is_plugin_active($plugin)) {
+                $debug[] = ' - ' . $plugin . ' - ' . $pluginData['Version'] . ' - ' . $pluginData['Name'];
+            } else {
+                $notActive[$plugin] = $pluginData;
+            }
+        }
+
+        $debug[] = '';
+        $debug[] = '';
+        $debug[] = 'NOT Activated Plugins:';
+        foreach ($notActive AS $plugin => $pluginData) {
+            $debug[] = ' - ' . $plugin . ' - ' . $pluginData['Version'] . ' - ' . $pluginData['Name'];
+        }
+
+        return $debug;
     }
 
 }

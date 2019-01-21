@@ -6,6 +6,8 @@ class N2Uri extends N2UriAbstract {
 
     function __construct() {
 
+        $this->uris[] = WP_PLUGIN_URL;
+
         $this->_baseuri = WP_CONTENT_URL;
         if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) != 'off') {
             $this->_baseuri = str_replace('http://', 'https://', $this->_baseuri);

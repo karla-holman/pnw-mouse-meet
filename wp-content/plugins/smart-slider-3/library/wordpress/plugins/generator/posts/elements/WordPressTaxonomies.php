@@ -17,13 +17,7 @@ class N2ElementWordPressTaxonomies extends N2ElementList {
 
         $this->options['0'] = n2_('All');
 
-        $taxonomyNames = array_diff(get_object_taxonomies($this->postType), array(
-            'category',
-            'nav_menu',
-            'link_category',
-            'post_format',
-            'post_tag'
-        ));
+        $taxonomyNames = get_object_taxonomies($this->postType);
 
         foreach ($taxonomyNames as $taxonomyName) {
             $terms = get_terms(array(

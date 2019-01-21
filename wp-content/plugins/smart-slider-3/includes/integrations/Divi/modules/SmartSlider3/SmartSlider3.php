@@ -28,7 +28,8 @@ class Nextend_SmartSlider3 extends ET_Builder_Module {
         ?>
         <script type="text/javascript">
             <?php
-            echo file_get_contents(NEXTEND_SMARTSLIDER_3 . '/includes/iframe.js');
+            echo file_get_contents(NEXTEND_SMARTSLIDER_3 . '/includes/iframe.min.js');
+        
             ?>
             window.SmartSlider3IframeUrl = <?php echo json_encode(site_url('') . '?n2prerender=1&n2app=smartslider&n2controller=slider&n2action=iframe'); ?>;
         </script>

@@ -114,7 +114,7 @@ div.n2-ss-spinner-rectangle-4 {
 }'
         ),
         'simpleDarkCounter'  => array(
-            '<div><div class="n2-ss-spinner-simple-dark-counter-container"><div class="n2-ss-spinner-simple-dark-counter n2-ss-spinner-counter"></div></div></div>',
+            '<div><div class="n2-ss-spinner-simple-dark-counter-container"><div class="n2-ss-spinner-simple-dark-counter n2-ss-spinner-counter">0%</div></div></div>',
             '.n2-ss-spinner-simple-dark-counter-container {
     position: absolute;
     top: 50%;
@@ -144,10 +144,10 @@ div.n2-ss-spinner-rectangle-4 {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 41px;
-    height: 41px;
-    margin-top: -23px;
-    margin-left: -23px;
+    width: 42px;
+    height: 42px;
+    margin-top: -22px;
+    margin-left: -22px;
 }
 
 .n2-ss-spinner-simple-dark-counter:not(:required):before {
@@ -214,7 +214,7 @@ div.n2-ss-spinner-rectangle-4 {
 }'
         ),
         'simpleWhiteCounter' => array(
-            '<div><div class="n2-ss-spinner-simple-white-counter-container"><div class="n2-ss-spinner-simple-white-counter n2-ss-spinner-counter"></div></div></div>',
+            '<div><div class="n2-ss-spinner-simple-white-counter-container"><div class="n2-ss-spinner-simple-white-counter n2-ss-spinner-counter">0%</div></div></div>',
             '.n2-ss-spinner-simple-white-counter-container {
     position: absolute;
     top: 50%;
@@ -244,10 +244,10 @@ div.n2-ss-spinner-rectangle-4 {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 41px;
-    height: 41px;
-    margin-top: -23px;
-    margin-left: -23px;
+    width: 42px;
+    height: 42px;
+    margin-top: -22px;
+    margin-left: -22px;
 }
 
 .n2-ss-spinner-simple-white-counter:not(:required):before {
@@ -361,8 +361,10 @@ div.n2-ss-spinner-rectangle-4 {
 
     public function renderSlider($slider, $sliderHTML) {
 
-        $customSpinner = $this->slider->params->get('custom-spinner', '');
-        if (!empty($customSpinner)) {
+        $customSpinner     = $this->slider->params->get('custom-spinner', '');
+        $customPlaceholder = !!$this->slider->params->get('custom-placeholder', 0);
+
+        if (!empty($customSpinner) && !$customPlaceholder) {
             $width      = $this->slider->params->get('custom-spinner-width', '100');
             $height     = $this->slider->params->get('custom-spinner-height', '100');
             $marginLeft = -($width / 2);
@@ -371,9 +373,11 @@ div.n2-ss-spinner-rectangle-4 {
             if ($this->slider->params->get('custom-display', '1')) {
                 $style = 'style="display:none;"';
             }
-            return $sliderHTML . '<div id="' . $slider->elementId . '-spinner" ' . $style . '><img src="' . N2ImageHelper::fixed($customSpinner) . '" style="width:' . $width . 'px; height:' . $height . 'px; position:absolute;left:50%;top:50%;margin-left:' . $marginLeft . 'px;margin-top:' . $marginTop . 'px;" alt="loading"/></div>';
+
+            return $sliderHTML . '<div id="' . $slider->elementId . '-spinner" ' . $style . '><img src="' . n2_esc_attr(N2ImageHelper::fixed($customSpinner)) . '" style="width:' . $width . 'px; height:' . $height . 'px; position:absolute;left:50%;top:50%;margin-left:' . $marginLeft . 'px;margin-top:' . $marginTop . 'px;" alt="loading"/></div>';
         } else if (isset(self::$spinners[$this->slider->params->get('spinner', 'simpleWhite')]) && !empty(self::$spinners[$this->slider->params->get('spinner', 'simpleWhite')])) {
             N2CSS::addInline(self::$spinners[$this->slider->params->get('spinner', 'simpleWhite')][1]);
+
             return $sliderHTML . '<div id="' . $slider->elementId . '-spinner" style="display: none;">' . self::$spinners[$this->slider->params->get('spinner', 'simpleWhite')][0] . '</div>';
         }
 

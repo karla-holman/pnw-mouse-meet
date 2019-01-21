@@ -48,7 +48,7 @@ class N2SmartSliderTypeSimple extends N2SmartSliderType {
         $this->widgets->echoAbove();
         ?>
 
-        <div class="n2-ss-slider-1 n2-ss-swipe-element n2-ow" style="<?php echo $sliderCSS; ?>">
+        <div class="n2-ss-slider-1 n2-ss-swipe-element n2-ow" style="<?php echo n2_esc_attr($sliderCSS); ?>">
             <?php
             echo $this->getBackgroundVideo($params);
             ?>
@@ -64,6 +64,8 @@ class N2SmartSliderTypeSimple extends N2SmartSliderType {
                     echo N2Html::tag('div', array('class' => 'n2-ss-slide-backgrounds'));
 
                     foreach ($this->slider->slides AS $i => $slide) {
+                        $slide->finalize();
+
                         echo N2Html::tag('div', N2HTML::mergeAttributes($slide->attributes, $slide->linkAttributes, array(
                             'class' => 'n2-ss-slide n2-ss-canvas n2-ow ' . $slide->classes,
                             'style' => $slide->style
@@ -107,7 +109,7 @@ class N2SmartSliderTypeSimple extends N2SmartSliderType {
     }
 
     public function getScript() {
-        return N2Html::script("N2R(" . json_encode($this->jsDependency) . ",function(){new N2Classes.SmartSliderSimple('#{$this->slider->elementId}', " . json_encode($this->javaScriptProperties) . ");});");
+        return "N2R(" . json_encode($this->jsDependency) . ",function(){new N2Classes.SmartSliderSimple('#{$this->slider->elementId}', " . json_encode($this->javaScriptProperties) . ");});";
     }
 
     public function loadResources() {
@@ -193,9 +195,7 @@ class N2SmartSliderTypeSimple extends N2SmartSliderType {
             return '';
         }
 
-        $attributes = array(
-            'autoplay' => 1
-        );
+        $attributes = array();
 
         if ($params->get('backgroundVideoMuted', 1)) {
             $attributes['muted'] = 'muted';
@@ -210,7 +210,8 @@ class N2SmartSliderTypeSimple extends N2SmartSliderType {
                 'data-mode'          => $params->get('backgroundVideoMode', 'fill'),
                 'playsinline'        => 1,
                 'webkit-playsinline' => 1,
-                'data-keepplaying'   => 1
+                'data-keepplaying'   => 1,
+                'preload'            => 'none'
             ), N2Html::tag("source", array(
             "src"  => $mp4,
             "type" => "video/mp4"

@@ -20,6 +20,7 @@
 			$(window).on('load', WPForms.load);
 
 			WPForms.bindUIActions();
+			WPForms.bindOptinMonster();
 		},
 
 		/**
@@ -40,7 +41,11 @@
 
 			// Randomize elements.
 			$( '.wpforms-randomize' ).each( function() {
-				$( this ).randomize();
+				var $list      = $( this ),
+					$listItems = $list.children();
+				while ( $listItems.length ) {
+					$list.append( $listItems.splice( Math.floor( Math.random() * $listItems.length ), 1 )[0] );
+				}
 			});
 
 			$(document).trigger('wpformsReady');
@@ -77,6 +82,17 @@
 				$( '.wpforms-input-temp-name' ).each(function( index, el ) {
 					var random = Math.floor( Math.random() * 9999 ) + 1;
 					$( this ).attr( 'name', 'wpf-temp-' + random );
+				});
+
+				// Prepend URL field contents with http:// if user input doesn't contain a schema.
+				$( '.wpforms-validate input[type=url]' ).change( function () {
+					var url = $( this ).val();
+					if ( ! url ) {
+						return false;
+					}
+					if ( url.substr( 0, 7 ) !== 'http://' && url.substr( 0, 8 ) !== 'https://' ) {
+						$( this ).val( 'http://' + url );
+					}
 				});
 
 				$.validator.messages.required = wpforms_settings.val_required;
@@ -169,6 +185,8 @@
 										} else {
 											element.closest( 'tr' ).find( 'th' ).append( error );
 										}
+									} else if ( element.hasClass( 'wpforms-net-promoter-score-option' ) ) {
+										element.closest( 'table' ).after( error );
 									} else {
 										element.parent().parent().parent().append( error );
 									}
@@ -223,7 +241,37 @@
 									// Form contains invisible reCAPTCHA.
 									grecaptcha.execute( $submit.get(0).recaptchaID );
 								}
-							}
+							},
+							onkeyup: function( element, event ) {
+								// This code is copied from JQuery Validate 'onkeyup' method with only one change: 'wpforms-novalidate-onkeyup' class check.
+								var excludedKeys = [ 16, 17, 18, 20, 35, 36, 37, 38, 39, 40, 45, 144, 225 ];
+
+								if ( $( element ).hasClass('wpforms-novalidate-onkeyup') ) {
+									return; // Disable onkeyup validation for some elements (e.g. remote calls).
+								}
+
+								if ( event.which === 9 && this.elementValue( element ) === "" || $.inArray( event.keyCode, excludedKeys ) !== -1 ) {
+									return;
+								} else if ( element.name in this.submitted || element.name in this.invalid ) {
+									this.element( element );
+								}
+							},
+							onfocusout: function( element ) {
+								// This code is copied from JQuery Validate 'onfocusout' method with only one change: 'wpforms-novalidate-onkeyup' class check.
+								var validate = false;
+
+								if ( $( element ).hasClass('wpforms-novalidate-onkeyup') && !element.value ) {
+									validate = true; // Empty value error handling for elements with onkeyup validation disabled.
+								}
+
+								if ( !this.checkable( element ) && ( element.name in this.submitted || !this.optional( element ) ) ) {
+									validate = true;
+								}
+
+								if ( validate ) {
+									this.element( element );
+								}
+							},
 						}
 					}
 					form.validate( properties );
@@ -256,8 +304,18 @@
 					} else {
 						properties = {
 							disableMobile: true
-						}
+						};
 					}
+
+					// Redefine locale only if user doesn't do that manually and we have the locale.
+					if (
+						! properties.hasOwnProperty( 'locale' ) &&
+						typeof wpforms_settings !== 'undefined' &&
+						wpforms_settings.hasOwnProperty( 'locale' )
+					) {
+						properties.locale = wpforms_settings.locale;
+					}
+
 					element.flatpickr(properties)
 				});
 			}
@@ -373,6 +431,11 @@
 				$this.val(formatted);
 			});
 
+			// Payments: preselect the selected payment (from dynamic/fallback population).
+			$( document ).ready( function () {
+				$( '.wpforms-field-payment-multiple .wpforms-image-choices-item input:checked' ).change();
+			} );
+
 			// Rating field: hover effect.
 			$( '.wpforms-field-rating-item' ).hover(
 				function() {
@@ -394,7 +457,12 @@
 
 				$items.removeClass( 'hover selected' );
 				$this.parent().prevAll().andSelf().addClass( 'selected' );
-			});
+			} );
+
+			// Rating field: preselect the selected rating (from dynamic/fallback population).
+			$( document ).ready( function () {
+				$( '.wpforms-field-rating-item input:checked' ).change();
+			} );
 
 			// Checkbox/Radio/Payment checkbox: toggle selected state class.
 			$( document ).on( 'change', '.wpforms-field-checkbox input, .wpforms-field-radio input, .wpforms-field-payment-multiple input', function() {
@@ -407,13 +475,7 @@
 				} else {
 					$( this ).closest( 'li' ).toggleClass( 'wpforms-selected' );
 				}
-			})
-
-			// OptinMonster: initialize again after OM is finished.
-			// This is to accommodate moving the form in the DOM.
-			$(document).on('OptinMonsterAfterInject', function() {
-				WPForms.ready();
-			});
+			} );
 		},
 
 		/**
@@ -452,10 +514,8 @@
 			if ( action === 'next' ){
 				// Validate
 				if (typeof $.fn.validate !== 'undefined') {
-					$page.find('input.wpforms-field-required, select.wpforms-field-required, textarea.wpforms-field-required, .wpforms-field-required input').each(function(index, el) {
-						var field = $(el);
-						if ( field.valid() ) {
-						} else {
+					$page.find('input.wpforms-field-required, select.wpforms-field-required, textarea.wpforms-field-required, .wpforms-field-required input, .wpforms-field-file-upload input').each(function(index, el) {
+						if ( ! $(el).valid() ) {
 							valid = false;
 						}
 					});
@@ -533,6 +593,59 @@
 			}
 		},
 
+		/**
+		 * OptinMonster compatibility.
+		 *
+		 * Re-initialize after OptinMonster loads to accomodate changes that
+		 * have occurred to the DOM.
+		 *
+		 * @since 1.5.0
+		 */
+		bindOptinMonster: function() {
+
+			// OM v5.
+			document.addEventListener( 'om.Campaign.load', function( event ) {
+				WPForms.ready();
+				WPForms.optinMonsterRecaptchaReset( event.detail.Campaign.data.id );
+			} );
+
+			// OM Legacy.
+			$( document ).on( 'OptinMonsterOnShow', function( event, data, object ) {
+				WPForms.ready();
+				WPForms.optinMonsterRecaptchaReset( data.optin );
+			} );
+		},
+
+		/**
+		 * Reset/recreate reCAPTCHA v2 inside OptinMonster.
+		 *
+		 * @since 1.5.0
+		 */
+		optinMonsterRecaptchaReset: function ( optinId ) {
+
+			var $form               = $( '#om-' + optinId ).find( '.wpforms-form' ),
+				$recaptchaContainer = $form.find( '.wpforms-recaptcha-container' ),
+				$recaptcha          = $form.find( '.g-recaptcha' ),
+				recaptchaSiteKey    = $recaptcha.attr( 'data-sitekey' ),
+				recaptchaID         = 'recaptcha-' + Date.now();
+
+			if ( $form.length && $recaptcha.length ) {
+
+				$recaptcha.remove();
+				$recaptchaContainer.prepend( '<div class="g-recaptcha" id="' + recaptchaID + '" data-sitekey="' + recaptchaSiteKey + '"></div>' );
+
+				grecaptcha.render(
+					recaptchaID,
+					{
+						sitekey: recaptchaSiteKey,
+						callback: function(){
+							wpformsRecaptchaCallback( $( '#' + recaptchaID ) );
+						}
+					}
+				);
+			}
+		},
+
 		//--------------------------------------------------------------------//
 		// Other functions
 		//--------------------------------------------------------------------//
@@ -580,7 +693,7 @@
 			$form.find('.wpforms-payment-total').each(function(index, el) {
 				if ( 'hidden' === $(this).attr('type') || 'text' === $(this).attr('type') ) {
 					$(this).val(totalFormattedSymbol);
-					if ( 'text' === $(this).attr('type') && validate ) {
+					if ( 'text' === $(this).attr('type') && validate && $form.data('validator') ) {
 						$(this).valid();
 					}
 				} else {
@@ -752,7 +865,7 @@
 		 */
 		setUserIndentifier: function() {
 
-			if ( wpforms_settings.uuid_cookie && ! WPForms.getCookie('_wpfuuid') ) {
+			if ( typeof wpforms_settings !== 'undefined' && wpforms_settings.uuid_cookie && ! WPForms.getCookie('_wpfuuid') ) {
 
 				// Generate UUID - http://stackoverflow.com/a/873856/1489528
 				var s         = new Array(36),
@@ -837,23 +950,4 @@
 	// Add to global scope.
 	window.wpforms = WPForms;
 
-	//--------------------------------------------------------------------//
-	// jQuery Functions.
-	//--------------------------------------------------------------------//
-
-	/**
-	 * Randomize selectors.
-	 *
-	 * @since 1.4.4
-	 */
-	$.fn.randomize = function( selector ){
-
-		var $elems = selector ? $( this ).find( selector ) : $( this ).children();
-
-		for ( var i = $elems.length; i >= 0; i-- ) {
-			$( this ).append( $elems[ Math.random() * i | 0 ] );
-		}
-
-		return this;
-	}
 })(jQuery);

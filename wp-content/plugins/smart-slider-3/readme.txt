@@ -1,10 +1,10 @@
 === Smart Slider 3 ===
 Contributors: nextendweb
-Tags: slider, gallery slider, image slider, layer slider, responsive slider, slideshow, fullwidth slider, post slider, horizontal slider, vertical slider, photo slider, video slider
+Tags: slider, wordpress slider, image slider, layer slider, responsive slider, slideshow, fullwidth slider, post slider, horizontal slider, vertical slider, photo slider, video slider
 Donate link: https://sites.fastspring.com/nextend/product/smartslider3donate
 Requires at least: 4.6
-Tested up to: 4.9
-Stable tag: 3.3.3
+Tested up to: 5.0
+Stable tag: 3.3.11
 Requires PHP: 5.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -116,13 +116,16 @@ Smart Slider 3 is a community-driven project that would not be the same without 
 #### Translations
 
 * English
-* French (fr_FR) 87%
-* Hungarian (hu_HU) 85%
-* Traditional Chinese (zh_tw) 83%
-* Italian (it_IT) 70%
-* Russian (ru_RU) 68%
-* German (de_DE) 65%
-* Spanish (es_ES) 67%
+* Brazil Portugese (pt_BR) 100%
+* Russian (ru_RU) 95%
+* Polish (pl_PL) 90%
+* Italian (it_IT) 74%
+* Finnish (fi_FI) 72%
+* Hungarian (hu_HU) 66%
+* French (fr_FR) 65%
+* Traditional Chinese (zh_tw) 61%
+* German (de_DE) 53%
+* Spanish (es_ES) 52%
 
 == Installation ==
 [Check our official documentation for more information](https://smartslider3.helpscoutdocs.com/)
@@ -192,6 +195,94 @@ Of course! Smart Slider use protocol relative urls which works fine on http:// a
 9. Layer slider with layers styles. Made with FREE version.
 
 == Changelog ==
+
+= 3.3.11 - 22. November 2018. =
+* Feature: SVG and WEBP image format support
+* Fix: Links will be able to contain || characters
+* Fix: Android Samsung internet browser fix for full page
+* Fix: Include additional CSS files in prerender iframes (fix for page builder frontend view)
+* Fix: If Load this slider after option is used, but the parent slider doesn't exists (like it is turned off for certain devices), your slider will still load.
+
+= 3.3.10 - 12. November 2018. =
+* Feature: Filters for WordPress post generators
+* Feature: WP admin area will use the user's language, not the website's language
+* Feature: New target options for links
+* Fix: YouTube layer updated to match the latest YouTube embedded API. The Related parameter is renamed to Show related videos from the same channel
+* Fix: Private Vimeo videos
+* Fix: Visual Composer
+* Fix: WPBakery Page Builder 
+* Fix: WordPress post generator possible warning
+* Fix: Font manager weight
+* Deprecated: YouTube has deprecated the showinfo parameter. The Show video title option has removed.
+
+= 3.3.9 - 17. October 2018. =
+* Fix: Thumbnail alignment and groupping
+* Fix: Text layer bold and italic text font colors are now harder to override by theme's codes
+* Fix: NextGen Gallery and Divi live editor bug
+
+= 3.3.8 - 10. October 2018. =
+* Fix: IE Edge layer display fix
+* Fix: Smart Slider 3 inside TablePress on AMP pages
+* Fix: PHP 7.3 compatibility fix
+* Fix: YouTube iPad control fix with undocumented use_native_controls param
+* Fix: Post generator compatibility with some plugins using filters on post titles
+* Fix: Elementor compatibility
+* Feature: In WordPress the dynamic slide generator caches will be automatically cleared on post saves
+* Feature: Better slider resizing on tabs and other custom codes where the slider container is changing
+* Feature: More possible post data received in post generators
+* Feature: Remove shortcodes option improvement in post generators
+* Feature: Alias anchor slide switching option
+* Feature: Play when visible improvements
+
+= 3.3.7 - 29. August 2018. =
+* NEW TEMPLATE: Brand new [slider template](https://smartslider3.com/main-slider-animation-slide-switching/)
+* Feature: The slider's code is automatically skipped by some AMP plugins (AMP for WordPress and AMP for WP – Accelerated Mobile Pages).
+* Feature: Lazy loader compatibility
+* Feature: Gutenberg support
+* Feature: Smooth scroll speed
+* Feature: Hide controls if only single slide shows
+* Feature: Clear Divi admin localstorage cache for slider selector
+* Fix: WordPress post generator when the origin post contains Smart Slider 3 ACF field
+* Fix: Compatibility with Narratium theme
+* Fix: KeyCDN cache enabler
+* Fix: Admin ajax fix for YOAST SEO when related post ids are used
+* Fix: Borlabs cache plugin conflict
+* Fix: Tablepress compatibility
+* Fix: Borlabs cache fix
+
+= 3.3.6 - 18. July 2018. =
+* Fix: Autoptimize compatibility
+* Fix: Divi compatibility
+* Fix: Ajax compatibility
+* Fix: Windows upload path
+
+= 3.3.4 - 12. July 2018. =
+* Compatibility: Smart Slider 3 requires minimum PHP 5.4 and WordPress 4.6. From now on the slider won't activate if these minimum requirements are not available.
+* Improvement: WordPress admin area icon replaced with Dashicon
+* Feature: generator variables are now supported in layer CSS class
+* Feature: slide background blur is enabled in Edge
+* Feature: YouTube privacy enchanted mode
+* Feature: Vimeo and YouTube layer cover image improvement
+* Feature: Google fonts can be disabled at the backend as well
+* Feature: Make sliders load into iframes on AJAX websites
+* Feature: Use alias to create an element in front of the slider with that ID 
+* Feature: dynamic slide generators now check whether the dynamic source is available
+* Feature: Clear both after slider became an option
+* Feature: Pause video on scroll (available at all video layers)
+* Feature: Jetpack Photon compatibility
+* Feature: WordPress posts generator customizable date variables option
+* Feature: New help page with selected articles, documentation search and better support form
+* Feature: Slide level autoplay duration is not restricted from now on
+* Feature: MySQL 8 compatibility
+* Feature: Smart Slider 3 is removed from WordPress RSS
+* Feature: Secondary server
+* Fix: Button text decoration
+* Fix: Controls in below/above positions are correctly centered now
+* Fix: Font family: inherit is correctly applied now
+* Fix: Removed webfontloader dependency to avoid HTML export issues
+* Fix: wayback machine fix for slide background images
+* Fix: Beaver Builder compatilibity
+* Fix: ACF compatibility on PHP 7.2.x
 
 = 3.3.3 - 07. June 2018. =
 * Fix for plugins_loaded action bug

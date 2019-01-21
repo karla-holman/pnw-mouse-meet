@@ -44,6 +44,7 @@ window.n2c = (function (origConsole) {
 n2c.debug(false);
 window.n2const = {
     passiveEvents: false,
+    devicePixelRatio: window.devicePixelRatio || 1,
     isIOS: /iPad|iPhone|iPod/.test(navigator.platform),
     isEdge: /Edge\/\d./i.test(navigator.userAgent),
     isFirefox: navigator.userAgent.toLowerCase().indexOf('firefox') > -1,
@@ -74,7 +75,32 @@ window.n2const = {
         // other browser
         return false;
     })(),
-    lightboxMobileNewTab: 1
+    isBot: /bot|googlebot|crawler|spider|robot|crawling|Google Search Console/i.test(navigator.userAgent),
+    lightboxMobileNewTab: 1,
+    isVideoAutoplayAllowed: function () {
+        var isAllowed = !!(navigator.platform.match(/(Win|Mac)/) || !(/Mobi/.test(navigator.userAgent)) || ('playsInline' in document.createElement('video') || ('webkit-playsinline' in document.createElement('video'))) || (navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./) && parseInt(navigator.userAgent.match(/Chrom(e|ium)\/([0-9]+)\./)[2]) >= 53) || navigator.userAgent.match(/Android.*(Firefox|Edge|Opera)/));
+        window.n2const.isVideoAutoplayAllowed = function () {
+            return isAllowed;
+        };
+        return isAllowed;
+    },
+    isWaybackMachine: function () {
+        var isWaybackMachine = typeof window.__wm !== 'undefined';
+        window.n2const.isWaybackMachine = function () {
+            return isWaybackMachine;
+        };
+        return isWaybackMachine;
+    },
+    setLocation: function (l) {
+        if (typeof window.zajax_goto === 'function') {
+            /**
+             * @url https://wordpress.org/plugins/zajax-ajax-navigation/
+             */
+            window.zajax_goto(l);
+        } else {
+            window.location = l;
+        }
+    }
 };
 
 window.n2const.IOSVersion = (function () {
@@ -187,9 +213,7 @@ N2R('$', function ($) {
 
 window.n2FilterProperty = false;
 var element = document.createElement('div');
-if (/Edge\/\d./i.test(navigator.userAgent)) {
-    //Edge has buggy filter implementation
-} else if (element.style.webkitFilter !== undefined) {
+if (element.style.webkitFilter !== undefined) {
     window.n2FilterProperty = 'webkitFilter';
 } else if (element.style.filter !== undefined) {
     window.n2FilterProperty = 'filter';
@@ -1601,7 +1625,9 @@ N2D('EventBurrito', function ($, undefined) {
 
             //attach event listeners to the document, so that the slider
             //will continue to recieve events wherever the pointer is
-            addEvent(document, events[eventType][1], tMove, events[eventType][1] == 'touchmove' ? {passive: false} : false);
+            if (eventType !== 0) {
+                addEvent(document, events[eventType][1], tMove, false);
+            }
             addEvent(document, events[eventType][2], tEnd, false);
             addEvent(document, events[eventType][3], tEnd, false);
 
@@ -1646,7 +1672,9 @@ N2D('EventBurrito', function ($, undefined) {
             }
 
             if (o.move(event, start, diff, speed, isRealScrolling)) {
-                if (o.preventDefault) preventDefault(event); //Prevent scrolling
+                if (o.preventDefault) {
+                    preventDefault(event); //Prevent scrolling
+                }
             }
         }
 
@@ -1660,7 +1688,9 @@ N2D('EventBurrito', function ($, undefined) {
             !clicksAllowed && event.target && event.target.blur && event.target.blur();
 
             //detach event listeners from the document
-            removeEvent(document, events[eventType][1], tMove, events[eventType][1] == 'touchmove' ? {passive: false} : false);
+            if (eventType !== 0) {
+                removeEvent(document, events[eventType][1], tMove, false);
+            }
             removeEvent(document, events[eventType][2], tEnd, false);
             removeEvent(document, events[eventType][3], tEnd, false);
 
@@ -1671,16 +1701,23 @@ N2D('EventBurrito', function ($, undefined) {
 
         function init() {
             //bind scroll
-            if (!n2const.isIOS || n2const.IOSVersion < 10) {
-                listeners.push(addEvent(document, 'scroll', function (e) {
+            listeners.push(addEvent(document, 'scroll', function (e) {
+                if (window.nextendScrollFocus === undefined || !window.nextendScrollFocus) {
                     isRealScrolling = true;
-                }));
-            }
+                }
+            }));
 
             //bind touchstart
             listeners.push(addEvent(_this, events[eventModel][0], function (e) {
                 tStart(e, eventModel);
-            }));
+            }, eventModel === 0 ? {passive: false} : false));
+
+            if (eventModel === 0) {
+                listeners.push(addEvent(_this, events[0][1], function (e) {
+                    tMove(e, 0);
+                }, {passive: false}));
+            }
+
             //prevent stuff from dragging when using mouse
             listeners.push(addEvent(_this, 'dragstart', preventDefault));
 
@@ -2713,15 +2750,27 @@ N2D('Tween', 'RAF', function ($) {
     };
 
     Tween.to = function (element, duration, to) {
-        return new Tween(element, duration, to);
+        var tween = new Tween(element, duration, to);
+        if (to.paused === undefined || !to.paused) {
+            tween.play();
+        }
+        return tween;
     };
 
     Tween.fromTo = function (element, duration, from, to) {
-        return new Tween(element, duration, from, to);
+        var tween = new Tween(element, duration, from, to);
+        if (to.paused === undefined || !to.paused) {
+            tween.play();
+        }
+        return tween;
     };
 
     Tween.from = function (element, duration, from) {
-        return new Tween(element, duration, from, null);
+        var tween = new Tween(element, duration, from, null);
+        if (from.paused === undefined || !from.paused) {
+            tween.play();
+        }
+        return tween;
     };
 
     window.NextendTween = Tween;
@@ -2818,14 +2867,17 @@ N2D('Timeline', 'RAF', function ($) {
     };
 
     Timeline.prototype.to = function (element, duration, to, position) {
+        to.paused = true;
         this.addTween(NextendTween.to(element, duration, to), position);
     };
 
     Timeline.prototype.fromTo = function (element, duration, from, to, position) {
+        to.paused = true;
         this.addTween(NextendTween.fromTo(element, duration, from, to), position);
     };
 
     Timeline.prototype.from = function (element, duration, from, position) {
+        from.paused = true;
         this.addTween(NextendTween.from(element, duration, from), position);
     };
 

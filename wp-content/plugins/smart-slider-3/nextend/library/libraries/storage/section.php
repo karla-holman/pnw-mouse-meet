@@ -65,11 +65,11 @@ class N2StorageSectionAdmin {
         }
 
         $rows = self::$model->db->findAllByAttributes($attributes, array(
-            "`id`",
-            "`referencekey`",
-            "`value`",
-            "`system`",
-            "`editable`"
+            "id",
+            "referencekey",
+            "value",
+            "system",
+            "editable"
         ));
 
         N2Pluggable::doAction($application . $section, array(

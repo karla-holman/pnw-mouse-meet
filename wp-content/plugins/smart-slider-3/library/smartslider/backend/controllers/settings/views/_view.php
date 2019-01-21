@@ -44,6 +44,8 @@ class N2SmartsliderBackendSettingsView extends N2ViewBase {
 
         $options = new N2Tab($form, 'options', n2_('Options'));
         new N2ElementToken($options);
+
+        new N2ElementOnOff($options, 'api-secondary', n2_('Secondary server'), 0);
         new N2ElementOnOff($options, 'protocol-relative', n2_('Use protocol-relative URL'), 1);
         new N2ElementOnOff($options, 'force-english-backend', n2_('Force english backend'), 0);
         new N2ElementOnOff($options, 'frontend-accessibility', n2_('Improved frontend accessibility'), 1);
@@ -54,6 +56,14 @@ class N2SmartsliderBackendSettingsView extends N2ViewBase {
         new N2ElementOnOff($javascript, 'async', n2_('Async'), 0);
         new N2ElementOnOff($javascript, 'combine-js', n2_('Combine'), 0);
         new N2ElementText($javascript, 'scriptattributes', n2_('Script attributes'), '');
+
+        new N2ElementRadio($javascript, 'javascript-inline', n2_('Slider\'s inline JavaScript'), 'head', array(
+            'options' => array(
+                'head' => n2_('Head'),
+                'body' => n2_('Into the slider')
+            )
+        ));
+
 
         $css = new N2Tab($form, 'css', n2_('CSS'));
         new N2ElementRadio($css, 'css-mode', n2_('CSS mode'), 'normal', array(
@@ -88,7 +98,7 @@ class N2SmartsliderBackendSettingsView extends N2ViewBase {
         $form = new N2Form($this->appType);
         $form->loadArray($values);
 
-        $aviary = new N2Tab($form, 'aviary', 'Adobe Creative SDK - Aviary');
+        $aviary = new N2Tab($form, 'aviary', n2_('Adobe Creative SDK - Aviary'));
         new N2ElementToken($aviary);
         new N2ElementText($aviary, 'public', n2_('API Key'), '', array(
             'style' => 'width: 250px;'

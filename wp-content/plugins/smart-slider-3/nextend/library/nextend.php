@@ -3,22 +3,39 @@
 class N2 {
 
     public static $version = '2.0.21';
-    public static $api = 'https://secure.nextendweb.com/api/api.php';
+
+    private static $api = 'https://secure.nextendweb.com/api/api.php';
+
+    private static $api2 = 'https://api.nextendweb.com/v1/';
+
+    public static function getApiUrl() {
+        if (N2Settings::get('api-secondary', 0)) {
+            return self::$api2;
+        }
+
+        return self::$api;
+    }
 
     public static function api($posts, $returnUrl = false) {
+
+        if (N2Settings::get('api-secondary', 0)) {
+            $api = self::$api2;
+        } else {
+            $api = self::$api;
+        }
 
         if ($returnUrl) {
             $posts_default = array(
                 'platform' => N2Platform::getPlatform()
             );
 
-            return self::$api . '?' . http_build_query($posts + $posts_default);
+            return $api . '?' . http_build_query($posts + $posts_default);
         }
 
         if (!isset($data)) {
             if (function_exists('curl_init') && function_exists('curl_exec') && N2Settings::get('curl', 1)) {
                 $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, self::$api);
+                curl_setopt($ch, CURLOPT_URL, $api);
 
                 $posts_default = array(
                     'platform' => N2Platform::getPlatform()
@@ -45,6 +62,14 @@ class N2 {
                 curl_close($ch);
 
                 if ($curlErrorNumber) {
+                    $href = N2Base::getApplication('smartslider')->router->createUrl(array(
+                        "help/index",
+                        array('curl' => 1)
+                    ));
+                    N2Message::error(N2Html::tag('a', array(
+                        'href' => $href . '#support-form'
+                    ), n2_('Debug error')));
+
                     N2Message::error($curlErrorNumber . $error);
 
                     return array(
@@ -64,7 +89,7 @@ class N2 {
                     )
                 );
                 $context = stream_context_create($opts);
-                $data    = file_get_contents(self::$api, false, $context);
+                $data    = file_get_contents($api, false, $context);
                 if ($data === false) {
                     N2Message::error(n2_('CURL disabled in your php.ini configuration. Please enable it!'));
 
@@ -93,14 +118,14 @@ class N2 {
                 if (count($matches)) {
                     $blockedIP = $matches[1];
 
-                    N2Message::error(sprintf('Your ip address (%s) is blocked by our hosting provider.<br>Please contact us (support@nextendweb.com) with your ip to whitelist it.', $blockedIP));
+                    N2Message::error(sprintf('Your ip address (%s) is blocked by our hosting provider.<br>Please try: Global Settings -> Framework settings -> Secondary server -> On, or contact us (support@nextendweb.com) with your ip to whitelist it.', $blockedIP));
 
                     return array(
                         'status' => 'ERROR_HANDLED'
                     );
                 }
 
-                N2Message::error(sprintf('Unexpected response from the API.<br>Please contact us (support@nextendweb.com) with the following log:') . '<br><textarea style="width: 100%;height:200px;font-size:8px;">' . base64_encode($data) . '</textarea>');
+                N2Message::error(sprintf('Unexpected response from the API.<br>Please try: Global Settings -> Framework settings -> Secondary server -> On, contact us (support@nextendweb.com) with the following log:') . '<br><textarea style="width: 100%;height:200px;font-size:8px;">' . base64_encode($data) . '</textarea>');
 
                 return array(
                     'status' => 'ERROR_HANDLED'

@@ -126,13 +126,13 @@ class N2SSShortcodeInsert {
 
                     window[eventMethod](eventMethod == "attachEvent" ? "onmessage" : "message", function (e) {
                         if (e.source == (iframe[0].contentWindow || iframe[0].contentDocument)) {
-                        	var message = e[e.message ? "message" : "data"];
-                        	try{
-								message = JSON.parse(message);
-								if(message.action && message.action === 'ss3embed') {
-									callback(message);
-								}
-                            } catch(ex) {
+                            var message = e[e.message ? "message" : "data"];
+                            try {
+                                message = JSON.parse(message);
+                                if (message.action && message.action === 'ss3embed') {
+                                    callback(message);
+                                }
+                            } catch (ex) {
 
                             }
                             hide();
@@ -144,15 +144,15 @@ class N2SSShortcodeInsert {
                     ?>
                     window.NextendSmartSliderWPTinyMCEModal = function (ed) {
                         callback = function (data) {
-                        	var shortcode = false;
-                        	if(data.mode === 'id'){
-                        	    shortcode = '<div>[smartslider3 slider=' + data.value + ']</div>';
-							}else if(data.mode === 'alias'){
-								shortcode = '<div>[smartslider3 alias="' + data.value + '"]</div>';
-							}
-							if(shortcode) {
-								ed.execCommand('mceInsertContent', false, shortcode);
-							}
+                            var shortcode = false;
+                            if (data.mode === 'id') {
+                                shortcode = '<div>[smartslider3 slider=' + data.value + ']</div>';
+                            } else if (data.mode === 'alias') {
+                                shortcode = '<div>[smartslider3 alias="' + data.value + '"]</div>';
+                            }
+                            if (shortcode) {
+                                ed.execCommand('mceInsertContent', false, shortcode);
+                            }
                         };
                         show();
                     };
@@ -160,15 +160,15 @@ class N2SSShortcodeInsert {
                     if (typeof QTags !== 'undefined') {
                         QTags.addButton('smart-slider-3', 'Smart Slider', function () {
                             callback = function (data) {
-								var shortcode = false;
-								if(data.mode === 'id'){
-									shortcode = '<div>[smartslider3 slider=' + data.value + ']</div>';
-								}else if(data.mode === 'alias'){
-									shortcode = '<div>[smartslider3 alias="' + data.value + '"]</div>';
-								}
-								if(shortcode) {
-									QTags.insertContent("\n" + shortcode);
-								}
+                                var shortcode = false;
+                                if (data.mode === 'id') {
+                                    shortcode = '<div>[smartslider3 slider=' + data.value + ']</div>';
+                                } else if (data.mode === 'alias') {
+                                    shortcode = '<div>[smartslider3 alias="' + data.value + '"]</div>';
+                                }
+                                if (shortcode) {
+                                    QTags.insertContent("\n" + shortcode);
+                                }
                             };
                             show();
                         });
@@ -180,23 +180,41 @@ class N2SSShortcodeInsert {
                     window.NextendSmartSliderSelectModal = function ($input) {
                         callback = function (data) {
 
-							var idOrAlias = false;
-							if(data.mode === 'id'){
-								idOrAlias = data.value;
-							}else if(data.mode === 'alias'){
-								idOrAlias = data.value;
-							}
+                            var idOrAlias = false;
+                            if (data.mode === 'id') {
+                                idOrAlias = data.value;
+                            } else if (data.mode === 'alias') {
+                                idOrAlias = data.value;
+                            }
 
-							if(idOrAlias) {
-								if (typeof $input === 'function') {
-									$input = $input();
-								}
-								$input.val(idOrAlias).trigger('input').trigger('change');
-							}
+                            if (idOrAlias) {
+                                if (typeof $input === 'function') {
+                                    $input = $input();
+                                }
+                                $input.val(idOrAlias).trigger('input').trigger('change');
+                            }
                         };
                         show();
                         return false;
                     };
+                    window.NextendSmartSliderSelectModalCallback = function (cb) {
+                        callback = function (data) {
+
+                            var idOrAlias = false;
+                            if (data.mode === 'id') {
+                                idOrAlias = data.value;
+                            } else if (data.mode === 'alias') {
+                                idOrAlias = data.value;
+                            }
+
+                            if (idOrAlias) {
+                                cb(idOrAlias);
+                            }
+                        };
+                        show();
+                        return false;
+
+                    }
 
                 });
 			</script>

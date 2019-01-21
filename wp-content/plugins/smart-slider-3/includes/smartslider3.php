@@ -12,16 +12,19 @@ class SmartSlider3 {
 
         SmartSlider3::registerApplication();
 
-        if (get_option("n2_ss3_version") != N2SS3::$version) {
-            self::install(true);
+        if (get_option("n2_ss3_version") != N2SS3::$completeVersion) {
+            self::install();
         }
+        require_once dirname(__FILE__) . '/blackfriday.php';
+    
+    
 
         add_action('widgets_init', 'SmartSlider3::widgets_init', 11);
         add_action('widgets_admin_page', 'SmartSlider3::widgets_admin_page');
 
         add_action('init', 'SmartSlider3::_init');
 
-        add_action('init', 'SmartSlider3::preRender');
+        add_action('init', 'SmartSlider3::preRender', 1000000);
 
         add_action('load-toplevel_page_' . NEXTEND_SMARTSLIDER_3_URL_PATH, 'SmartSlider3::removeEmoji');
 
@@ -29,8 +32,10 @@ class SmartSlider3 {
 
         add_action('network_admin_menu', 'SmartSlider3::nextendNetworkAdminInit');
 
-        add_action('wpmu_new_blog', 'SmartSlider3::install_new_blog');
         add_action('delete_blog', 'SmartSlider3::delete_blog', 10, 2);
+
+        add_action('save_post', 'SmartSlider3::clear_slider_cache');
+        add_action('wp_untrash_post', 'SmartSlider3::clear_slider_cache');
 
         require_once dirname(NEXTEND_SMARTSLIDER_3__FILE__) . DIRECTORY_SEPARATOR . 'includes/shortcode.php';
         require_once dirname(NEXTEND_SMARTSLIDER_3__FILE__) . DIRECTORY_SEPARATOR . 'includes/widget.php';
@@ -64,6 +69,49 @@ class SmartSlider3 {
         if (isset($_GET['pswLoad']) && $_GET['pswLoad'] == 1) {
             N2SS3Shortcode::forceIframe('psw');
         }
+
+        if (defined('JETPACK__VERSION')) {
+            require_once dirname(__FILE__) . '/integrations/jetpack.php';
+        }
+
+        require_once dirname(__FILE__) . '/integrations/gutenberg/block.php';
+
+
+        if (defined('TABLEPRESS_ABSPATH')) {
+            require_once dirname(__FILE__) . '/integrations/tablepress.php';
+        }
+
+        /**
+         * Fix for NextGenGallery and Divi live editor bug
+         */
+        add_filter('run_ngg_resource_manager', function ($ret) {
+            if (isset($_GET['n2prerender']) && isset($_GET['n2app'])) {
+                $ret = false;
+            }
+
+            return $ret;
+        }, 1000000);
+
+
+        /**
+         * For ajax based page loaders
+         */
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest') {
+
+            N2Loader::import('libraries.settings.settings', 'smartslider');
+            if (intval(N2SmartSliderSettings::get('wp-ajax-iframe-slider', 0))) {
+                N2SS3Shortcode::forceIframe('ajax');
+            }
+        }
+    }
+
+    public static function clear_slider_cache() {
+        N2Loader::import(array(
+            'models.Sliders'
+        ), 'smartslider');
+
+        $slidersModel = new N2SmartsliderSlidersModel();
+        $slidersModel->invalidateCache();
     }
 
     public static function removeEmoji() {
@@ -91,10 +139,6 @@ class SmartSlider3 {
         return $permalink;
     }
 
-    public static function removeShortcode() {
-        remove_shortcode('smartslider3');
-    }
-
     public static function registerApplication() {
 
         N2Base::registerApplication(dirname(NEXTEND_SMARTSLIDER_3__FILE__) . '/library/smartslider/N2SmartsliderApplicationInfo.php');
@@ -118,7 +162,7 @@ class SmartSlider3 {
             for ($i = 1; $i <= $widgetAreas; $i++) {
 
                 register_sidebar(array(
-                    'name'          => 'Smart Slider Widget Area - #' . $i,
+                    'name'          => 'Custom Widget Area - #' . $i,
                     'description'   => '',
                     'id'            => 'smartslider_area_' . $i,
                     'before_widget' => '',
@@ -177,23 +221,13 @@ class SmartSlider3 {
     }
 
     public static function nextendAdminInit() {
-        $icon = NEXTEND_SMARTSLIDER_3_URL . '/images/icon16x.png';
-        if (isset($_REQUEST['page']) && $_REQUEST['page'] == NEXTEND_SMARTSLIDER_3_URL_PATH) {
-            $icon = NEXTEND_SMARTSLIDER_3_URL . '/images/icon16x-active.png';
-        }
 
-        add_menu_page('Smart Slider', 'Smart Slider', 'smartslider', NEXTEND_SMARTSLIDER_3_URL_PATH, 'SmartSlider3::application', $icon);
+        add_menu_page('Smart Slider', 'Smart Slider', 'smartslider', NEXTEND_SMARTSLIDER_3_URL_PATH, 'SmartSlider3::application', 'dashicons-welcome-learn-more');
 
-        function nextend_smart_slider_admin_menu() {
-            echo '<style type="text/css">#adminmenu .toplevel_page_' . NEXTEND_SMARTSLIDER_3_URL_PATH . ' .wp-menu-image img{opacity: 1;}</style>';
-        }
-
-        add_action('admin_head', 'nextend_smart_slider_admin_menu');
     }
 
     public static function nextendNetworkAdminInit() {
-        $icon = NEXTEND_SMARTSLIDER_3_URL . '/icon.png';
-        add_menu_page('Smart Slider Update', 'Smart Slider Update', 'smartslider', NEXTEND_SMARTSLIDER_3_URL_PATH, 'SmartSlider3::networkUpdate', $icon);
+        add_menu_page('Smart Slider Update', 'Smart Slider Update', 'smartslider', NEXTEND_SMARTSLIDER_3_URL_PATH, 'SmartSlider3::networkUpdate', 'dashicons-welcome-learn-more');
 
         function nextend_smart_slider_admin_menu() {
             echo '<style type="text/css">#adminmenu .toplevel_page_' . NEXTEND_SMARTSLIDER_3_URL_PATH . '{display: none;}</style>';
@@ -225,50 +259,9 @@ class SmartSlider3 {
         n2_exit();
     }
 
-    public static function install($network_wide) {
-        global $wpdb;
+    public static function install() {
 
-        N2WP::install($network_wide);
-
-        if (is_multisite() && $network_wide) {
-            $tmpPrefix = $wpdb->prefix;
-            $blogs     = get_sites(array('network_id' => $wpdb->siteid));
-            foreach ($blogs AS $blog) {
-                $wpdb->prefix = $wpdb->get_blog_prefix($blog->blog_id);
-
-                N2Base::getApplication("smartslider")
-                      ->getApplicationType('backend')
-                      ->render(array(
-                          "controller" => "install",
-                          "action"     => "index",
-                          "useRequest" => false
-                      ), array(true));
-            }
-
-            $wpdb->prefix = $tmpPrefix;
-        } else {
-
-            N2Base::getApplication("smartslider")
-                  ->getApplicationType('backend')
-                  ->render(array(
-                      "controller" => "install",
-                      "action"     => "index",
-                      "useRequest" => false
-                  ), array(true));
-        }
-
-        update_option("n2_ss3_version", N2SS3::$version);
-
-
-        return true;
-    }
-
-    public static function install_new_blog($blog_id) {
-        global $wpdb;
-        N2WP::install_new_blog($blog_id);
-
-        $tmpPrefix    = $wpdb->prefix;
-        $wpdb->prefix = $wpdb->get_blog_prefix($blog_id);
+        N2WP::install();
 
         N2Base::getApplication("smartslider")
               ->getApplicationType('backend')
@@ -278,13 +271,16 @@ class SmartSlider3 {
                   "useRequest" => false
               ), array(true));
 
-        $wpdb->prefix = $tmpPrefix;
+        update_option("n2_ss3_version", N2SS3::$completeVersion);
+
+
+        return true;
     }
 
     public static function delete_blog($blog_id, $drop) {
-        if ($drop) {
-            N2WP::delete_blog($blog_id, $drop);
+        N2WP::delete_blog($blog_id, $drop);
 
+        if ($drop) {
             global $wpdb;
             $prefix = $wpdb->get_blog_prefix($blog_id);
             $wpdb->query('DROP TABLE IF EXISTS ' . $prefix . 'nextend2_smartslider3_generators, ' . $prefix . 'nextend2_smartslider3_sliders,	' . $prefix . 'nextend2_smartslider3_slides, ' . $prefix . 'nextend2_smartslider3_sliders_xref;');
@@ -382,6 +378,7 @@ class SmartSlider3 {
             'href'   => admin_url("admin.php?page=" . NEXTEND_SMARTSLIDER_3_URL_PATH . '#createslider')
         ));
 
+
         $query   = 'SELECT sliders.title, sliders.id, slides.thumbnail
             FROM ' . $wpdb->prefix . 'nextend2_smartslider3_sliders AS sliders
             LEFT JOIN ' . $wpdb->prefix . 'nextend2_smartslider3_slides AS slides ON slides.id = (SELECT id FROM ' . $wpdb->prefix . 'nextend2_smartslider3_slides WHERE slider = sliders.id AND published = 1 AND generator_id = 0 AND thumbnail NOT LIKE \'\' ORDER BY ordering DESC LIMIT 1)
@@ -415,6 +412,17 @@ class SmartSlider3 {
                 ));
             }
         }
+
+        /*
+        $wp_admin_bar->add_node(array(
+            'id'     => 'smart_slider_3_clear_cache',
+            'parent' => 'smart_slider_3',
+            'title'  => 'Clear cache',
+            'href'   => N2Base::getApplication('smartslider')->router->createUrl(array(
+                'settings/clearcache'
+            ), true)
+        ));
+        */
     }
 
     public static function sliderSelectAction($jQueryNode) {

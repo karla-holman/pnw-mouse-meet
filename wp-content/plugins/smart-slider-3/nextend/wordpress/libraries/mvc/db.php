@@ -20,7 +20,7 @@ class N2DBConnector extends N2DBConnectorAbstract {
     public function query($query, $attributes = false) {
         if ($attributes) {
             foreach ($attributes as $key => $value) {
-                $replaceTo = is_numeric($value) ? $value : $this->db->quote($value);
+                $replaceTo = is_numeric($value) ? $value : $this->db->prepare('%s', $value);
                 $query     = str_replace($key, $replaceTo, $query);
             }
         }
@@ -49,6 +49,12 @@ class N2DBConnector extends N2DBConnectorAbstract {
 
         $query = 'SELECT ';
         if ($fields) {
+
+            $fields = array_map(array(
+                $this,
+                'quoteName'
+            ), $fields);
+
             $query .= implode(', ', $fields);
         } else {
             $query .= '*';

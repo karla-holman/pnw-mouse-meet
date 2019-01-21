@@ -1,7 +1,6 @@
 <?php
 
-class N2SmartSliderFeatureAlign
-{
+class N2SmartSliderFeatureAlign {
 
     private $slider;
 
@@ -43,7 +42,7 @@ class N2SmartSliderFeatureAlign
 
         $sliderHTML = N2Html::tag("div", $htmlOptions, N2Html::tag("div", $htmlOptionsPadding, $sliderHTML));
 
-        if ($aligned == true) {
+        if ($aligned == true && intval($this->slider->params->get('clear-both-after', 1))) {
             $sliderHTML .= N2Html::tag("div", array("style" => "clear: both"), "");
         }
 
@@ -51,7 +50,7 @@ class N2SmartSliderFeatureAlign
     }
 
     public function makeJavaScriptProperties(&$properties) {
-        $properties['align'] = $this->align;
+        $properties['align']     = $this->align;
         $properties['isDelayed'] = intval($this->slider->params->get('is-delayed', 0));
     }
 }

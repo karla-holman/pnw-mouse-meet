@@ -74,6 +74,15 @@ class DiviSmartSlider3Extension extends DiviExtension {
         $styles_url = "{$this->plugin_dir_url}styles/admin/style.min.css";
 
         wp_enqueue_style("{$this->name}-admin-styles", $styles_url, array(), $this->version);
+
+        ?>
+        <script>
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem('et_pb_templates_et_pb_nextend_smart_slider_3');
+                localStorage.removeItem('et_pb_templates_et_pb_nextend_smart_slider_3_fullwidth');
+            }
+        </script>
+        <?php
     }
 }
 

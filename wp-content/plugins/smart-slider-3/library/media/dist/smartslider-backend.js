@@ -324,7 +324,7 @@ N2D('CreateSlider', function ($, undefined) {
 
         }, this));
 
-        if (window.location.hash.substring(1) == 'createslider') {
+        if (window.location.hash.substring(1) === 'createslider') {
             this.showModal();
         }
     }
@@ -350,7 +350,7 @@ N2D('CreateSlider', function ($, undefined) {
                 name: n2_('Thumbnail - horizontal'),
                 image: '$ss$/admin/images/sliderpresets/thumbnailhorizontal.png'
             });
-            var size = [550, 390 + 130];
+            var size = [550, 540];
         
 
             this.createSliderModal = new N2Classes.NextendModal({
@@ -387,10 +387,14 @@ N2D('CreateSlider', function ($, undefined) {
                             sliderHeight.parent().addClass('n2-form-element-autocomplete');
 
                             this.createHeading(n2_('Preset')).appendTo(this.content);
-                            var imageRadioHeight = 100
+                            var imageRadioHeight = 120
                         
                             var imageRadio = this.createImageRadio(presets)
-                                    .css('height', imageRadioHeight)
+                                    .css({
+                                        height: imageRadioHeight,
+                                        display: 'flex',
+                                        flexWrap: 'wrap'
+                                    })
                                     .appendTo(this.content),
                                 sliderPreset = imageRadio.find('input');
                             imageRadio.css('overflow', 'hidden');
@@ -2245,11 +2249,11 @@ N2D('QuickSlides', function ($, undefined) {
                                 tr = $('<tr />').appendTo(table),
                                 id = slide.data('slideid');
                             tr.append($('<td />').append('<img src="' + slide.data('image') + '" style="width:100px;"/>'));
-                            tr.append($('<td />').append(that.createInput('Name', 'title-' + id, slide.data('title'), 'width: 240px;')));
-                            tr.append($('<td />').append(that.createTextarea('Description', 'description-' + id, slide.data('description'), 'width: 330px;height:24px;')));
+                            tr.append($('<td />').append(that.createInput(n2_('Name'), 'title-' + id, slide.data('title'), 'width: 240px;')));
+                            tr.append($('<td />').append(that.createTextarea(n2_('Description'), 'description-' + id, slide.data('description'), 'width: 330px;height:24px;')));
                             var link = slide.data('link').split('|*|');
-                            tr.append($('<td />').append(that.createLink('Link', 'link-' + id, link[0], 'width: 180px;')));
-                            tr.append($('<td />').append(that.createTarget('Target window', 'target-' + id, link.length > 1 ? link[1] : '_self', '')));
+                            tr.append($('<td />').append(that.createLink(n2_('Link'), 'link-' + id, link[0], 'width: 180px;')));
+                            tr.append($('<td />').append(that.createTarget(n2_('Target window'), 'target-' + id, link.length > 1 ? link[1] : '_self', '')));
 
                             new N2Classes.FormElementUrl('link-' + id, nextend.NextendElementUrlParams);
 
@@ -2578,7 +2582,6 @@ N2D('SlidesManager', function ($, undefined) {
                     case 'post':
                         this.addQuickPost(e);
                         break;
-                    case 'library':
                     case 'empty':
                     case 'static':
                     case 'dynamic':
@@ -2587,6 +2590,14 @@ N2D('SlidesManager', function ($, undefined) {
                         } else {
                             window.location = $(e.currentTarget).data('href');
                         }
+                        break;
+                    case 'library':
+                        if (which === 2) {
+                            window.open($(e.currentTarget).data('href'), '_blank').focus();
+                        } else {
+                            window.location = $(e.currentTarget).data('href');
+                        }
+                    
                         break;
                 }
             }
@@ -2836,14 +2847,21 @@ N2D('SlidesManager', function ($, undefined) {
                                             image: data[0].thumbnail_large
                                         });
                                     }, this)).fail(function (data) {
-                                        N2Classes.Notification.error(data.responseText);
+                                        N2Classes.Notification.error('Video not found or private.');
+                                        manager._addQuickVideo(this, {
+                                            type: 'vimeo',
+                                            title: '',
+                                            description: '',
+                                            video: vimeoMatch[3],
+                                            image: ''
+                                        });
                                     });
 
                                 } else if (html5Video) {
-                                    N2Classes.Notification.error('This video url is not supported!');
+                                    N2Classes.Notification.error(n2_('This video url is not supported!'));
                                 
                                 } else {
-                                    N2Classes.Notification.error('This video url is not supported!');
+                                    N2Classes.Notification.error(n2_('This video url is not supported!'));
                                 }
                             }, this)));
                         }
@@ -3401,6 +3419,12 @@ N2D('EditorAbstract', function ($, undefined) {
         this.sliderElementID = sliderElementID;
         this.slideContentElementID = slideContentElementID;
 
+        this.readyDeferred.done($.proxy(function () {
+            N2D('SSEditor', $.proxy(function () {
+                return this;
+            }, this));
+        }, this));
+
         this.options = $.extend({
             slideAsFile: 0,
             isUploadDisabled: true,
@@ -3499,6 +3523,7 @@ N2D('EditorSlide', ['EditorAbstract'], function ($, undefined) {
 
         N2Classes.EditorAbstract.prototype.constructor.call(this, sliderElementID, slideContentElementID, $.extend({
             isAddSample: false,
+            sampleSlidesUrl: '',
             slideBackgroundMode: 'fill'
         }, options));
 
@@ -3513,10 +3538,9 @@ N2D('EditorSlide', ['EditorAbstract'], function ($, undefined) {
         this.$slideContentElement = $('#' + this.slideContentElementID);
         this.slideStartValue = this.$slideContentElement.val();
 
-        N2R('#' + this.sliderElementID, $.proxy(function () {
-
+        N2R('#' + this.sliderElementID, $.proxy(function ($, slider) {
             /** @type {SmartSliderAbstract} */
-            this.frontend = window[this.sliderElementID];
+            this.frontend = slider;
             this.frontend.editor = this;
             nextend.pre = 'div#' + this.frontend.elementID + ' ';
 
@@ -3559,7 +3583,7 @@ N2D('EditorSlide', ['EditorAbstract'], function ($, undefined) {
             '#slidebackgroundVideoMp4',
             '#slidebackgroundColor',
             '#slidebackgroundColorEnd',
-            '#linkslidelink-1',
+            '#slidehref',
             '#layergenerator-visible',
             '#layergroup-generator-visible'
         ]);
@@ -3660,7 +3684,7 @@ N2D('EditorSlide', ['EditorAbstract'], function ($, undefined) {
         nextend.askToSave = true;
         $('#smartslider-form').trigger('saved');
 
-        $('.n2-ss-edit-slide-top-details .n2-h1').html($('#slidetitle').val());
+        $('.n2-ss-edit-slide-top-details .n2-h1').text($('#slidetitle').val());
     };
 
     EditorSlide.prototype.prepareForm = function () {
@@ -3736,13 +3760,10 @@ N2D('EditorSlide', ['EditorAbstract'], function ($, undefined) {
     };
 
     EditorSlide.prototype.startSampleSlides = function () {
-        var sampleSlidesUrl = 'https://smartslider3.com/slides/' + window.N2SS3VERSION + '/free/';
-    
 
         var that = this,
-            eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-
-        var $iframe = $('<iframe src="' + sampleSlidesUrl + '"></iframe>').prependTo('.n2-ss-sample-slides-container'),
+            eventMethod = window.addEventListener ? "addEventListener" : "attachEvent",
+            $iframe = $('<iframe src="' + this.options.sampleSlidesUrl + '"></iframe>').prependTo('.n2-ss-sample-slides-container'),
             iframe = $iframe[0];
 
         $('html, body').scrollTop($iframe.offset().top - $('#wpadminbar').height());
@@ -4318,7 +4339,7 @@ N2D('Generator', ['EditorAbstract'], function ($, undefined) {
             }, this));
 
 
-            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Find image') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-findimage"></div><div class="n2-form-element-text n2-text-has-unit n2-border-radius"><div class="n2-text-sub-label n2-h5 n2-uc">' + n2_('Index') + '</div><input type="text" autocomplete="off" style="width: 22px;" class="n2-h5" value="1" id="n2-generator-function-findimage-index"></div></div></div>')
+            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Find image') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-findimage"></div><div class="n2-form-element-text n2-text-has-unit n2-border-radius"><div class="n2-text-sub-label n2-h5 n2-uc">' + n2_('Index') + '</div><input type="text" autocomplete="off" style="width: 22px;" class="n2-h5" value="1" id="n2-generator-function-findimage-index"></div></div></div>')
                 .appendTo(functionsContainer);
 
             var findImage = functionsContainer.find('#n2-generator-function-findimage');
@@ -4332,7 +4353,7 @@ N2D('Generator', ['EditorAbstract'], function ($, undefined) {
                 updateResult();
             }, this));
 
-            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Find link') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-findlink"></div><div class="n2-form-element-text n2-text-has-unit n2-border-radius"><div class="n2-text-sub-label n2-h5 n2-uc">' + n2_('Index') + '</div><input type="text" autocomplete="off" style="width: 22px;" class="n2-h5" value="1" id="n2-generator-function-findlink-index"></div></div></div>')
+            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Find link') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-findlink"></div><div class="n2-form-element-text n2-text-has-unit n2-border-radius"><div class="n2-text-sub-label n2-h5 n2-uc">' + n2_('Index') + '</div><input type="text" autocomplete="off" style="width: 22px;" class="n2-h5" value="1" id="n2-generator-function-findlink-index"></div></div></div>')
                 .appendTo(functionsContainer);
 
             var findLink = functionsContainer.find('#n2-generator-function-findlink');
@@ -4347,7 +4368,7 @@ N2D('Generator', ['EditorAbstract'], function ($, undefined) {
             }, this));
 
 
-            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Remove links') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-removevarlink"></div></div></div>')
+            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Remove links') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-removevarlink"></div></div></div>')
                 .appendTo(functionsContainer);
 
             var removeVarLink = functionsContainer.find('#n2-generator-function-removevarlink');
@@ -4361,7 +4382,7 @@ N2D('Generator', ['EditorAbstract'], function ($, undefined) {
                 updateResult();
             }, this));
 
-            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Remove line breaks') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-removelinebreaks"></div></div></div>')
+            $('<div class="n2-mixed-group"><div class="n2-mixed-label"><label>' + n2_('Remove line breaks') + '</label></div><div class="n2-mixed-element"><div class="n2-form-element-onoff"><div class="n2-onoff-slider"><div class="n2-onoff-yes"><i class="n2-i n2-i-tick"></i></div><div class="n2-onoff-round"></div><div class="n2-onoff-no"><i class="n2-i n2-i-close"></i></div></div><input type="hidden" autocomplete="off" value="0" id="n2-generator-function-removelinebreaks"></div></div></div>')
                 .appendTo(functionsContainer);
 
             var removelinebreaks = functionsContainer.find('#n2-generator-function-removelinebreaks');
@@ -5550,7 +5571,7 @@ N2D('LayerContainer', function ($, undefined) {
         var layers = this.getSortedLayers();
 
         var layerIndex = $.inArray(layer, layers);
-        if (layerIndex != '-1' && layerIndex < index) {
+        if (layerIndex > -1 && layerIndex < index) {
             // we have to readjust the target index of the layer
             index++;
         }
@@ -5566,7 +5587,7 @@ N2D('LayerContainer', function ($, undefined) {
 
     LayerContainer.prototype.syncLayerRow = function (layer) {
         var relatedLayer,
-            isReversed = (this.allowedPlacementMode == 'absolute');
+            isReversed = (this.allowedPlacementMode === 'absolute');
         if (isReversed) {
             relatedLayer = layer.getRootElement().prevAll('.n2-ss-layer, .n2-ss-layer-group').first().data('layerObject');
         } else {
@@ -6974,6 +6995,8 @@ N2D('FragmentEditor', function ($, undefined) {
                 // If the single layer is already in a group, we just activate that group
                 if (activeLayer.group instanceof N2Classes.Group) {
                     activeLayer.group.activate();
+                } else if (activeLayer instanceof N2Classes.Content || activeLayer instanceof N2Classes.Col) {
+                    // Do nothing for content and Col layers
                 } else {
                     group = new N2Classes.Group(this, this.mainContainer, {}, null);
                     group.create();
@@ -7207,7 +7230,7 @@ N2D('CanvasUserInterface', function ($, undefined) {
             currentLayer = currentLayer.group;
         } while (currentLayer !== this.fragmentEditor.mainContainer);
 
-        if (top < scrollTop || top > scrollTop + this.paneLeft.height() - 40) {
+        if (top < scrollTop || top > scrollTop + this.paneLeft.height() - 32) {
             this.paneLeft.scrollTop(top);
             this.paneRight.scrollTop(top);
         }
@@ -7221,11 +7244,11 @@ N2D('CanvasUserInterface', function ($, undefined) {
         var cb = $.proxy(function (e) {
             var top = this.paneLeft.scrollTop();
             if (e.originalEvent.deltaY > 0) {
-                top += 40;
+                top += 32;
             } else {
-                top -= 40;
+                top -= 32;
             }
-            top = Math.round(top / 40) * 40;
+            top = Math.round(top / 32) * 32;
             this.paneLeft.scrollTop(top);
             this.paneRight.scrollTop(top);
             e.preventDefault();
@@ -7277,7 +7300,7 @@ N2D('CanvasUserInterface', function ($, undefined) {
     };
 
     CanvasUserInterface.prototype.__calculateDesiredHeight = function (h) {
-        return Math.round(Math.min(Math.max(40, h), (window.innerHeight || document.documentElement.clientHeight) / 2) / 40) * 40 + 48;
+        return Math.round(Math.min(Math.max(32, h), (window.innerHeight || document.documentElement.clientHeight) / 2) / 32) * 32 + 48;
     };
 
 
@@ -8309,7 +8332,7 @@ N2D('CanvasSettings', function ($, undefined) {
             editor.toggleClass('n2-ss-lock-guides', value == 1);
         }, this));
 
-        this._addAction('Clear Guides', $.proxy(function () {
+        this._addAction(n2_('Clear Guides'), $.proxy(function () {
             this.ruler.clearGuides();
         }, this))
     };
@@ -9320,7 +9343,7 @@ N2D('PlacementAbsolute', ['PlacementAbstract'], function ($, undefined) {
         var value = this.layer.getProperty('align');
         this.$layer.attr('data-align', value);
 
-        if (from != 'history' && value != oldValue) {
+        if (from !== 'history' && value != oldValue) {
             this.setPositionLeft(this.$layer.position().left);
         }
     };
@@ -9328,7 +9351,7 @@ N2D('PlacementAbsolute', ['PlacementAbstract'], function ($, undefined) {
         var value = this.layer.getProperty('valign');
         this.$layer.attr('data-valign', value);
 
-        if (from != 'history' && value != oldValue) {
+        if (from !== 'history' && value != oldValue) {
             this.setPositionTop(this.$layer.position().top);
         }
     };
@@ -10575,7 +10598,7 @@ N2D('ItemManager', function ($, undefined) {
         if (this.fragmentEditor.editor.generator.isDynamicSlide() && field.connectedField && field.connectedField instanceof N2Classes.FormElementImage) {
 
         } else {
-            this.activeForm.fields.eq(0).data('field').focus(typeof context !== 'undefined' && context);
+            field.focus(typeof context !== 'undefined' && context);
         }
     };
 
@@ -10657,7 +10680,7 @@ N2D('ItemManager', function ($, undefined) {
     ItemManager.prototype.createLayerItem = function (group, data, interaction, props) {
         group = group || this.fragmentEditor.mainContainer.getActiveGroup();
         var type = data.item;
-        if (type == 'structure') {
+        if (type === 'structure') {
             var layer = new N2Classes.Row(this.fragmentEditor, group, {});
             layer.create(data.sstype);
             layer.hightlightStructure();
@@ -10666,10 +10689,20 @@ N2D('ItemManager', function ($, undefined) {
                 layer: layer
             };
         } else {
-
             var itemData = this.getItemForm(type),
-                $item = $('<div></div>').attr('data-item', type)
-                    .data('itemvalues', $.extend(true, {}, itemData.values, this.getLastValues(type)))
+                extraValues = {};
+            switch (type) {
+                case 'image':
+                    if (group.container.allowedPlacementMode === 'absolute') {
+                        extraValues.size = '100%|*|auto';
+                    } else {
+                        extraValues.size = 'auto|*|auto';
+                    }
+                    break;
+            }
+
+            var $item = $('<div></div>').attr('data-item', type)
+                    .data('itemvalues', $.extend(true, {}, itemData.values, this.getLastValues(type), extraValues))
                     .addClass('n2-ss-item n2-ss-item-' + type),
                 layer = this._createLayer($item, group, $.extend($('.n2-ss-core-item-' + type).data('layerproperties'), props));
 
@@ -11085,7 +11118,8 @@ N2D('Col', ['ContentAbstract'], function ($, undefined) {
         N2Classes.ContentAbstract.prototype.addProperties.call(this, $layer);
 
         this.createProperty('colwidth', '1', $layer);
-        this.createProperty('link', '#|*|_self', $layer);
+        this.createProperty('href', '', $layer);
+        this.createProperty('href-target', '_self', $layer);
 
         this.createAdvancedProperty(new N2Classes.LayerAdvancedProperty('borderradius', 0, {
             "-hover": undefined
@@ -11214,8 +11248,9 @@ N2D('Col', ['ContentAbstract'], function ($, undefined) {
         return this.widthPercentage;
     };
 
-    Col.prototype._synclink = function () {
-    };
+    Col.prototype._synchref =
+        Col.prototype['_synchref-target'] = function () {
+        };
 
     Col.prototype._syncborderradius =
         Col.prototype['_syncborderradius-hover'] = function () {
@@ -11547,6 +11582,7 @@ N2D('ComponentAbstract', dependencies, function ($, undefined) {
         this.addProperties($layer);
 
         this.layer = $layer.data('layerObject', this);
+
         this.layer.triggerHandler('layerStarted', [this]);
 
         this.$.triggerHandler('load');
@@ -12312,7 +12348,7 @@ N2D('ComponentAbstract', dependencies, function ($, undefined) {
         if (this._lastClasses !== false) {
             this.layer.removeClass(this._lastClasses);
         }
-        var value = this.getProperty('class');
+        var value = this.fragmentEditor.editor.generator.fill(this.getProperty('class'));
 
         if (value && value != '') {
             this.layer.addClass(value);
@@ -12384,7 +12420,7 @@ N2D('ComponentAbstract', dependencies, function ($, undefined) {
 
     ComponentAbstract.prototype.onCanvasUpdate = function (originalIndex, targetGroup, newIndex) {
 
-        if (this.group == targetGroup) {
+        if (this.group === targetGroup) {
 
             if (originalIndex != newIndex) {
                 this.userIndexChange(originalIndex, newIndex)
@@ -13250,7 +13286,9 @@ N2D('Layer', ['ComponentAbstract'], function ($, undefined) {
 
     /**
      *
-     * @param item {optional}
+     * @param e if provided, the layerWindow will show
+     * @param context
+     * @param preventExitFromSelection
      */
     Layer.prototype.activate = function (e, context, preventExitFromSelection) {
 
@@ -13981,7 +14019,8 @@ N2D('Row', ['LayerContainer', 'ComponentAbstract'], function ($, undefined) {
         N2Classes.ComponentAbstract.prototype.addProperties.call(this, $layer);
 
 
-        this.createProperty('link', '#|*|_self', $layer);
+        this.createProperty('href', '', $layer);
+        this.createProperty('href-target', '_self', $layer);
 
         this.createProperty('bgimage', '', $layer);
         this.createProperty('bgimagex', 50, $layer);
@@ -14472,7 +14511,7 @@ N2D('Row', ['LayerContainer', 'ComponentAbstract'], function ($, undefined) {
         }
 
         this.$rowInner.css({
-            width: 'calc(100% + ' + gutterValue + 'px)',
+            width: 'calc(100% + ' + (gutterValue + 1) + 'px)',
             margin: -sideGutterValue + 'px'
         });
 
@@ -14527,7 +14566,7 @@ N2D('Row', ['LayerContainer', 'ComponentAbstract'], function ($, undefined) {
                         sumWidth += flexLine[j].getWidthPercentage();
                     }
                     for (j = 0; j < flexLine.length; j++) {
-                        flexLine[j].layer.css('width', 'calc(' + (flexLine[j].getWidthPercentage() / sumWidth * 100) + '% - ' + gutterValue + 'px)');
+                        flexLine[j].layer.css('width', 'calc(' + (flexLine[j].getWidthPercentage() / sumWidth * 100) + '% - ' + (n2const.isIE ? gutterValue + 1 : gutterValue) + 'px)');
                     }
                 }
             } else {
@@ -14605,8 +14644,9 @@ N2D('Row', ['LayerContainer', 'ComponentAbstract'], function ($, undefined) {
         return '';
     };
 
-    Row.prototype._synclink = function () {
-    };
+    Row.prototype._synchref =
+        Row.prototype['_synchref-target'] = function () {
+        };
 
     Row.prototype._syncbgimage =
         Row.prototype._syncbgimagex =
@@ -14827,7 +14867,7 @@ N2D('Row', ['LayerContainer', 'ComponentAbstract'], function ($, undefined) {
                     sumWidth += flexLine[j]._tempWidth;
                 }
                 for (j = 0; j < flexLine.length; j++) {
-                    flexLine[j].layer.css('width', 'calc(' + (flexLine[j]._tempWidth / sumWidth * 100) + '% - ' + gutterValue + 'px)');
+                    flexLine[j].layer.css('width', 'calc(' + (flexLine[j]._tempWidth / sumWidth * 100) + '% - ' + (n2const.isIE ? gutterValue + 1 : gutterValue) + 'px)');
                 }
             }
         } else {
@@ -15009,6 +15049,8 @@ N2D('ComponentSettings', function ($, undefined) {
                 stop: $('#layeronstop')
             }
         };
+        fragmentEditor.editor.generator.registerField(this.forms.global.class);
+
         this.fragmentEditor = fragmentEditor;
 
         var availableDeviceModes = fragmentEditor.editor.getAvailableDeviceModes();
@@ -15075,7 +15117,8 @@ N2D('ComponentSettings', function ($, undefined) {
             stretch: $('#layerrow-stretch'),
             wrapafter: $('#layerrow-wrap-after'),
             inneralign: $('#layerrow-inneralign'),
-            link: $('#layerrow-link'),
+            href: $('#layerrow-href'),
+            'href-target': $('#layerrow-href-target'),
             bgimage: $('#layerrow-background-image'),
             bgimagex: $('#layerrow-background-focus-x'),
             bgimagey: $('#layerrow-background-focus-y'),
@@ -15088,6 +15131,7 @@ N2D('ComponentSettings', function ($, undefined) {
             boxshadow: $('#layerrow-boxshadow'),
             opened: $('#layerrow-opened')
         };
+        fragmentEditor.editor.generator.registerField(this.forms.component.row.href);
         fragmentEditor.editor.generator.registerField(this.forms.component.row.bgimage);
 
         this.forms.component.col = {
@@ -15095,7 +15139,8 @@ N2D('ComponentSettings', function ($, undefined) {
             padding: $('#layercol-padding'),
             inneralign: $('#layercol-inneralign'),
             verticalalign: $('#layercol-verticalalign'),
-            link: $('#layercol-link'),
+            href: $('#layercol-href'),
+            'href-target': $('#layercol-href-target'),
             bgimage: $('#layercol-background-image'),
             bgimagex: $('#layercol-background-focus-x'),
             bgimagey: $('#layercol-background-focus-y'),
@@ -15113,7 +15158,7 @@ N2D('ComponentSettings', function ($, undefined) {
             colwidth: $('#layercol-colwidth'),
             order: $('#layercol-order')
         };
-        fragmentEditor.editor.generator.registerField($('#col-linklayerlink-1'));
+        fragmentEditor.editor.generator.registerField(this.forms.component.col.href);
         fragmentEditor.editor.generator.registerField(this.forms.component.col.bgimage);
     }
 
@@ -16611,7 +16656,7 @@ N2D('nUILayerList', ['nUIWidgetBase'], function ($, undefined) {
             newIndex = -1;
 
 
-        if (this.context.targetContainer.layers.length == 0) {
+        if (this.context.targetContainer.layers.length === 0) {
             newIndex = 0;
         } else {
             var nextLayer = false,
@@ -16625,10 +16670,10 @@ N2D('nUILayerList', ['nUIWidgetBase'], function ($, undefined) {
                 prevLayer = this.context.targetContainer.layers[targetIndex - 1].layer;
             }
 
-            if (nextLayer == itemOptions.layer || prevLayer == itemOptions.layer) {
+            if (nextLayer === itemOptions.layer || prevLayer === itemOptions.layer) {
                 newIndex = -1;
             } else {
-                if (targetContainer.layer.container.allowedPlacementMode == 'absolute') {
+                if (targetContainer.layer.container.allowedPlacementMode === 'absolute') {
                     if (nextLayer) {
                         //itemOptions.layer.layer.detach();
                         newIndex = nextLayer.getIndex() + 1;
@@ -16648,10 +16693,10 @@ N2D('nUILayerList', ['nUIWidgetBase'], function ($, undefined) {
             }
         }
         if (newIndex >= 0) {
-            if (itemOptions.layer.type == 'col') {
-                if (newIndex > originalIndex) {
-                    newIndex--;
-                }
+            if (newIndex > originalIndex) {
+                newIndex--;
+            }
+            if (itemOptions.layer.type === 'col') {
                 targetContainer.layer.moveCol(originalIndex, newIndex);
             } else {
                 targetContainer.layer.container.insertLayerAt(itemOptions.layer, newIndex);
@@ -16746,11 +16791,11 @@ N2D('ItemButton', ['Item'], function ($, undefined) {
     ItemButton.needSize = false;
 
     ItemButton.prototype.added = function () {
-        this.needFill = ['content'];
+        this.needFill = ['content', 'class'];
         this.addedFont('link', 'font');
         this.addedStyle('button', 'style');
 
-        this.generator.registerFields(['#item_buttoncontent', '#linkitem_buttonlink-1']);
+        this.generator.registerFields(['#item_buttoncontent', '#item_buttonhref', '#item_buttonclass']);
     };
 
     ItemButton.prototype.getName = function (data) {
@@ -16758,10 +16803,6 @@ N2D('ItemButton', ['Item'], function ($, undefined) {
     };
 
     ItemButton.prototype.parseAll = function (data) {
-        var link = data.link.split('|*|');
-        data.url = link[0];
-        data.target = link[1];
-        delete data.link;
 
         data.classes = '';
 
@@ -16807,19 +16848,19 @@ N2D('ItemHeading', ['Item'], function ($, undefined) {
 
     ItemHeading.prototype.getDefault = function () {
         return {
-            link: '#|*|_self',
+            href: '',
             font: '',
             style: ''
         }
     };
 
     ItemHeading.prototype.added = function () {
-        this.needFill = ['heading'];
+        this.needFill = ['heading', 'class'];
 
         this.addedFont('hover', 'font');
         this.addedStyle('heading', 'style');
 
-        this.generator.registerFields(['#item_headingheading', '#linkitem_headinglink-1']);
+        this.generator.registerFields(['#item_headingheading', '#item_headinghref', '#item_headingclass']);
     };
 
     ItemHeading.prototype.getName = function (data) {
@@ -16828,12 +16869,6 @@ N2D('ItemHeading', ['Item'], function ($, undefined) {
 
     ItemHeading.prototype.parseAll = function (data) {
         data.uid = $.fn.uid();
-
-        var link = data.link.split('|*|');
-        data.url = link[0];
-        data.target = link[1];
-        delete data.link;
-
 
         if (parseInt(data.fullwidth)) {
             data.display = 'block';
@@ -16850,7 +16885,7 @@ N2D('ItemHeading', ['Item'], function ($, undefined) {
 
         N2Classes.Item.prototype.parseAll.apply(this, arguments);
 
-        if (data['url'] == '#' || data['url'] == '') {
+        if (data['href'] == '#' || data['href'] == '') {
             data['afontclass'] = '';
             data['astyleclass'] = '';
         } else {
@@ -16869,7 +16904,7 @@ N2D('ItemHeading', ['Item'], function ($, undefined) {
                     display: data.display
                 }).appendTo($node);
 
-        if (data['url'] == '#' || data['url'] == '') {
+        if (data['href'] == '#' || data['href'] == '') {
             $heading.html(data.heading);
         } else {
             $heading.append($('<a style="display:' + data.display + ';" href="#" class="' + data.afontclass + ' ' + data.astyleclass + ' n2-ow" onclick="return false;">' + data.heading + '</a>'));
@@ -16902,15 +16937,15 @@ N2D('ItemImage', ['Item'], function ($, undefined) {
     ItemImage.prototype.getDefault = function () {
         return {
             size: 'auto|*|auto',
-            link: '#|*|_self',
+            href: '',
             style: ''
         }
     };
 
     ItemImage.prototype.added = function () {
-        this.needFill = ['image'];
+        this.needFill = ['image', 'cssclass'];
 
-        this.generator.registerFields(['#item_imageimage', '#item_imagealt', '#item_imagetitle', '#linkitem_imagelink-1']);
+        this.generator.registerFields(['#item_imageimage', '#item_imagealt', '#item_imagetitle', '#item_imagehref', '#item_imagecssclass']);
     };
 
     ItemImage.prototype.getName = function (data) {
@@ -16922,11 +16957,6 @@ N2D('ItemImage', ['Item'], function ($, undefined) {
         data.width = size[0];
         data.height = size[1];
         delete data.size;
-
-        var link = data.link.split('|*|');
-        data.url = link[0];
-        data.target = link[1];
-        delete data.link;
 
         N2Classes.Item.prototype.parseAll.apply(this, arguments);
 
@@ -16955,7 +16985,7 @@ N2D('ItemImage', ['Item'], function ($, undefined) {
         var $node = $('<div class="' + data.styleclass + ' n2-ss-img-wrapper n2-ow" style="overflow:hidden"></div>'),
             $a = $node;
 
-        if (data['url'] != '#' && data['url'] != '') {
+        if (data['href'] != '#' && data['href'] != '') {
             $a = $('<a href="#" class="n2-ow" onclick="return false;" style="display: block;background: none !important;"></a>').appendTo($node);
         }
 
@@ -17218,10 +17248,10 @@ N2D('ItemVimeo', ['Item'], function ($, undefined) {
                 N2Classes.AjaxHelper.getJSON('https://vimeo.com/api/v2/video/' + encodeURI(videoCode) + '.json').done($.proxy(function (data) {
                     $('#item_vimeoimage').val(data[0].thumbnail_large).trigger('change');
                 }, this)).fail(function (data) {
-                    N2Classes.Notification.error(data.responseText);
+                    N2Classes.Notification.error('Video not found or private.');
                 });
             } else {
-                N2Classes.Notification.error('The provided URL does not match any known Vimeo url or code!');
+                N2Classes.Notification.error('The provided URL does not match any known Vimeo url or code.');
             }
         }
     };
@@ -17236,7 +17266,7 @@ N2D('ItemVimeo', ['Item'], function ($, undefined) {
             backgroundSize: 'cover'
         });
 
-        $('<div class="n2-video-play n2-ow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><g fill="none" fill-rule="evenodd"><circle cx="24" cy="24" r="24" fill="#000" opacity=".6"/><path fill="#FFF" d="M19.8 32c-.124 0-.247-.028-.36-.08-.264-.116-.436-.375-.44-.664V16.744c.005-.29.176-.55.44-.666.273-.126.592-.1.84.07l10.4 7.257c.2.132.32.355.32.595s-.12.463-.32.595l-10.4 7.256c-.14.1-.31.15-.48.15z"/></g></svg></div>')
+        $('<div class="n2-ss-layer-player n2-ss-layer-player-cover"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyNCIgZmlsbD0iIzAwMCIgb3BhY2l0eT0iLjYiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTkuOCAzMmMtLjEyNCAwLS4yNDctLjAyOC0uMzYtLjA4LS4yNjQtLjExNi0uNDM2LS4zNzUtLjQ0LS42NjRWMTYuNzQ0Yy4wMDUtLjI5LjE3Ni0uNTUuNDQtLjY2Ni4yNzMtLjEyNi41OTItLjEuODQuMDdsMTAuNCA3LjI1N2MuMi4xMzIuMzIuMzU1LjMyLjU5NXMtLjEyLjQ2My0uMzIuNTk1bC0xMC40IDcuMjU2Yy0uMTQuMS0uMzEuMTUtLjQ4LjE1eiIvPjwvZz48L3N2Zz4=" /></div>')
             .appendTo($node);
 
         this.$item.append($node);
@@ -17318,13 +17348,6 @@ N2D('ItemYoutube', ['Item'], function ($, undefined) {
         return true;
     };
 
-    ItemYoutube.prototype._render = function (node, data) {
-        if (!parseInt(data.playbutton)) {
-            node.find('.n2-video-play').remove();
-        }
-        return node;
-    };
-
     ItemYoutube.prototype._render = function (data) {
 
         var $node = $('<div class="n2-ow"></div>').css({
@@ -17336,7 +17359,7 @@ N2D('ItemYoutube', ['Item'], function ($, undefined) {
         });
 
         if (parseInt(data.playbutton)) {
-            $('<div class="n2-video-play n2-ow"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><g fill="none" fill-rule="evenodd"><circle cx="24" cy="24" r="24" fill="#000" opacity=".6"/><path fill="#FFF" d="M19.8 32c-.124 0-.247-.028-.36-.08-.264-.116-.436-.375-.44-.664V16.744c.005-.29.176-.55.44-.666.273-.126.592-.1.84.07l10.4 7.257c.2.132.32.355.32.595s-.12.463-.32.595l-10.4 7.256c-.14.1-.31.15-.48.15z"/></g></svg></div>')
+            $('<div class="n2-ss-layer-player n2-ss-layer-player-cover"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSIyNCIgZmlsbD0iIzAwMCIgb3BhY2l0eT0iLjYiLz48cGF0aCBmaWxsPSIjRkZGIiBkPSJNMTkuOCAzMmMtLjEyNCAwLS4yNDctLjAyOC0uMzYtLjA4LS4yNjQtLjExNi0uNDM2LS4zNzUtLjQ0LS42NjRWMTYuNzQ0Yy4wMDUtLjI5LjE3Ni0uNTUuNDQtLjY2Ni4yNzMtLjEyNi41OTItLjEuODQuMDdsMTAuNCA3LjI1N2MuMi4xMzIuMzIuMzU1LjMyLjU5NXMtLjEyLjQ2My0uMzIuNTk1bC0xMC40IDcuMjU2Yy0uMTQuMS0uMzEuMTUtLjQ4LjE1eiIvPjwvZz48L3N2Zz4=" /></div>')
                 .appendTo($node);
         }
 

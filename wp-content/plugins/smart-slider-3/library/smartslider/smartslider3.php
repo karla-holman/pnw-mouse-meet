@@ -2,7 +2,11 @@
 
 class N2SS3 {
 
-    public static $version = '3.3.3';
+    public static $version = '3.3.11';
+
+    public static $revision = '2911';
+
+    public static $completeVersion;
 
     public static $plan = 'pro';
 
@@ -58,11 +62,39 @@ class N2SS3 {
         return 'https://smartslider3.com/pro-features/?' . http_build_query($params);
     }
 
+    public static function getSampleSlidesUrl($params = array()) {
+        self::applySource($params);
+        return 'https://smartslider3.com/slides/' . self::$version . '/free/?' . http_build_query($params);
+    
+    }
+
+    public static function getActivationUrl($params = array()) {
+        self::applySource($params);
+
+        return 'https://secure.nextendweb.com/activate/?' . http_build_query($params);
+    }
+
     public static function getUpdateInfo() {
         return array(
             'name'   => 'smartslider3',
             'plugin' => 'nextend-smart-slider3-pro/nextend-smart-slider3-pro.php'
         );
+    }
+
+    public static function getDomain() {
+        $domain = parse_url(N2Uri::getFullUri(), PHP_URL_HOST);
+        if (empty($domain)) {
+            if (isset($_SERVER['HTTP_HOST'])) {
+
+                $domain = $_SERVER['HTTP_HOST'];
+            }
+            if (empty($domain) && isset($_SERVER['SERVER_NAME'])) {
+
+                $domain = $_SERVER['SERVER_NAME'];
+            }
+        }
+
+        return $domain;
     }
 
     public static function api($_posts, $returnUrl = false) {
@@ -88,16 +120,16 @@ class N2SS3 {
                 N2Message::error('Premium sliders are available in PRO version only!');
                 break;
             case 'ASSET_VERSION':
-                N2Message::error('Please update your Smart Slider to the latest version to be able to import the selected sample slider!');
+                N2Message::error('Please <a href="https://smartslider3.helpscoutdocs.com/article/414-update" target="_blank">update</a> your Smart Slider to the latest version to be able to import the selected sample slider!');
                 break;
             case 'LICENSE_EXPIRED':
-                N2Message::error('Your license key expired!');
+                N2Message::error('Your license has <a href="https://smartslider3.helpscoutdocs.com/article/1101-activation#nokey" target="_blank">expired</a>! Get new one: <a href="https://smartslider3.com/pricing" target="_blank">smartslider3.com</a>.');
                 break;
             case 'DOMAIN_REGISTER_FAILED':
-                N2Message::error('Your license key authorized on a different domain! You can move it to this domain like <a href="https://smartslider3.helpscoutdocs.com/article/1101-license#move" target="_blank">this</a>, or get new one: <a href="https://smartslider3.com/pricing" target="_blank">smartslider3.com</a>');
+                N2Message::error('Smart Slider 3 PRO license is not registered on the current domain. Please activate this domain by following <a href="https://smartslider3.helpscoutdocs.com/article/1101-activation" target="_blank">the license activation documentation</a>.');
                 break;
             case 'LICENSE_INVALID':
-                N2Message::error('Your license key invalid, please enter again!');
+                N2Message::error('Smart Slider 3 PRO license is not registered on the current domain. Please activate this domain by following <a href="https://smartslider3.helpscoutdocs.com/article/1101-activation" target="_blank">the license activation documentation</a>.');
                 N2SmartsliderLicenseModel::getInstance()
                                          ->setKey('');
 
@@ -109,19 +141,19 @@ class N2SS3 {
                 N2Message::error('Update error, please update manually!');
                 break;
             case 'PLATFORM_NOT_ALLOWED':
-                N2Message::error(sprintf('Your license key is not valid for Smart Slider3 - %s!', N2Platform::getPlatformName()));
+                N2Message::error(sprintf('Your license is not valid for Smart Slider3 - %s!', N2Platform::getPlatformName()));
                 break;
             case 'ERROR_HANDLED':
                 break;
             case '503':
-                N2Message::error('Licensing server is down, try again later!');
+                N2Message::error('Licensing server is down. Try: Global Settings -> Framework settings -> Secondary server -> On');
                 break;
             case null:
-                N2Message::error('Licensing server not reachable, try again later!');
+                N2Message::error('Licensing server not reachable. Try: Global Settings -> Framework settings -> Secondary server -> On');
                 break;
             default:
                 N2Message::error('Debug: ' . $status);
-                N2Message::error('Licensing server not reachable, try again later!');
+                N2Message::error('Licensing server not reachable. Try: Global Settings -> Framework settings -> Secondary server -> On');
                 break;
         }
 
@@ -137,4 +169,6 @@ class N2SS3 {
     public static function initLicense() {
     }
 }
+
+N2SS3::$completeVersion = N2SS3::$version . 'r' . N2SS3::$revision;
 N2SS3::$plan = 'free';
