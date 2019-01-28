@@ -299,12 +299,18 @@ footer.footer {
   // z-index: -100;
   &.primary {
     background-color: $brand-primary;
+    h2, h3, h4 {
+      color: #fff;
+    }
   }
   &.primary-light {
     background-color: $brand-primary-light;
   }
   &.success {
     background-color: $brand-success;
+    h2, h3, h4 {
+      color: #fff;
+    }
   }
   min-height: 300px;
   position: relative;

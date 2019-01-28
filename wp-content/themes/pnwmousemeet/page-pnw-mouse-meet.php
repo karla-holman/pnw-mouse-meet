@@ -30,11 +30,12 @@
 
   <!-- Handle Hero -->
   <?php if( $upcoming_query->have_posts() ) : while( $upcoming_query->have_posts() ) : $upcoming_query->the_post(); ?>
-    <div class="hero full"<?php echo(has_post_thumbnail() ? ' style="background-image: url(' . get_the_post_thumbnail_url() . ')"' : ''); ?>>
+    <div class="hero full">
       <div class="container">
         <div class="text-overlay col-md-5">
           <div class="content">
-            <h1><?php the_title(); ?> Pacific Northwest Mouse Meet!</h1>
+            <h1>Pacific Northwest Mouse Meet</h1>
+            <h5>The <?php the_title(); ?> PNWMM - Coming Soon!</h5>
             <p><?php the_field('description'); ?></p>
           </div>
           <div class="hero-buttons">

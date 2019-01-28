@@ -52,12 +52,14 @@
           <?php if($past) : ?>
             <a href="#event-photos">Event Photos</a>
             <a href="#guest-speakers">Guest Speakers</a>
+            <a href="#mini-meets">Guest Speakers</a>
             <?php if( have_rows('resources') ): ?>
               <a href="#resources">Videos & More</a>
             <?php endif; ?>
           <?php else : ?>
             <a href="#event-location">Event Location</a>
             <a href="#guest-speakers">Guest Speakers</a>
+            <a href="#mini-meets">Guest Speakers</a>
             <a href="#things-to-do">Things to Do</a>
             <a href="#mouse-meet-info">Mouse Meet Info</a>
             <a href="#event-hotel">Hotel Information</a>
@@ -215,6 +217,36 @@
         </div><!-- Row -->
       </div><!-- Container -->
     </div> <!-- End Speakers -->
+
+    <!-- Related Mini Meets -->
+    <?php if( have_rows('mini_meets') ): ?>
+    <a name="mini-meets"></a>
+    <div class="color-background primary">
+      <div class="container page-section align-center">
+        <div class="row intro-paragraph">
+          <div class="col-md-12">
+            <h2>Other Related Events</h2>
+          </div>
+        </div>
+        <div class="row">
+          <?php while ( have_rows('mini_meets') ) : ?>
+            <?php $meet_up = get_post(the_row()); ?>
+            <?php $meet_up_image = wp_get_attachment_image_src( get_post_thumbnail_id( $meet_up->ID ), 'single-post-thumbnail' ); ?>
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $meet_up_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title"><?php echo get_the_title($meet_up); ?></h5>
+                  <p class="card-text"><?php echo $meet_up->description; ?></p>
+                  <a href="<?php the_permalink($meet_up->ID); ?>" class="btn btn-info">Learn More</a>
+                </div>
+              </div>
+            </div>
+          <?php endwhile; ?>
+        </div><!-- Row -->
+      </div><!-- Container -->
+    </div> <!-- End Meet Ups -->
+    <?php endif; ?>
 
     <!-- Things to Do -->
     <a name="things-to-do"></a>
