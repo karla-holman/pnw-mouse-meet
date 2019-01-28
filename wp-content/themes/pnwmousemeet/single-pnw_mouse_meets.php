@@ -8,6 +8,7 @@
     <?php $date = get_field('event_date'); ?>
     <?php $past = $date && $date < date('Ymd'); ?>
     <?php $date_object = new DateTime($date); ?>
+    <?php $ticket_info = get_field('ticket_info'); ?>
     <div class="hero full"<?php echo(has_post_thumbnail() ? ' style="background-image: url(' . get_the_post_thumbnail_url() . ')"' : ''); ?>>
       <div class="container">
         <div class="row">
@@ -21,10 +22,10 @@
               <p><i class="fa fa-map-marker"></i> <a href="<?php echo the_permalink(get_field('location')->ID) ?>"><?php echo get_the_title(get_field('location')) ?></a></p>
             </div>
             <div class="hero-buttons">
-              <?php if ( $past || !get_field('ticket_link') ) : ?>
+              <?php if ( $past || !$ticket_info ) : ?>
 
               <?php else : ?>
-                <a class="btn btn-lg btn-info sparkley" href="<?php the_field('ticket_link') ?>" target="_blank">Get Tickets!</a>
+                <a class="btn btn-lg btn-info sparkley" href="#get-tickets">Get Tickets!</a>
               <?php endif; ?>
             </div>
           </div>
@@ -51,8 +52,9 @@
           <?php if($past) : ?>
             <a href="#event-photos">Event Photos</a>
             <a href="#guest-speakers">Guest Speakers</a>
-            <a href="#guest-responses">Guest Responses</a>
-            <a href="#resources">Videos & More</a>
+            <?php if( have_rows('resources') ): ?>
+              <a href="#resources">Videos & More</a>
+            <?php endif; ?>
           <?php else : ?>
             <a href="#event-location">Event Location</a>
             <a href="#guest-speakers">Guest Speakers</a>
@@ -64,7 +66,57 @@
       </div>
     </div>
 
+
+    <!-- The Content -->
+    <?php if( get_the_content() ): ?>
+      <div class="color-background success">
+        <div class="container page-section">
+          <div class="row">
+            <div class="card mouse-meet">
+              <div class="card-body">
+                <?php the_content() ?>
+              </div>
+            </div>
+          </div><!-- row -->
+        </div>
+      </div>
+    <?php endif; ?>
+
+
     <?php if(!$past) : ?>
+      <!-- Tickets -->
+      <a name="get-tickets"></a>
+      <?php if( $ticket_info['ticket_text'] || $ticket_info['ticket_code'] ): ?>
+        <div class="container page-section">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="card mouse-meet">
+                <div class="card-header">
+                  <div class="sparkle-side"></div>
+                  <h1 class="card-title">Ticket Information</h1>
+                </div>
+                <div class="card-body">
+                  <p class="card-text"><?php echo $ticket_info['ticket_text'] ?></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map -->
+            <div class="col-md-4">
+              <div class="card mouse-meet">
+                <div class="card-header">
+                  <div class="sparkle-side"></div>
+                  <h1 class="card-title">Buy Tickets</h1>
+                </div>
+                <div class="card-body">
+                  <p class="card-text"><?php echo $ticket_info['ticket_code'] ?></p>
+                </div>
+              </div>
+            </div>
+          </div><!-- row -->
+        </div>
+      <?php endif; ?>
+
       <!-- Location -->
       <a name="event-location"></a>
       <?php $post_object = get_field('location'); ?>
@@ -101,20 +153,23 @@
         <p><?php esc_html_e( 'Oops! No Location Found.' ); ?></p>
       <?php endif; ?><!-- END Location -->
     <?php else : ?>
+
       <!-- Image Gallery -->
       <?php $past_gallery = get_field('past_gallery'); ?>
-      <a name="event-photos"></a>
-      <div class="container page-section align-center">
-        <div class="row">
-          <div class="col-md-12">
-            <h2>Photos From the Event</h2>
-            <p class="intro_text">Check out some highlights from the event or view more on our SmugMug Gallery!</p>
-            <a href="<?php $past_gallery['external_photo_gallery']; ?>" class="btn btn-info" style="margin-bottom: 40px;" target="_blank">View More</a>
+      <?php if( $past_gallery['external_photo_gallery'] || $past_gallery['photo_gallery'] ): ?>
+        <a name="event-photos"></a>
+        <div class="container page-section align-center">
+          <div class="row">
+            <div class="col-md-12">
+              <h2>Photos From the Event</h2>
+              <p class="intro_text">Check out some highlights from the event or view more on our external gallery!</p>
+              <a href="<?php echo $past_gallery['external_photo_gallery']; ?>" class="btn btn-info" style="margin-bottom: 40px;" target="_blank">View More</a>
 
-            <?php echo $past_gallery['photo_gallery']; ?>
+              <?php echo $past_gallery['photo_gallery']; ?>
+            </div>
           </div>
         </div>
-      </div>
+      <?php endif; ?>
     <?php endif; ?>
 
     <!-- Guest Speakers -->
@@ -146,7 +201,7 @@
               </div>
             <?php endwhile; ?>
           <?php else : ?>
-            <div class="col-md-4 offset-md-4">
+            <div class="col-md-4">
               <div class="card event-card">
                 <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
                 <div class="card-body">
@@ -269,122 +324,51 @@
       <?php endif; ?><!-- END Location -->
     <?php else : ?>
 
-      <!-- Testimonials -->
-      <?php
-        $args = array(
-          'post_type' => 'testimonials',
-          'meta_key' => 'related_event'
-        );
-
-        $testimonial_query = new WP_Query( $args );
-      ?>
-
-      <a name="guest-responses"></a>
-      <div class="testimonial-background">
-        <img class="mountain" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/mountain.svg">
+      <!-- Resources -->
+      <?php if( have_rows('resources') ): ?>
+        <a name="resources"></a>
         <div class="container page-section align-center">
           <div class="row intro-paragraph">
             <div class="col-md-12">
-              <h2>Guest Responses</h2>
+              <h2>Videos & More</h2>
             </div>
           </div>
-
-            <div id="carouselTestimonial" class="carousel slide" data-ride="carousel">
-              <ol class="carousel-indicators">
-                <?php for( $i = 0; $i < $testimonial_query->post_count; $i++ ): ?>
-                  <li data-target="#carouselTestimonial" data-slide-to="0" class="<?php echo ($i == 0 ? 'active' : '') ?>"></li>
-                <?php endfor; ?>
-              </ol>
-              <div class="carousel-inner row w-75 mx-auto">
-                <?php $first_iteration = true; ?>
-                <?php if( $testimonial_query->have_posts() ) : while( $testimonial_query->have_posts() ) : $testimonial_query->the_post(); ?>
-                  <div class="carousel-item <?php echo ($first_iteration ? 'active' : '') ?>">
-                    <?php $first_iteration = false; ?>
-                    <div class="d-block w-100">
-                      <div class="card">
-                        <div class="card-body">
-                          <?php the_content(); ?>
-                        </div>
-                        <div class="card-footer">
-                          <h6><?php the_field('name'); ?></h6>
-                        </div>
+          <div class="row">
+            <!-- Resources -->
+              <?php while ( have_rows('resources') ) : ?>
+                <?php $resource = get_post(the_row()); ?>
+                <?php $resource_image = wp_get_attachment_image_src( get_post_thumbnail_id( $resource->ID ), 'single-post-thumbnail' ); ?>
+                <div class="col-md-4">
+                  <div class="card resource-card">
+                    <?php if($resource->video_embed): ?>
+                      <div class="main-image">
+                        <?php echo $resource->video_embed ?>
                       </div>
-                    </div>
-                  </div>
-                <?php endwhile; else : ?>
-                  <h4>No Quotes Available.</h4>
-                <?php endif; wp_reset_postdata(); ?>
-              </div>
-              <a class="carousel-control-prev" href="#carouselTestimonial" role="button" data-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-              </a>
-              <a class="carousel-control-next" href="#carouselTestimonial" role="button" data-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-              </a>
-            </div>
-          </div>
-
-      </div>
-
-      <!-- Resources -->
-      <a name="resources"></a>
-      <div class="container page-section align-center">
-        <div class="row intro-paragraph">
-          <div class="col-md-12">
-            <h2>Videos & More</h2>
-          </div>
-        </div>
-        <div class="row">
-          <!-- Resources -->
-          <?php if( have_rows('resources') ): ?>
-            <?php while ( have_rows('resources') ) : ?>
-              <?php $resource = get_post(the_row()); ?>
-              <?php $resource_image = wp_get_attachment_image_src( get_post_thumbnail_id( $resource->ID ), 'single-post-thumbnail' ); ?>
-              <div class="col-md-4">
-                <div class="card resource-card">
-                  <?php if($resource->video_embed): ?>
-                    <div class="main-image">
-                      <?php echo $resource->video_embed ?>
-                    </div>
-                  <?php else: ?>
-                    <div class="main-image" style="background-image: url('<?php echo $resource_image[0]; ?>')"></div>
-                  <?php endif; ?>
-                  <div class="card-body">
-                    <!-- Header -->
-                    <?php if($resource->external_link): ?>
-                      <h5 class="card-title"><a href="<?php echo $resource->external_link ?>"><?php echo get_the_title($resource); ?></a></h5>
-                    <?php elseif($resource->file_upload): ?>
-                      <h5 class="card-title"><a target="_blank" href="<?php echo wp_get_attachment_url( $resource->file_upload ) ?>"><?php echo get_the_title($resource); ?></a></h5>
                     <?php else: ?>
-                      <h5 class="card-title"><?php echo get_the_title($resource); ?></h5>
+                      <div class="main-image" style="background-image: url('<?php echo $resource_image[0]; ?>')"></div>
                     <?php endif; ?>
+                    <div class="card-body">
+                      <!-- Header -->
+                      <?php if($resource->external_link): ?>
+                        <h5 class="card-title"><a href="<?php echo $resource->external_link ?>"><?php echo get_the_title($resource); ?></a></h5>
+                      <?php elseif($resource->file_upload): ?>
+                        <h5 class="card-title"><a target="_blank" href="<?php echo wp_get_attachment_url( $resource->file_upload ) ?>"><?php echo get_the_title($resource); ?></a></h5>
+                      <?php else: ?>
+                        <h5 class="card-title"><?php echo get_the_title($resource); ?></h5>
+                      <?php endif; ?>
 
-                    <!-- Content -->
-                    <?php if (get_post_field('post_content', $resource->ID)): ?>
-                      <p><?php echo get_post_field('post_content', $resource->ID);?></p>
-                    <?php endif; ?>
+                      <!-- Content -->
+                      <?php if (get_post_field('post_content', $resource->ID)): ?>
+                        <p><?php echo get_post_field('post_content', $resource->ID);?></p>
+                      <?php endif; ?>
+                    </div>
                   </div>
                 </div>
-              </div>
-            <?php endwhile; ?>
-          <?php else : ?>
-            <div class="col-md-4 offset-md-4">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title">Coming Soon</h5>
-                  <p class="card-text">Guest Speakers will be announced soon.</p>
-                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
-                </div>
-              </div>
-            </div>
-          <?php endif; ?>
-        </div><!-- Row -->
-      </div><!-- Container -->
+              <?php endwhile; ?>
+          </div><!-- Row -->
+        </div><!-- Container -->
+      <?php endif; ?>
     <?php endif; ?>
-
   <?php endwhile; else : ?>
     <p><?php esc_html_e( 'Oops! No Meet Found.' ); ?></p>
   <?php endif; ?>

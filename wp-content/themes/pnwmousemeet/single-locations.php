@@ -23,6 +23,9 @@
               <p><i class="fa fa-map-marker"></i> <?php the_field('street_address'); ?></p>
               <p><i class="fa fa-phone"></i> <?php the_field('phone_number'); ?></p>
               <p><a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a></p>
+              <?php if( get_field('website') ): ?>
+                <p><a href="<?php the_field('website'); ?>">Visit Website</a></p>
+              <?php endif; ?>
             </div>
           </div>
           <div class="card">

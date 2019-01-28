@@ -4,7 +4,7 @@
   <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
 
     <!-- Hero -->
-    <div class="hero full"<?php echo(has_post_thumbnail() ? ' style="background-position: top; background-image: url(' . get_the_post_thumbnail_url() . ')"' : ''); ?>>
+    <div class="hero full"<?php echo(has_post_thumbnail() ? ' style="background-image: url(' . get_the_post_thumbnail_url() . ')"' : ''); ?>>
       <div class="container">
         <div class="text-overlay col-md-5">
           <div class="sparkle"></div>

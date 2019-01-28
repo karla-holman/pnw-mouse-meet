@@ -1,6 +1,7 @@
 //var topofDiv = 40; //gets offset of header
 $( document ).ready(function() {
   var height = $(".secondary-nav").css( "height" );
+  $('.wpforms-container input, .wpforms-container textarea').addClass('form-control');
 
   $('.carousel').carousel();
 

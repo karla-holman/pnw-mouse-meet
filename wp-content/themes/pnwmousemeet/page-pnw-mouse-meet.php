@@ -62,7 +62,7 @@
   <div class="container page-section">
     <div class="row">
       <div class="col-md-6">
-        <h2>What is a Mouse Meet?</h2>
+        <h2><?php the_field('intro_title') ?></h2>
         <?php the_field('intro_text'); ?>
       </div>
       <div class="col-md-6">
@@ -131,7 +131,7 @@
   <div class="container page-section">
     <!-- Introduction -->
     <div class="row intro-paragraph">
-      <div class="col-md-8 offset-md-2">
+      <div class="col-md-8">
         <h2>Past Events</h2>
         <p class="intro">
           We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Hover over a guest to learn more.
