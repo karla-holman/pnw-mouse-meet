@@ -97,7 +97,7 @@
             <img src="<?php the_field('info_icon'); ?>" />
             <h4><?php the_title(); ?></h4>
             <p><?php the_field('info_intro'); ?></p>
-            <a href="<?php the_field('info_link'); ?>" class="btn btn-primary">Learn More</a>
+            <a href="<?php the_permalink(); ?>" class="btn btn-primary">Learn More</a>
           </div>
         <?php endwhile; else : ?>
           <h4>No Information Available.</h4>
