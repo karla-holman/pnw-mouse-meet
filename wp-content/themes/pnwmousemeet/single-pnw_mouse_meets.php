@@ -22,8 +22,8 @@
               <p><i class="fa fa-map-marker"></i> <a href="<?php echo the_permalink(get_field('location')->ID) ?>"><?php echo get_the_title(get_field('location')) ?></a></p>
             </div>
             <div class="hero-buttons">
-              <?php if ( $past || !$ticket_info ) : ?>
-
+              <?php if ( $past || !$ticket_info['ticket_text'] ) : ?>
+                <a class="btn btn-lg btn-info sparkley disabled">Tickets Coming Soon!</a>
               <?php else : ?>
                 <a class="btn btn-lg btn-info sparkley" href="#get-tickets">Get Tickets!</a>
               <?php endif; ?>
@@ -213,6 +213,11 @@
                 </div>
               </div>
             </div>
+            <?php if( get_field('early_link') ): ?>
+              <div class="col-md-4">
+                <a href="<?php the_field('early_link') ?>"><img src="<?php the_field('early_img') ?>" style="max-width: 100%;"></a>
+              </div>
+            <?php endif; ?>
           <?php endif; ?>
         </div><!-- Row -->
       </div><!-- Container -->
