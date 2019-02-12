@@ -52,14 +52,14 @@
           <?php if($past) : ?>
             <a href="#event-photos">Event Photos</a>
             <a href="#guest-speakers">Guest Speakers</a>
-            <a href="#mini-meets">Guest Speakers</a>
+            <a href="#mini-meets">Related Events</a>
             <?php if( have_rows('resources') ): ?>
               <a href="#resources">Videos & More</a>
             <?php endif; ?>
           <?php else : ?>
             <a href="#event-location">Event Location</a>
             <a href="#guest-speakers">Guest Speakers</a>
-            <a href="#mini-meets">Guest Speakers</a>
+            <a href="#mini-meets">Related Events</a>
             <a href="#things-to-do">Things to Do</a>
             <a href="#mouse-meet-info">Mouse Meet Info</a>
             <a href="#event-hotel">Hotel Information</a>

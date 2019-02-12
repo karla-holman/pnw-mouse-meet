@@ -38,7 +38,7 @@ $(function() {
 
 
   // default is varying levels of transparent white sparkles
-  $(".sparkley:first").sparkleh();
+  $(".btn").sparkleh();
 
   // rainbow as a color generates random rainbow colros
   // count determines number of sparkles

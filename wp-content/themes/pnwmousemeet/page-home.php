@@ -70,6 +70,38 @@
    endif;
  ?>
 
+ <?php // Get Mouse Trek Popover
+   $mouse_trek_html = "";
+   $today = date('Ymd');
+   $args = array(
+     'post_type' => 'pnw_mouse_treks',
+     'meta_key' => 'event_date',
+     'meta_query' => array(
+         array(
+             'key' => 'event_date',
+             'value' => $today,
+             'compare' => '>='
+         )
+     ),
+     'orderby' => 'meta_value',
+     'order' => 'ASC'
+   );
+
+   $upcoming_query = new WP_Query( $args );
+
+   if( $upcoming_query->have_posts() ) : while( $upcoming_query->have_posts() ) : $upcoming_query->the_post();
+     $title = get_the_title();
+     $date = get_field('event_date');
+     $link = get_permalink();
+     $date = new DateTime($date);
+     $mouse_trek_html .= "<h5>" . $title . "</h5>";
+     $mouse_trek_html .= "<p><i class=\"fa fa-calendar\"></i> " . $date->format('F j, Y') . "</p>";
+     $mouse_trek_html .= "<p><a href=\"" . $link . "\" class=\"btn btn-info\">Learn More</a></p>";
+   endwhile; else :
+     $mouse_trek_html .= "No Mouse Treks Upcoming";
+   endif;
+ ?>
+
  <main role="main">
    <?php if ( have_posts() ) : while ( have_posts() ) : the_post(); ?>
 
@@ -116,7 +148,7 @@
          <div class="col-md-8">
            <h2>Mouse Meet Events</h2>
            <p class="intro">
-             We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Hover over our guests to learn more.
+             PNW Mouse Meet produces a wide variety of events big and small for thousands of Disney Fans including Author Events, Meet Ups, Trips, Cruise and our big Annual Summer Event! Follow the links below for details on all the Events from the past and more Events coming soon…
            </p>
          </div>
         </div>
@@ -126,7 +158,7 @@
             <div class="card event-card">
               <div class="main-image" style="background-image: url('<?php echo the_field('pnw_mouse_meet_main_image'); ?>')"></div>
               <div class="card-body">
-                <h5 class="card-title">PNW Mouse Meets</h5>
+                <h5 class="card-title">Pacific Northwest Mouse Meets™</h5>
                 <p class="card-text"><?php the_field('pnw_mouse_meet_description'); ?></p>
                 <a href="<?php the_field('pnw_mouse_meet_link'); ?>" class="btn btn-info">Learn More</a>
                 <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="pnw-mouse-meet">
@@ -142,7 +174,7 @@
             <div class="card event-card">
               <div class="main-image" style="background-image: url('<?php echo the_field('mini_meet_ups_image'); ?>')"></div>
               <div class="card-body">
-                <h5 class="card-title">Mini Meet Ups</h5>
+                <h5 class="card-title">PNW Mini Meet Ups</h5>
                 <p class="card-text"><?php the_field('mini_meet_ups_description'); ?></p>
                 <a href="<?php the_field('mini_meet_ups_link'); ?>" class="btn btn-info">Learn More</a>
                 <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="mini-meet-ups">
@@ -161,9 +193,12 @@
                 <h5 class="card-title">PNW Mouse Treks</h5>
                 <p class="card-text"><?php the_field('pnw_mouse_treks_description'); ?></p>
                 <a href="<?php the_field('pnw_mouse_trek_link'); ?>" class="btn btn-info">Learn More</a>
-                <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="pnw-mouse-treks">
+                <button type="button" class="btn btn-success" data-container="body" data-toggle="popover" data-placement="bottom" data-html="true" id="mouse-treks">
                   Upcoming Events
                 </button>
+                <div id="popover-content-mouse-treks" class="d-none">
+                    <?php echo $mouse_trek_html ?>
+                </div>
               </div>
             </div>
           </div>
