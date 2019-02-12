@@ -177,7 +177,15 @@
     <!-- Guest Speakers -->
     <a name="guest-speakers"></a>
     <div class="wheel-background">
-      <img class="wheel" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/wheel.svg">
+      <?php
+        if($past) {
+          $background = get_stylesheet_directory_uri() . '/dist/images/wheel.svg';
+        }
+        else {
+          $background = get_stylesheet_directory_uri() . '/dist/images/space-mountain.svg';
+        }
+      ?>
+      <img class="wheel" src="<?php echo $background; ?>">
       <div class="container page-section align-center">
         <div class="row intro-paragraph">
           <div class="col-md-12">
