@@ -23,7 +23,7 @@
               <p><i class="fa fa-map-marker"></i> <a href="<?php echo the_permalink(get_field('location')->ID) ?>"><?php echo get_the_title(get_field('location')) ?></a></p>
             </div>
             <div class="hero-buttons">
-              <?php if ( $past || !$ticket_info ) : ?>
+              <?php if ( $past || !$ticket_info['ticket_text'] ) : ?>
 
               <?php else : ?>
                 <a class="btn btn-lg btn-info sparkley" href="#get-tickets">Get Tickets!</a>
