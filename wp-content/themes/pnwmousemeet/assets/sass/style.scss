@@ -24,6 +24,12 @@ a {
   }
 }
 
+@media(max-width: map-get($grid-breakpoints, md)) {
+  .btn {
+    margin-bottom: 10px;
+  }
+}
+
 .fa {
   margin-right: 5px;
 }
@@ -296,7 +302,6 @@ footer.footer {
   background-color: $brand-primary-light;
   min-height: 300px;
   position: relative;
-  overflow: hidden;
   .wheel {
     position: absolute;
     bottom: 0;

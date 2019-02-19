@@ -120,6 +120,42 @@
       <?php endif; ?>
 
       <!-- Location -->
+      <a name="event-hotel"></a>
+      <?php $post_object = get_field('hotel'); ?>
+      <?php if( $post_object ): ?>
+
+        <?php
+          // override $post
+        	$post = $post_object;
+        	setup_postdata( $post );
+        ?>
+        <div class="container page-section" style="border-bottom: 1px solid #016E73">
+          <div class="row">
+            <div class="col-md-4">
+              <h6>Where to Stay</h6>
+              <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
+              <p><?php the_field('overview'); ?></p>
+              <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
+              <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
+            </div>
+
+            <!-- Map -->
+            <div class="col-md-4">
+                <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
+            </div>
+
+            <!-- Image -->
+            <div class="col-md-4">
+                <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
+            </div>
+          </div><!-- row -->
+        </div>
+        <?php wp_reset_postdata(); ?>
+      <?php else : ?>
+        <p><?php esc_html_e( 'Oops! No Location Found.' ); ?></p>
+      <?php endif; ?><!-- END Location -->
+
+      <!-- Location -->
       <a name="event-location"></a>
       <?php $post_object = get_field('location'); ?>
       <?php if( $post_object ): ?>
@@ -176,16 +212,20 @@
 
     <!-- Guest Speakers -->
     <a name="guest-speakers"></a>
-    <div class="wheel-background">
-      <?php
-        if($past) {
-          $background = get_stylesheet_directory_uri() . '/dist/images/wheel.svg';
-        }
-        else {
-          $background = get_stylesheet_directory_uri() . '/dist/images/space-mountain.svg';
-        }
-      ?>
-      <img class="wheel" src="<?php echo $background; ?>">
+    <?php
+      if($past) {
+        $background = get_stylesheet_directory_uri() . '/dist/images/wheel.svg';
+        $class = 'wheel-background';
+        $imgClass = 'wheel';
+      }
+      else {
+        $background = get_stylesheet_directory_uri() . '/dist/images/space-mountain.svg';
+        $class = 'grizzly-background';
+        $imgClass = 'peak';
+      }
+    ?>
+    <div class="<?php echo $class; ?>">
+      <img class="<?php echo $imgClass; ?>" src="<?php echo $background; ?>">
       <div class="container page-section align-center">
         <div class="row intro-paragraph">
           <div class="col-md-12">
@@ -213,7 +253,7 @@
           <?php else : ?>
             <div class="col-md-4">
               <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
+                <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
                 <div class="card-body">
                   <h5 class="card-title">Coming Soon</h5>
                   <p class="card-text">Guest Speakers will be announced soon.</p>
@@ -223,7 +263,7 @@
             </div>
             <?php if( get_field('early_link') ): ?>
               <div class="col-md-4">
-                <a href="<?php the_field('early_link') ?>"><img src="<?php the_field('early_img') ?>" style="max-width: 100%;"></a>
+                <a href="<?php the_field('early_link') ?>"><img src="<?php the_field('early_img') ?>" style="max-width: 100px;"></a>
               </div>
             <?php endif; ?>
           <?php endif; ?>
@@ -331,42 +371,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Location -->
-      <a name="event-hotel"></a>
-      <?php $post_object = get_field('hotel'); ?>
-      <?php if( $post_object ): ?>
-
-        <?php
-          // override $post
-        	$post = $post_object;
-        	setup_postdata( $post );
-        ?>
-        <div class="container page-section">
-          <div class="row">
-            <div class="col-md-4">
-              <h6>Where to Stay</h6>
-              <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
-              <p><?php the_field('overview'); ?></p>
-              <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
-              <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
-            </div>
-
-            <!-- Map -->
-            <div class="col-md-4">
-                <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
-            </div>
-
-            <!-- Image -->
-            <div class="col-md-4">
-                <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
-            </div>
-          </div><!-- row -->
-        </div>
-        <?php wp_reset_postdata(); ?>
-      <?php else : ?>
-        <p><?php esc_html_e( 'Oops! No Location Found.' ); ?></p>
-      <?php endif; ?><!-- END Location -->
     <?php else : ?>
 
       <!-- Resources -->

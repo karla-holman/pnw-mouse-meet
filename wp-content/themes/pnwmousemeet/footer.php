@@ -8,7 +8,7 @@
         </p>
       </div>
       <div class="col-md-4 footer-links">
-        <h5>Events & Partnerships</h5>
+        <h5>Site Links</h5>
         <?php footer_nav(); ?>
       </div>
       <div class="col-md-4">
