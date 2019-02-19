@@ -112,7 +112,7 @@
          <div class="text-overlay col-lg-5 col-md-12 col-sm-12">
            <div class="content">
              <h1><?php the_title(); ?></h1>
-             <p class="intro">Connect with Other Disney Fans</p>
+             <p class="intro">A Celebration of All Things Disney®!</p>
              <p><?php the_field('hero_text'); ?></p>
            </div>
            <div class="hero-buttons">
@@ -148,7 +148,7 @@
          <div class="col-md-8">
            <h2>PNW Mouse Meet Events</h2>
            <p class="intro">
-             PNW Mouse Meet produces a wide variety of events big and small for thousands of Disney Fans including Author Events, Meet Ups, Trips, Cruise and our big Annual Summer Event! Follow the links below for details on all the Events from the past and more Events coming soon…
+             PNW Mouse Meet produces a wide variety of events big and small for thousands of Disney Fans including Author Events, Meet Ups, Trips, Cruises and our big Annual Summer Event! Follow the links below for details on all the Events from the past and more Events coming soon…
            </p>
          </div>
         </div>

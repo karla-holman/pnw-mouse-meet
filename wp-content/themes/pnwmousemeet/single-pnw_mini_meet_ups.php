@@ -153,13 +153,14 @@
               <?php $guest = get_post(the_row()); ?>
               <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $guest->ID ), 'single-post-thumbnail' ); ?>
               <?php $speaker_legend = $guest->disney_legend ? 'legend' : ''; ?>
+              <?php $speaker_link = $guest->replacement_link ? $guest->replacement_link : get_permalink($guest->ID); ?>
               <div class="col-md-4">
                 <div class="card event-card">
                   <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
                   <div class="card-body">
                     <h5 class="card-title"><?php echo get_the_title($guest); ?></h5>
                     <p class="card-text"><?php echo $guest->title; ?></p>
-                    <a href="<?php the_permalink($guest->ID); ?>" class="btn btn-info">Learn More</a>
+                    <a href="<?php echo $speaker_link; ?>" class="btn btn-info">Learn More</a>
                   </div>
                 </div>
               </div>
