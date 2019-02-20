@@ -364,12 +364,6 @@ footer.footer {
     opacity: 1;
     max-width: 100vw;
   }
-  .carousel-control-next {
-    right: -30px;
-  }
-  .carousel-control-prev {
-    left: -30px;
-  }
   .carousel-indicators {
     bottom: -40px;
   }
@@ -379,6 +373,9 @@ footer.footer {
     .card-body {
       color: #fff;
       font-size: 36px;
+      @media(max-width: map-get($grid-breakpoints, sm)) {
+        font-size: 24px;
+      }
     }
     .card-footer {
       background-color: $brand-warning;
