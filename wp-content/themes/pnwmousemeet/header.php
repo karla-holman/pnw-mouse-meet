@@ -16,10 +16,10 @@
     <header>
       <a class="navbar-brand" href="<?php echo get_home_url(); ?>">
         <div class="navbar-circle">
-          
+
         </div>
       </a>
-      <nav class="navbar navbar-light justify-content-end align-items-center secondary-nav">
+      <nav class="navbar navbar-light align-items-center secondary-nav">
         <?php social_links(); ?>
         <!--
         <div id="search-area" class="my-2 my-lg-0">
