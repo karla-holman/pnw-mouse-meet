@@ -209,13 +209,16 @@ footer.footer {
     }
 
     @media(max-width: map-get($grid-breakpoints, md)) {
-      min-height: 600px;
+      min-height: 700px;
       .n2-section-smartslider {
         display: none;
       }
       .container {
         position: relative;
       }
+    }
+    @media(max-width: map-get($grid-breakpoints, lg)) {
+      min-height: 500px;
     }
   }
 

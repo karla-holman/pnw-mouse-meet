@@ -109,7 +109,7 @@
      <div class="hero slider full d-flex align-content-center"<?php echo(has_post_thumbnail() ? ' style="background-image: url(' . get_the_post_thumbnail_url() . ')"' : ''); ?>>
        <?php echo do_shortcode('[smartslider3 slider=' . get_field('hero_slider_number') . ']'); ?>
        <div class="container d-flex align-content-center">
-         <div class="text-overlay col-lg-5 col-md-12 col-sm-12">
+         <div class="text-overlay col-xl-5 col-lg-7 col-md-12 col-sm-12">
            <div class="content">
              <h1><?php the_title(); ?></h1>
              <p class="intro">A Celebration of All Things Disney®!</p>
