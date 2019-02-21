@@ -452,7 +452,7 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
 
   .card-footer {
     position: relative;
-    margin-top: 60px;
+    // margin-top: 60px;
     min-height: 75px;
     border-top: none;
     background-color: $brand-primary-light;
@@ -474,13 +474,13 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
           width: 80px;
           height: 80px;
         }
-        @media(min-width: map-get($grid-breakpoints, lg)) {
+        @media(min-width: map-get($grid-breakpoints, xl)) {
           width: 90px;
           height: 90px;
         }
         border-radius: 100%;
         background-size: cover;
-        margin-top: -40px;
+        margin-top: 5px;
 
         .speaker-btn {
           width: 100%;

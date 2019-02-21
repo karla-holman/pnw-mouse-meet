@@ -12,7 +12,7 @@
     $today = date('Ymd');
     $args = array(
       'post_type' => 'pnw_mouse_meets',
-      'posts_per_page' => '9',
+      'posts_per_page' => '1',
       'meta_key' => 'event_date',
       'meta_query' => array(
           array(
@@ -112,7 +112,7 @@
     $today = date('Ymd');
     $args = array(
       'post_type' => 'pnw_mouse_meets',
-      'posts_per_page' => '9',
+      'posts_per_page' => '-1',
       'meta_key' => 'event_date',
       'meta_query' => array(
           array(
