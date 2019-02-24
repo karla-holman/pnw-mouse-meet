@@ -14,6 +14,10 @@ main {
   margin-top: 95px;
 }
 
+img {
+  max-width: 100%;
+}
+
 // Links
 a {
   font-weight: 600;
@@ -35,7 +39,7 @@ a {
 }
 
 .fill-image {
-  min-height: 100%;
+  min-height: 300px;
   background-size: cover;
 }
 

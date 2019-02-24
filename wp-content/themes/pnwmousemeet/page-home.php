@@ -134,7 +134,7 @@
      <!-- Special CTA -->
      <div class="mid-page-cta">
       <div class="container">
-        <div class="row d-flex justify-content-between align-content-center">
+        <div class="d-flex justify-content-between align-content-center">
           <p><?php the_field('cta_text'); ?></p>
           <a href="<?php the_field('cta_link'); ?>"><?php the_field('cta_label'); ?> <i class="fa fa-arrow-right"></i></a>
         </div>
