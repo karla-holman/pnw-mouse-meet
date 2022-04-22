@@ -2,19 +2,19 @@
 
 namespace WPForms\Lite\Admin;
 
+use WPForms\Admin\Dashboard\Widget;
+
 /**
  * Dashboard Widget shows a chart and the form entries stats in WP Dashboard.
  *
- * @package    WPForms\Admin
- * @author     WPForms
- * @since      1.5.0
- * @license    GPL-2.0+
- * @copyright  Copyright (c) 2018, WPForms LLC
+ * @since 1.5.0
  */
-class DashboardWidget {
+class DashboardWidget extends Widget {
 
 	/**
 	 * Widget settings.
+	 *
+	 * @since 1.5.0
 	 *
 	 * @var array
 	 */
@@ -27,12 +27,21 @@ class DashboardWidget {
 	 */
 	public function __construct() {
 
+		add_action( 'admin_init', array( $this, 'init' ) );
+	}
+	/**
+	 * Init class.
+	 *
+	 * @since 1.5.5
+	 */
+	public function init() {
+
 		// This widget should be displayed for certain high-level users only.
 		if ( ! wpforms_current_user_can() ) {
 			return;
 		}
 
-		if ( ! apply_filters( 'wpforms_admin_dashboardwidget', '__return_true' ) ) {
+		if ( ! apply_filters( 'wpforms_admin_dashboardwidget', true ) ) {
 			return;
 		}
 
@@ -58,10 +67,7 @@ class DashboardWidget {
 			// Transient lifetime in seconds. Defaults to the end of a current day.
 			'transient_lifetime'               => \apply_filters( 'wpforms_dash_widget_transient_lifetime', \strtotime( 'tomorrow' ) - \time() ),
 
-			// Allow entries count logging for WPForms Lite.
-			'allow_entries_count_lite'         => \apply_filters( 'wpforms_dash_widget_allow_entries_count_lite', true ),
-
-			// Determines if the forms with no entries should appear in a forms list. Once switched, the effect applies after cache expiration.
+			// Determine if the forms with no entries should appear in a forms list. Once switched, the effect applies after cache expiration.
 			'display_forms_list_empty_entries' => \apply_filters( 'wpforms_dash_widget_display_forms_list_empty_entries', true ),
 		);
 	}
@@ -79,9 +85,9 @@ class DashboardWidget {
 
 		\add_action( 'admin_init', array( $this, 'hide_widget' ) );
 
-		if ( ! empty( $this->settings['allow_entries_count_lite'] ) ) {
-			\add_action( 'wpforms_process_entry_save', array( $this, 'update_entry_count' ), 10, 3 );
-		}
+		\add_action( 'wpforms_create_form', __CLASS__ . '::clear_widget_cache' );
+		\add_action( 'wpforms_save_form', __CLASS__ . '::clear_widget_cache' );
+		\add_action( 'wpforms_delete_form', __CLASS__ . '::clear_widget_cache' );
 	}
 
 	/**
@@ -175,7 +181,7 @@ class DashboardWidget {
 	 */
 	public function widget_content() {
 
-		$forms = \wpforms()->form->get( '', array( 'fields' => 'ids' ) );
+		$forms = wpforms()->get( 'form' )->get( '', [ 'fields' => 'ids' ] );
 
 		echo '<div class="wpforms-dash-widget wpforms-lite">';
 
@@ -184,14 +190,11 @@ class DashboardWidget {
 		} else {
 			$this->widget_content_html();
 		}
-		$plugins = \get_plugins();
 
-		if (
-			! \array_key_exists( 'google-analytics-for-wordpress/googleanalytics.php', $plugins ) &&
-			! \array_key_exists( 'google-analytics-premium/googleanalytics-premium.php', $plugins ) &&
-			! empty( $forms )
-		) {
-			$this->recommended_plugin_block_html();
+		$plugin = $this->get_recommended_plugin();
+
+		if ( ! empty( $plugin ) && ! empty( $forms ) ) {
+			$this->recommended_plugin_block_html( $plugin );
 		}
 
 		echo '</div><!-- .wpforms-dash-widget -->';
@@ -209,14 +212,18 @@ class DashboardWidget {
 
 		?>
 		<div class="wpforms-dash-widget-block wpforms-dash-widget-block-no-forms">
-			<img class="wpforms-dash-widget-block-sullie-logo" src="<?php echo \esc_url( WPFORMS_PLUGIN_URL . 'assets/images/sullie.png' ); ?>" alt="<?php \esc_attr_e( 'Sullie the WPForms mascot', 'wpforms' ); ?>">
-			<h2><?php \esc_html_e( 'Create Your First Form to Start Collecting Leads', 'wpforms' ); ?></h2>
-			<p><?php \esc_html_e( 'You can use WPForms to build contact forms, surveys, payment forms, and more with just a few clicks.', 'wpforms' ); ?></p>
-			<a href="<?php echo \esc_url( $create_form_url ); ?>" class="button button-primary">
-				<?php \esc_html_e( 'Create Your Form', 'wpforms' ); ?>
-			</a>
+			<img class="wpforms-dash-widget-block-sullie-logo" src="<?php echo \esc_url( WPFORMS_PLUGIN_URL . 'assets/images/sullie.png' ); ?>" alt="<?php \esc_attr_e( 'Sullie the WPForms mascot', 'wpforms-lite' ); ?>">
+			<h2><?php \esc_html_e( 'Create Your First Form to Start Collecting Leads', 'wpforms-lite' ); ?></h2>
+			<p><?php \esc_html_e( 'You can use WPForms to build contact forms, surveys, payment forms, and more with just a few clicks.', 'wpforms-lite' ); ?></p>
+
+			<?php if ( wpforms_current_user_can( 'create_forms' ) ) : ?>
+				<a href="<?php echo \esc_url( $create_form_url ); ?>" class="button button-primary">
+					<?php \esc_html_e( 'Create Your Form', 'wpforms-lite' ); ?>
+				</a>
+			<?php endif; ?>
+
 			<a href="<?php echo \esc_url( $learn_more_url ); ?>" class="button" target="_blank" rel="noopener noreferrer">
-				<?php \esc_html_e( 'Learn More', 'wpforms' ); ?>
+				<?php \esc_html_e( 'Learn More', 'wpforms-lite' ); ?>
 			</a>
 		</div>
 		<?php
@@ -346,20 +353,29 @@ class DashboardWidget {
 	 * Recommended plugin block HTML.
 	 *
 	 * @since 1.5.0
+	 * @since 1.7.3 Added plugin parameter.
+	 *
+	 * @param array $plugin Plugin data.
 	 */
-	public function recommended_plugin_block_html() {
+	public function recommended_plugin_block_html( $plugin = [] ) {
 
-		$install_mi_url = \wp_nonce_url(
-			\self_admin_url( 'update.php?action=install-plugin&plugin=google-analytics-for-wordpress' ),
-			'install-plugin_google-analytics-for-wordpress'
+		if ( ! $plugin ) {
+			return;
+		}
+
+		$install_url = wp_nonce_url(
+			self_admin_url( 'update.php?action=install-plugin&plugin=' . rawurlencode( $plugin['slug'] ) ),
+			'install-plugin_' . $plugin['slug']
 		);
 
 		?>
 		<div class="wpforms-dash-widget-recommended-plugin-block">
-			<p><?php \esc_html_e( 'Recommended Plugin:', 'wpforms-lite' ); ?>
-				<b><?php \esc_html_e( 'MonsterInsights', 'wpforms-lite' ); ?></b> -
-				<a href="<?php echo \esc_url( $install_mi_url ); ?>"><?php \esc_html_e( 'Install', 'wpforms-lite' ); ?></a> &vert;
-				<a href="https://www.monsterinsights.com/?utm_source=wpformsplugin&utm_medium=link&utm_campaign=wpformsdashboardwidget"><?php \esc_html_e( 'Learn More', 'wpforms-lite' ); ?></a></p>
+			<p><?php esc_html_e( 'Recommended Plugin:', 'wpforms-lite' ); ?>
+				<strong><?php echo esc_html( $plugin['name'] ); ?></strong> -
+				<?php if ( wpforms_can_install( 'plugin' ) ) { ?>
+					<a href="<?php echo esc_url( $install_url ); ?>"><?php esc_html_e( 'Install', 'wpforms-lite' ); ?></a> &vert;
+				<?php } ?>
+				<a href="<?php echo esc_url( $plugin['more'] ); ?>?utm_source=wpformsplugin&utm_medium=link&utm_campaign=wpformsdashboardwidget"><?php esc_html_e( 'Learn More', 'wpforms-lite' ); ?></a></p>
 		</div>
 		<?php
 	}
@@ -367,7 +383,7 @@ class DashboardWidget {
 	/**
 	 * Get entries count grouped by form.
 	 * Main point of entry to fetch form entry count data from DB.
-	 * Caches the result.
+	 * Cache the result.
 	 *
 	 * @since 1.5.0
 	 *
@@ -465,23 +481,12 @@ class DashboardWidget {
 	}
 
 	/**
-	 * Increase entries count once a form is submitted.
+	 * Clear dashboard widget cached data.
 	 *
-	 * @since 1.5.0
-	 *
-	 * @param array      $fields  Set of form fields.
-	 * @param array      $entry   Entry contents.
-	 * @param int|string $form_id Form ID.
+	 * @since 1.5.2
 	 */
-	public function update_entry_count( $fields, $entry, $form_id ) {
+	public static function clear_widget_cache() {
 
-		$form_id = \absint( $form_id );
-
-		if ( empty( $form_id ) ) {
-			return;
-		}
-
-		$count = \absint( \get_post_meta( $form_id, 'wpforms_entries_count', true ) );
-		\update_post_meta( $form_id, 'wpforms_entries_count', $count + 1 );
+		delete_transient( 'wpforms_dash_widget_lite_entries_by_form' );
 	}
 }

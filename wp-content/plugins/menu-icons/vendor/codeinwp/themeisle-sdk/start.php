@@ -7,32 +7,43 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.1.0
  */
-$products      = apply_filters( 'themeisle_sdk_products', array() );
-$path          = dirname( __FILE__ );
-$files_to_load = array(
-	'class-themeisle-sdk-loader.php',
-	'class-themeisle-sdk-product.php',
-	'class-themeisle-sdk-logger.php',
-	'class-themeisle-sdk-licenser.php',
-	'class-themeisle-sdk-rollback.php',
-	'class-themeisle-sdk-feedback-factory.php',
-	'class-themeisle-sdk-feedback.php',
-	'class-themeisle-sdk-feedback-deactivate.php',
-	'class-themeisle-sdk-feedback-review.php',
-	'class-themeisle-sdk-feedback-translate.php',
-	'class-themeisle-sdk-notification-manager.php',
-	'class-themeisle-sdk-widget.php',
-	'class-themeisle-sdk-widget-dashboard-blog.php',
-	'class-themeisle-sdk-widgets-factory.php',
-	'class-themeisle-sdk-endpoints.php',
-);
+
+namespace ThemeisleSDK;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+$products               = apply_filters( 'themeisle_sdk_products', array() );
+$themeisle_library_path = dirname( __FILE__ );
+$files_to_load          = [
+	$themeisle_library_path . '/src/Loader.php',
+	$themeisle_library_path . '/src/Product.php',
+
+	$themeisle_library_path . '/src/Common/Abstract_module.php',
+	$themeisle_library_path . '/src/Common/Module_factory.php',
+
+	$themeisle_library_path . '/src/Modules/Dashboard_widget.php',
+	$themeisle_library_path . '/src/Modules/Rollback.php',
+	$themeisle_library_path . '/src/Modules/Uninstall_feedback.php',
+	$themeisle_library_path . '/src/Modules/Licenser.php',
+	$themeisle_library_path . '/src/Modules/Endpoint.php',
+	$themeisle_library_path . '/src/Modules/Notification.php',
+	$themeisle_library_path . '/src/Modules/Logger.php',
+	$themeisle_library_path . '/src/Modules/Translate.php',
+	$themeisle_library_path . '/src/Modules/Review.php',
+	$themeisle_library_path . '/src/Modules/Recommendation.php',
+];
+
+$files_to_load = array_merge( $files_to_load, apply_filters( 'themeisle_sdk_required_files', [] ) );
 
 foreach ( $files_to_load as $file ) {
-	$file_path = $path . '/' . $file;
-	if ( is_readable( $file_path ) ) {
-		require_once $file_path;
+	if ( is_file( $file ) ) {
+		require_once $file;
 	}
 }
+
+Loader::init();
+
 foreach ( $products as $product ) {
-	ThemeIsle_SDK_Loader::init_product( $product );
+	Loader::add_product( $product );
 }

@@ -1,11 +1,11 @@
 <?php
 
+use WPMailSMTP\Options;
+
 /**
  * WPForms Lite. Load Lite specific features/functionality.
  *
  * @since 1.2.0
- *
- * @package WPForms
  */
 class WPForms_Lite {
 
@@ -18,18 +18,17 @@ class WPForms_Lite {
 
 		$this->includes();
 
-		add_action( 'wpforms_form_settings_notifications', array( $this, 'form_settings_notifications' ), 8, 1 );
-		add_action( 'wpforms_form_settings_confirmations', array( $this, 'form_settings_confirmations' ) );
-		add_action( 'wpforms_setup_panel_after', array( $this, 'form_templates' ) );
-		add_filter( 'wpforms_builder_fields_buttons', array( $this, 'form_fields' ), 20 );
-		add_action( 'wpforms_builder_enqueues_before', array( $this, 'builder_enqueues' ) );
-		add_action( 'wpforms_admin_page', array( $this, 'entries_page' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'addon_page_enqueues' ) );
-		add_action( 'wpforms_admin_page', array( $this, 'addons_page' ) );
-		add_action( 'wpforms_providers_panel_sidebar', array( $this, 'builder_provider_sidebar' ), 20 );
-		add_action( 'wpforms_payments_panel_sidebar', array( $this, 'builder_payments_sidebar' ), 20 );
-		add_action( 'wpforms_admin_settings_after', array( $this, 'settings_cta' ), 10, 1 );
-		add_action( 'wp_ajax_wpforms_lite_settings_upgrade', array( $this, 'settings_cta_dismiss' ) );
+		add_action( 'wpforms_form_settings_notifications', [ $this, 'form_settings_notifications' ], 8, 1 );
+		add_action( 'wpforms_form_settings_confirmations', [ $this, 'form_settings_confirmations' ] );
+		add_action( 'wpforms_builder_enqueues_before', [ $this, 'builder_enqueues' ] );
+		add_action( 'wpforms_admin_page', [ $this, 'entries_page' ] );
+		add_action( 'wpforms_admin_settings_after', [ $this, 'settings_cta' ] );
+		add_action( 'wp_ajax_wpforms_lite_settings_upgrade', [ $this, 'settings_cta_dismiss' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'admin_enqueues' ] );
+		add_filter( 'wpforms_helpers_templates_get_theme_template_paths', [ $this, 'add_templates' ] );
+
+		// Entries count logging for WPForms Lite.
+		add_action( 'wpforms_process_entry_save', [ $this, 'update_entry_count' ], 10, 3 );
 	}
 
 	/**
@@ -52,40 +51,85 @@ class WPForms_Lite {
 		$cc               = wpforms_setting( 'email-carbon-copy', false );
 		$from_name_after  = apply_filters( 'wpforms_builder_notifications_from_name_after', '' );
 		$from_email_after = apply_filters( 'wpforms_builder_notifications_from_email_after', '' );
+		$from_email       = '{admin_email}';
+		$from_name        = sanitize_text_field( get_option( 'blogname' ) );
+
+		// If WP Mail SMTP is available, use its settings.
+		if ( class_exists( Options::class ) ) {
+			$mail_options = Options::init()->get_group( 'mail' );
+			$from_email   = $mail_options['from_email_force'] ? $mail_options['from_email'] : $from_email;
+			$from_name    = $mail_options['from_name_force'] ? $mail_options['from_name'] : $from_name;
+		}
 
 		// Handle backwards compatibility.
 		if ( empty( $settings->form_data['settings']['notifications'] ) ) {
 			/* translators: %s - form name. */
 			$settings->form_data['settings']['notifications'][1]['subject']        = ! empty( $settings->form_data['settings']['notification_subject'] ) ? $settings->form_data['settings']['notification_subject'] : sprintf( esc_html__( 'New %s Entry', 'wpforms-lite' ), $settings->form->post_title );
 			$settings->form_data['settings']['notifications'][1]['email']          = ! empty( $settings->form_data['settings']['notification_email'] ) ? $settings->form_data['settings']['notification_email'] : '{admin_email}';
-			$settings->form_data['settings']['notifications'][1]['sender_name']    = ! empty( $settings->form_data['settings']['notification_fromname'] ) ? $settings->form_data['settings']['notification_fromname'] : get_bloginfo( 'name' );
-			$settings->form_data['settings']['notifications'][1]['sender_address'] = ! empty( $settings->form_data['settings']['notification_fromaddress'] ) ? $settings->form_data['settings']['notification_fromaddress'] : '{admin_email}';
+			$settings->form_data['settings']['notifications'][1]['sender_name']    = ! empty( $settings->form_data['settings']['notification_fromname'] ) ? $settings->form_data['settings']['notification_fromname'] : $from_name;
+			$settings->form_data['settings']['notifications'][1]['sender_address'] = ! empty( $settings->form_data['settings']['notification_fromaddress'] ) ? $settings->form_data['settings']['notification_fromaddress'] : $from_email;
 			$settings->form_data['settings']['notifications'][1]['replyto']        = ! empty( $settings->form_data['settings']['notification_replyto'] ) ? $settings->form_data['settings']['notification_replyto'] : '';
 		}
+
 		$id = 1;
 
 		echo '<div class="wpforms-panel-content-section-title">';
-			esc_html_e( 'Notifications', 'wpforms-lite' );
-			echo '<button class="wpforms-builder-settings-block-add upgrade-modal" data-name="' . esc_attr__( 'Multiple notifications', 'wpforms-lite' ) . '">';
+			echo '<span id="wpforms-builder-settings-notifications-title">';
+				esc_html_e( 'Notifications', 'wpforms-lite' );
+			echo '</span>';
+			echo '<button class="wpforms-builder-settings-block-add education-modal"
+					data-utm-content="Multiple notifications"
+					data-name="' . esc_attr__( 'Multiple notifications', 'wpforms-lite' ) . '">';
 				esc_html_e( 'Add New Notification', 'wpforms-lite' );
 			echo '</button>';
 		echo '</div>';
-		?>
 
-		<?php
+		$dismissed = get_user_meta( get_current_user_id(), 'wpforms_dismissed', true );
+
+		if ( empty( $dismissed['edu-builder-notifications-description'] ) ) {
+			echo '<div class="wpforms-panel-content-section-description wpforms-dismiss-container wpforms-dismiss-out">';
+			echo '<button type="button" class="wpforms-dismiss-button" title="' . esc_attr__( 'Dismiss this message.', 'wpforms-lite' ) . '" data-section="builder-notifications-description"></button>';
+			echo '<p>';
+			printf(
+				wp_kses( /* translators: %s - Link to the WPForms.com doc article. */
+					__( 'Notifications are emails sent when a form is submitted. By default, these emails include entry details. For setup and customization options, including a video overview, please <a href="%s" target="_blank" rel="noopener noreferrer">see our tutorial</a>.', 'wpforms-lite' ),
+					[
+						'a' => [
+							'href'   => [],
+							'rel'    => [],
+							'target' => [],
+						],
+					]
+				),
+				'https://wpforms.com/docs/setup-form-notification-wpforms/'
+			);
+			echo '</p>';
+			echo '<p>';
+			printf(
+				wp_kses( /* translators: 1$s, %2$s - Links to the WPForms.com doc articles. */
+					__( 'After saving these settings, be sure to <a href="%1$s" target="_blank" rel="noopener noreferrer">test a form submission</a>. This lets you see how emails will look, and to ensure that<br>they <a href="%2$s" target="_blank" rel="noopener noreferrer">are delivered successfully</a>.', 'wpforms-lite' ),
+					[
+						'a'  => [
+							'href'   => [],
+							'rel'    => [],
+							'target' => [],
+						],
+						'br' => [],
+					]
+				),
+				'https://wpforms.com/docs/how-to-properly-test-your-wordpress-forms-before-launching-checklist/',
+				'https://wpforms.com/docs/troubleshooting-email-notifications/'
+			);
+			echo '</p>';
+			echo '</div>';
+		}
+
 		wpforms_panel_field(
-			'select',
+			'toggle',
 			'settings',
 			'notification_enable',
 			$settings->form_data,
-			esc_html__( 'Notifications', 'wpforms-lite' ),
-			array(
-				'default' => '1',
-				'options' => array(
-					'1' => esc_html__( 'On', 'wpforms-lite' ),
-					'0' => esc_html__( 'Off', 'wpforms-lite' ),
-				),
-			)
+			esc_html__( 'Enable Notifications', 'wpforms-lite' )
 		);
 		?>
 
@@ -104,17 +148,17 @@ class WPForms_Lite {
 					'email',
 					$settings->form_data,
 					esc_html__( 'Send To Email Address', 'wpforms-lite' ),
-					array(
+					[
 						'default'    => '{admin_email}',
 						'tooltip'    => esc_html__( 'Enter the email address to receive form entry notifications. For multiple notifications, separate email addresses with a comma.', 'wpforms-lite' ),
-						'smarttags'  => array(
+						'smarttags'  => [
 							'type'   => 'fields',
 							'fields' => 'email',
-						),
+						],
 						'parent'     => 'settings',
 						'subsection' => $id,
 						'class'      => 'email-recipient',
-					)
+					]
 				);
 				if ( $cc ) :
 					wpforms_panel_field(
@@ -123,14 +167,14 @@ class WPForms_Lite {
 						'carboncopy',
 						$settings->form_data,
 						esc_html__( 'CC', 'wpforms-lite' ),
-						array(
-							'smarttags'  => array(
+						[
+							'smarttags'  => [
 								'type'   => 'fields',
 								'fields' => 'email',
-							),
+							],
 							'parent'     => 'settings',
 							'subsection' => $id,
-						)
+						]
 					);
 				endif;
 				wpforms_panel_field(
@@ -138,16 +182,16 @@ class WPForms_Lite {
 					'notifications',
 					'subject',
 					$settings->form_data,
-					esc_html__( 'Email Subject', 'wpforms-lite' ),
-					array(
+					esc_html__( 'Email Subject Line', 'wpforms-lite' ),
+					[
 						/* translators: %s - form name. */
 						'default'    => sprintf( esc_html__( 'New Entry: %s', 'wpforms-lite' ), $settings->form->post_title ),
-						'smarttags'  => array(
+						'smarttags'  => [
 							'type' => 'all',
-						),
+						],
 						'parent'     => 'settings',
 						'subsection' => $id,
-					)
+					]
 				);
 				wpforms_panel_field(
 					'text',
@@ -155,17 +199,17 @@ class WPForms_Lite {
 					'sender_name',
 					$settings->form_data,
 					esc_html__( 'From Name', 'wpforms-lite' ),
-					array(
-						'default'    => sanitize_text_field( get_option( 'blogname' ) ),
-						'smarttags'  => array(
+					[
+						'default'    => $from_name,
+						'smarttags'  => [
 							'type'   => 'fields',
 							'fields' => 'name,text',
-						),
+						],
 						'parent'     => 'settings',
 						'subsection' => $id,
 						'readonly'   => ! empty( $from_name_after ),
 						'after'      => ! empty( $from_name_after ) ? '<p class="note">' . $from_name_after . '</p>' : '',
-					)
+					]
 				);
 				wpforms_panel_field(
 					'text',
@@ -173,45 +217,45 @@ class WPForms_Lite {
 					'sender_address',
 					$settings->form_data,
 					esc_html__( 'From Email', 'wpforms-lite' ),
-					array(
-						'default'    => '{admin_email}',
-						'smarttags'  => array(
+					[
+						'default'    => $from_email,
+						'smarttags'  => [
 							'type'   => 'fields',
 							'fields' => 'email',
-						),
+						],
 						'parent'     => 'settings',
 						'subsection' => $id,
 						'readonly'   => ! empty( $from_email_after ),
 						'after'      => ! empty( $from_email_after ) ? '<p class="note">' . $from_email_after . '</p>' : '',
-					)
+					]
 				);
 				wpforms_panel_field(
 					'text',
 					'notifications',
 					'replyto',
 					$settings->form_data,
-					esc_html__( 'Reply-To', 'wpforms-lite' ),
-					array(
-						'smarttags'  => array(
+					esc_html__( 'Reply-To Email Address', 'wpforms-lite' ),
+					[
+						'smarttags'  => [
 							'type'   => 'fields',
 							'fields' => 'email',
-						),
+						],
 						'parent'     => 'settings',
 						'subsection' => $id,
-					)
+					]
 				);
 				wpforms_panel_field(
 					'textarea',
 					'notifications',
 					'message',
 					$settings->form_data,
-					esc_html__( 'Message', 'wpforms-lite' ),
-					array(
+					esc_html__( 'Email Message', 'wpforms-lite' ),
+					[
 						'rows'       => 6,
 						'default'    => '{all_fields}',
-						'smarttags'  => array(
+						'smarttags'  => [
 							'type' => 'all',
-						),
+						],
 						'parent'     => 'settings',
 						'subsection' => $id,
 						'class'      => 'email-msg',
@@ -222,13 +266,36 @@ class WPForms_Lite {
 											'<code>{all_fields}</code>'
 										) .
 										'</p>',
-					)
+					]
 				);
 				?>
 			</div>
 		</div>
 
 		<?php
+		do_action( 'wpforms_builder_settings_notifications_after', 'notifications', $settings );
+	}
+
+	/**
+	 * Lite admin scripts and styles.
+	 *
+	 * @since 1.5.7
+	 */
+	public function admin_enqueues() {
+
+		if ( ! wpforms_is_admin_page() ) {
+			return;
+		}
+
+		$min = wpforms_get_min_suffix();
+
+		// Admin styles.
+		wp_enqueue_style(
+			'wpforms-lite-admin',
+			WPFORMS_PLUGIN_URL . "lite/assets/css/admin{$min}.css",
+			array(),
+			WPFORMS_VERSION
+		);
 	}
 
 	/**
@@ -236,7 +303,7 @@ class WPForms_Lite {
 	 *
 	 * @since 1.4.8
 	 *
-	 * @param object $settings
+	 * @param WPForms_Builder_Panel_Settings $settings Builder panel settings.
 	 */
 	public function form_settings_confirmations( $settings ) {
 
@@ -250,11 +317,13 @@ class WPForms_Lite {
 			$settings->form_data['settings']['confirmations'][1]['page']           = ! empty( $settings->form_data['settings']['confirmation_page'] ) ? $settings->form_data['settings']['confirmation_page'] : '';
 			$settings->form_data['settings']['confirmations'][1]['redirect']       = ! empty( $settings->form_data['settings']['confirmation_redirect'] ) ? $settings->form_data['settings']['confirmation_redirect'] : '';
 		}
-		$id = 1;
+		$field_id = 1;
 
 		echo '<div class="wpforms-panel-content-section-title">';
 			esc_html_e( 'Confirmations', 'wpforms-lite' );
-			echo '<button class="wpforms-builder-settings-block-add upgrade-modal" data-name="' . esc_attr__( 'Multiple confirmations', 'wpforms-lite' ) . '">';
+			echo '<button class="wpforms-builder-settings-block-add education-modal"
+					data-utm-content="Multiple confirmations"
+					data-name="' . esc_attr__( 'Multiple confirmations', 'wpforms-lite' ) . '">';
 				esc_html_e( 'Add New Confirmation', 'wpforms-lite' );
 			echo '</button>';
 		echo '</div>';
@@ -269,24 +338,34 @@ class WPForms_Lite {
 			<div class="wpforms-builder-settings-block-content">
 
 				<?php
+				/**
+				 * Fires before each confirmation to add custom fields.
+				 *
+				 * @since 1.6.9
+				 *
+				 * @param WPForms_Builder_Panel_Settings $settings Builder panel settings.
+				 * @param int                            $field_id Field ID.
+				 */
+				do_action( 'wpforms_lite_form_settings_confirmations_single_before', $settings, $field_id );
+
 				wpforms_panel_field(
 					'select',
 					'confirmations',
 					'type',
 					$settings->form_data,
 					esc_html__( 'Confirmation Type', 'wpforms-lite' ),
-					array(
+					[
 						'default'     => 'message',
-						'options'     => array(
+						'options'     => [
 							'message'  => esc_html__( 'Message', 'wpforms-lite' ),
 							'page'     => esc_html__( 'Show Page', 'wpforms-lite' ),
 							'redirect' => esc_html__( 'Go to URL (Redirect)', 'wpforms-lite' ),
-						),
+						],
 						'class'       => 'wpforms-panel-field-confirmations-type-wrap',
 						'input_class' => 'wpforms-panel-field-confirmations-type',
 						'parent'      => 'settings',
-						'subsection'  => $id,
-					)
+						'subsection'  => $field_id,
+					]
 				);
 				wpforms_panel_field(
 					'textarea',
@@ -294,47 +373,46 @@ class WPForms_Lite {
 					'message',
 					$settings->form_data,
 					esc_html__( 'Confirmation Message', 'wpforms-lite' ),
-					array(
+					[
 						'default'     => esc_html__( 'Thanks for contacting us! We will be in touch with you shortly.', 'wpforms-lite' ),
-						'tinymce'     => array(
+						'tinymce'     => [
 							'editor_height' => '200',
-						),
-						'input_id'    => 'wpforms-panel-field-confirmations-message-' . $id,
+						],
+						'input_id'    => 'wpforms-panel-field-confirmations-message-' . $field_id,
 						'input_class' => 'wpforms-panel-field-confirmations-message',
 						'parent'      => 'settings',
-						'subsection'  => $id,
-					)
+						'subsection'  => $field_id,
+						'class'       => 'wpforms-panel-field-tinymce',
+						'smarttags'   => [
+							'type' => 'all',
+						],
+					]
 				);
 				wpforms_panel_field(
-					'checkbox',
+					'toggle',
 					'confirmations',
 					'message_scroll',
 					$settings->form_data,
 					esc_html__( 'Automatically scroll to the confirmation message', 'wpforms-lite' ),
-					array(
+					[
 						'input_class' => 'wpforms-panel-field-confirmations-message_scroll',
 						'parent'      => 'settings',
-						'subsection'  => $id,
-					)
+						'subsection'  => $field_id,
+					]
 				);
-				$p     = array();
-				$pages = get_pages();
-				foreach ( $pages as $page ) {
-					$depth          = count( $page->ancestors );
-					$p[ $page->ID ] = str_repeat( '-', $depth ) . ' ' . $page->post_title;
-				}
+
 				wpforms_panel_field(
 					'select',
 					'confirmations',
 					'page',
 					$settings->form_data,
 					esc_html__( 'Confirmation Page', 'wpforms-lite' ),
-					array(
-						'options'     => $p,
+					[
+						'options'     => wpforms_get_pages_list(),
 						'input_class' => 'wpforms-panel-field-confirmations-page',
 						'parent'      => 'settings',
-						'subsection'  => $id,
-					)
+						'subsection'  => $field_id,
+					]
 				);
 				wpforms_panel_field(
 					'text',
@@ -342,202 +420,28 @@ class WPForms_Lite {
 					'redirect',
 					$settings->form_data,
 					esc_html__( 'Confirmation Redirect URL', 'wpforms-lite' ),
-					array(
+					[
 						'input_class' => 'wpforms-panel-field-confirmations-redirect',
 						'parent'      => 'settings',
-						'subsection'  => $id,
-					)
+						'subsection'  => $field_id,
+					]
 				);
+
+				/**
+				 * Fires after each confirmation to add custom fields.
+				 *
+				 * @since 1.6.9
+				 *
+				 * @param WPForms_Builder_Panel_Settings $settings Builder panel settings.
+				 * @param int                            $field_id Field ID.
+				 */
+				do_action( 'wpforms_lite_form_settings_confirmations_single_after', $settings, $field_id );
 				?>
 			</div>
 		</div>
 
 		<?php
-	}
-
-	/**
-	 * Display/register additional templates available in the Pro version.
-	 *
-	 * @since 1.0.6
-	 */
-	public function form_templates() {
-
-		$templates = array(
-			array(
-				'name'        => esc_html__( 'Request A Quote Form', 'wpforms-lite' ),
-				'slug'        => 'request-quote',
-				'description' => esc_html__( 'Start collecting leads with this pre-made Request a quote form. You can add and remove fields as needed.', 'wpforms-lite' ),
-			),
-			array(
-				'name'        => esc_html__( 'Donation Form', 'wpforms-lite' ),
-				'slug'        => 'donation',
-				'description' => esc_html__( 'Start collecting donation payments on your website with this ready-made Donation form. You can add and remove fields as needed.', 'wpforms-lite' ),
-			),
-			array(
-				'name'        => esc_html__( 'Billing / Order Form', 'wpforms-lite' ),
-				'slug'        => 'order',
-				'description' => esc_html__( 'Collect payments for product and service orders with this ready-made form template. You can add and remove fields as needed.', 'wpforms-lite' ),
-			),
-		);
-		?>
-
-		<div class="wpforms-setup-title">
-			<?php esc_html_e( 'Unlock Pre-Made Form Templates', 'wpforms-lite' ); ?>
-			<a href="<?php echo esc_url( wpforms_admin_upgrade_link( 'builder-templates' ) ); ?>" target="_blank" rel="noopener noreferrer"
-				class="btn-green wpforms-upgrade-link wpforms-upgrade-modal"
-				style="text-transform: uppercase;font-size: 13px;font-weight: 700;padding: 5px 10px;vertical-align: text-bottom;">
-				<?php esc_html_e( 'Upgrade', 'wpforms-lite' ); ?>
-			</a>
-		</div>
-		<p class="wpforms-setup-desc">
-			<?php esc_html_e( 'While WPForms Lite allows you to create any type of form, you can speed up the process by unlocking our other pre-built form templates among other features, so you never have to start from scratch again...', 'wpforms-lite' ); ?>
-		</p>
-		<div class="wpforms-setup-templates wpforms-clear" style="opacity:0.5;">
-			<?php
-			$x = 0;
-			foreach ( $templates as $template ) {
-				$class = 0 === $x % 3 ? 'first ' : '';
-				?>
-				<div class="wpforms-template upgrade-modal <?php echo $class; ?>" id="wpforms-template-<?php echo sanitize_html_class( $template['slug'] ); ?>">
-					<div class="wpforms-template-name wpforms-clear">
-						<?php echo esc_html( $template['name'] ); ?>
-					</div>
-					<div class="wpforms-template-details">
-						<p class="desc"><?php echo esc_html( $template['description'] ); ?></p>
-					</div>
-				</div>
-				<?php
-				$x ++;
-			}
-			?>
-		</div>
-
-		<?php
-	}
-
-	/**
-	 * Display/register additional fields available in the Pro version.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param array $fields
-	 *
-	 * @return array
-	 */
-	public function form_fields( $fields ) {
-
-		$fields['fancy']['fields'] = array(
-			array(
-				'icon'  => 'fa-link',
-				'name'  => 'Website / URL',
-				'type'  => 'url',
-				'order' => '1',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-map-marker',
-				'name'  => 'Address',
-				'type'  => 'address',
-				'order' => '2',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-phone',
-				'name'  => 'Phone',
-				'type'  => 'phone',
-				'order' => '3',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-lock',
-				'name'  => 'Password',
-				'type'  => 'password',
-				'order' => '4',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-calendar-o',
-				'name'  => 'Date / Time',
-				'type'  => 'date-time',
-				'order' => '5',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-eye-slash',
-				'name'  => 'Hidden Field',
-				'type'  => 'hidden',
-				'order' => '6',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-upload',
-				'name'  => 'File Upload',
-				'type'  => 'file-upload',
-				'order' => '7',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-code',
-				'name'  => 'HTML',
-				'type'  => 'html',
-				'order' => '8',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-files-o',
-				'name'  => 'Page Break',
-				'type'  => 'pagebreak',
-				'order' => '9',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-arrows-h',
-				'name'  => 'Divider',
-				'type'  => 'Divider',
-				'order' => '10',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-star',
-				'name'  => 'Rating',
-				'type'  => 'rating',
-				'order' => '21',
-				'class' => 'upgrade-modal',
-			),
-		);
-
-		$fields['payment']['fields'] = array(
-			array(
-				'icon'  => 'fa-file-o',
-				'name'  => 'Single Item',
-				'type'  => 'payment-single',
-				'order' => '1',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-list-ul',
-				'name'  => 'Multiple Items',
-				'type'  => 'payment-multiple',
-				'order' => '2',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-caret-square-o-down',
-				'name'  => 'Dropdown Items',
-				'type'  => 'payment-multiple',
-				'order' => '3',
-				'class' => 'upgrade-modal',
-			),
-			array(
-				'icon'  => 'fa-money',
-				'name'  => 'Total',
-				'type'  => 'payment-total',
-				'order' => '4',
-				'class' => 'upgrade-modal',
-			),
-		);
-
-		return $fields;
+		do_action( 'wpforms_builder_settings_confirmations_after', 'confirmations', $settings );
 	}
 
 	/**
@@ -547,134 +451,39 @@ class WPForms_Lite {
 	 */
 	public function builder_enqueues() {
 
+		$min = wpforms_get_min_suffix();
+
 		wp_enqueue_script(
 			'wpforms-builder-lite',
-			WPFORMS_PLUGIN_URL . 'lite/assets/js/admin-builder-lite.js',
-			array( 'jquery', 'jquery-confirm' ),
+			WPFORMS_PLUGIN_URL . "lite/assets/js/admin-builder-lite{$min}.js",
+			[ 'jquery', 'jquery-confirm' ],
 			WPFORMS_VERSION,
 			false
 		);
 
+		$strings = [
+			'disable_notifications' => sprintf(
+				wp_kses( /* translators: %s - WPForms.com docs page URL. */
+					__( 'You\'ve just turned off notification emails for this form. Since entries are not stored in WPForms Lite, notification emails are recommended for collecting entry details. For setup steps, <a href="%s" target="_blank" rel="noopener noreferrer">please see our notification tutorial</a>.', 'wpforms-lite' ),
+					[
+						'a' => [
+							'href'   => [],
+							'target' => [],
+							'rel'    => [],
+						],
+					]
+				),
+				'https://wpforms.com/docs/setup-form-notification-wpforms/'
+			),
+		];
+
+		$strings = apply_filters( 'wpforms_lite_builder_strings', $strings );
 
 		wp_localize_script(
 			'wpforms-builder-lite',
 			'wpforms_builder_lite',
-			array(
-				'disable_notifications' => sprintf(
-					wp_kses(
-						/* translators: %s - WPForms.com docs page URL. */
-						__( 'You\'ve just turned off notification emails for this form. Since entries are not stored in WPForms Lite, notification emails are recommended for collecting entry details. For setup steps, <a href="%s" target="_blank" rel="noopener noreferrer">please see our notification tutorial</a>.', 'wpforms-lite' ),
-						array(
-							'a'      => array(
-								'href'   => array(),
-								'target' => array(),
-								'rel'    => array(),
-							),
-						)
-					),
-					'https://wpforms.com/docs/setup-form-notification-wpforms/'
-				),
-				'upgrade_title'         => esc_html__( 'is a PRO Feature', 'wpforms-lite' ),
-				'upgrade_message'       => '<p>' . esc_html__( 'We\'re sorry, the %name% is not available on your plan. Please upgrade to the PRO plan to unlock all these awesome features.', 'wpforms-lite' ) . '</p>',
-				'upgrade_bonus'         => '<p>' .
-					wp_kses(
-						__( '<strong>Bonus:</strong> WPForms Lite users get <span>50% off</span> regular price, automatically applied at checkout.', 'wpforms-lite' ),
-						array(
-							'strong' => array(),
-							'span'   => array(),
-						)
-					) .
-				'</p>',
-				'upgrade_doc'           => '<a href="https://wpforms.com/docs/upgrade-wpforms-lite-paid-license/?utm_source=WordPress&amp;utm_medium=link&amp;utm_campaign=liteplugin" target="_blank" rel="noopener noreferrer" class="already-purchased">' . esc_html__( 'Already purchased?' ) . '</a>',
-				'upgrade_button'        => esc_html__( 'Upgrade to PRO', 'wpforms-lite' ),
-				'upgrade_url'           => esc_url( wpforms_admin_upgrade_link( 'builder-modal' ) ),
-				'upgrade_modal'         => wpforms_get_upgrade_modal_text(),
-			)
+			$strings
 		);
-	}
-
-	/**
-	 * Display other providers available with paid license.
-	 *
-	 * @since 1.3.8
-	 */
-	public function builder_provider_sidebar() {
-
-		$providers = array(
-			array(
-				'name' => 'AWeber',
-				'slug' => 'aweber',
-				'img'  => 'addon-icon-aweber.png',
-			),
-			array(
-				'name' => 'Campaign Monitor',
-				'slug' => 'campaign-monitor',
-				'img'  => 'addon-icon-campaign-monitor.png',
-			),
-			array(
-				'name' => 'Drip',
-				'slug' => 'drip',
-				'img'  => 'addon-icon-drip.png',
-			),
-			array(
-				'name' => 'GetResponse',
-				'slug' => 'getresponse',
-				'img'  => 'addon-icon-getresponse.png',
-			),
-			array(
-				'name' => 'MailChimp',
-				'slug' => 'mailchimp',
-				'img'  => 'addon-icon-mailchimp.png',
-			),
-			array(
-				'name' => 'Zapier',
-				'slug' => 'zapier',
-				'img'  => 'addon-icon-zapier.png',
-			),
-		);
-
-		foreach ( $providers as $provider ) {
-
-			/* translators: %s - addon name*/
-			$modal_name = sprintf( esc_html__( '%s addon', 'wpforms-lite' ), esc_attr( $provider['name'] ) );
-			echo '<a href="#" class="wpforms-panel-sidebar-section icon wpforms-panel-sidebar-section-' . esc_attr( $provider['slug'] ) . ' upgrade-modal" data-name="' . $modal_name . '">';
-				echo '<img src="' . WPFORMS_PLUGIN_URL . 'lite/assets/images/' . $provider['img'] . '">';
-				echo esc_html( $provider['name'] );
-				echo '<i class="fa fa-angle-right wpforms-toggle-arrow"></i>';
-			echo '</a>';
-		}
-	}
-
-	/**
-	 * Display payment addons available with paid license.
-	 *
-	 * @since 1.4.7
-	 */
-	public function builder_payments_sidebar() {
-
-		$payments = array(
-			array(
-				'name' => 'PayPal Standard',
-				'slug' => 'paypal_standard',
-				'img'  => 'addon-icon-paypal.png',
-			),
-			array(
-				'name' => 'Stripe',
-				'slug' => 'stripe',
-				'img'  => 'addon-icon-stripe.png',
-			),
-		);
-
-		foreach ( $payments as $payment ) {
-
-			/* translators: %s - addon name*/
-			$modal_name = sprintf( esc_html__( '%s addon', 'wpforms-lite' ), esc_attr( $payment['name'] ) );
-			echo '<a href="#" class="wpforms-panel-sidebar-section icon wpforms-panel-sidebar-section-' . esc_attr( $payment['slug'] ) . ' upgrade-modal" data-name="' . $modal_name . '">';
-				echo '<img src="' . WPFORMS_PLUGIN_URL . 'lite/assets/images/' . $payment['img'] . '">';
-				echo esc_html( $payment['name'] );
-				echo '<i class="fa fa-angle-right wpforms-toggle-arrow"></i>';
-			echo '</a>';
-		}
 	}
 
 	/**
@@ -682,7 +491,7 @@ class WPForms_Lite {
 	 *
 	 * @since 1.4.7
 	 *
-	 * @param string $view
+	 * @param string $view Current view inside the plugin settings page.
 	 */
 	public function settings_cta( $view ) {
 
@@ -697,35 +506,34 @@ class WPForms_Lite {
 			<p>
 				<?php
 				printf(
-					wp_kses(
-						/* translators: %s - star icons. */
-						__( 'We know that you will truly love WPForms. It has over 2000+ five star ratings (%s) and is active on over 1 million websites.', 'wpforms-lite' ),
-						array(
-							'i' => array(
-								'class'       => array(),
-								'aria-hidden' => array(),
-							),
-						)
+					wp_kses( /* translators: %s - star icons. */
+						__( 'We know that you will truly love WPForms. It has over 10,000+ five star ratings (%s) and is active on over 5 million websites.', 'wpforms-lite' ),
+						[
+							'i' => [
+								'class'       => [],
+								'aria-hidden' => [],
+							],
+						]
 					),
-					str_repeat( '<i class="fa fa-star" aria-hidden="true"></i>', 5 )
+					str_repeat( '<i class="fa fa-star" aria-hidden="true"></i>', 5 ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				);
 				?>
 			</p>
 			<h6><?php esc_html_e( 'Pro Features:', 'wpforms-lite' ); ?></h6>
 			<div class="list">
 				<ul>
-					<li><?php esc_html_e( 'Entry Management - view all leads in one place', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( 'All form features like file upload, pagination, etc', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( 'Create surveys & polls with the surveys addon', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( 'WordPress user registration and login forms', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( 'Create payment forms with Stripe and PayPal', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( '300+ customizable form templates', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Store and manage form entries in WordPress', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Unlock all fields & features, including Rich Text & conditional logic', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Make Surveys and Polls and create reports', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Accept user-submitted content with the Post Submissions addon', 'wpforms-lite' ); ?></li>
 				</ul>
 				<ul>
-					<li><?php esc_html_e( 'Powerful Conditional Logic so you can create smart forms', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( '500+ integrations with different marketing & payment services', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( 'Collect signatures, geo-location data, and more', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( 'Accept user submitted content wit Post Submissions addon', 'wpforms-lite' ); ?></li>
-					<li><?php esc_html_e( 'Bonus form templates, form abandonment, and more', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( '500+ integrations with marketing and payment services', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Let users Save and Resume submissions to prevent abandonment', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Take payments with Stripe, Square, Authorize.Net, and PayPal', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Collect signatures, geolocation data, and file uploads', 'wpforms-lite' ); ?></li>
+					<li><?php esc_html_e( 'Create user registration and login forms', 'wpforms-lite' ); ?></li>
 				</ul>
 			</div>
 			<p>
@@ -737,18 +545,18 @@ class WPForms_Lite {
 				<?php
 				echo wp_kses(
 					__( '<strong>Bonus:</strong> WPForms Lite users get <span class="green">50% off regular price</span>, automatically applied at checkout.', 'wpforms-lite' ),
-					array(
-						'strong' => array(),
-						'span'   => array(
-							'class' => array(),
-						),
-					)
+					[
+						'strong' => [],
+						'span'   => [
+							'class' => [],
+						],
+					]
 				);
 				?>
 			</p>
 		</div>
 		<script type="text/javascript">
-			jQuery( document ).ready( function ( $ ) {
+			jQuery( function ( $ ) {
 				$( document ).on( 'click', '.settings-lite-cta .dismiss', function ( event ) {
 					event.preventDefault();
 					$.post( ajaxurl, {
@@ -789,7 +597,7 @@ class WPForms_Lite {
 		}
 		?>
 
-		<style type="text/css">
+		<style>
 			.wpforms-admin-content {
 				-webkit-filter: blur(3px);
 				-moz-filter: blur(3px);
@@ -888,6 +696,7 @@ class WPForms_Lite {
 				float: left;
 			}
 		</style>
+
 		<script type="text/javascript">
 			jQuery( function ( $ ) {
 				var userAgent = window.navigator.userAgent,
@@ -952,7 +761,7 @@ class WPForms_Lite {
 						<div class="form-details-actions">
 							<a href="#" class="form-details-actions-edit"><span class="dashicons dashicons-edit"></span> Edit This Form</a>
 							<a href="#" class="form-details-actions-preview" target="_blank" rel="noopener noreferrer"><span class="dashicons dashicons-visibility"></span> Preview Form</a>
-							<a href="#" class="form-details-actions-export"><span class="dashicons dashicons-migrate"></span> Download Export (CSV)</a>
+							<a href="#" class="form-details-actions-export"><span class="dashicons dashicons-migrate"></span> Export All (CSV)</a>
 							<a href="#" class="form-details-actions-read"><span class="dashicons dashicons-marker"></span> Mark All Read</a>
 						</div>
 					</div>
@@ -1205,175 +1014,86 @@ class WPForms_Lite {
 	 * Add appropriate styling to addons page.
 	 *
 	 * @since 1.0.4
+	 * @deprecated 1.6.7
 	 */
 	public function addon_page_enqueues() {
 
-		if ( ! isset( $_GET['page'] ) || 'wpforms-addons' !== $_GET['page'] ) {
+		_deprecated_function( __METHOD__, '1.6.7 of WPForms plugin', "wpforms()->get( 'addons_page' )->enqueues()" );
+
+		wpforms()->get( 'addons_page' )->enqueues();
+	}
+
+	/**
+	 * Addons page.
+	 *
+	 * @since 1.0.0
+	 * @deprecated 1.6.7
+	 */
+	public function addons_page() {
+
+		_deprecated_function( __METHOD__, '1.6.7 of WPForms plugin', "wpforms()->get( 'addons_page' )->output()" );
+
+		if ( ! wpforms_is_admin_page( 'addons' ) ) {
 			return;
 		}
 
-		// JavaScript.
-		wp_enqueue_script(
-			'jquery-matchheight',
-			WPFORMS_PLUGIN_URL . 'assets/js/jquery.matchHeight-min.js',
-			array( 'jquery' ),
-			'0.7.0',
-			false
-		);
+		wpforms()->get( 'addons_page' )->output();
+	}
 
-		wp_enqueue_script(
-			'listjs',
-			WPFORMS_PLUGIN_URL . 'assets/js/list.min.js',
-			array( 'jquery' ),
-			'1.5.0'
+	/**
+	 * Increase entries count once a form is submitted.
+	 *
+	 * @since 1.5.9
+	 *
+	 * @param array      $fields  Set of form fields.
+	 * @param array      $entry   Entry contents.
+	 * @param int|string $form_id Form ID.
+	 */
+	public function update_entry_count( $fields, $entry, $form_id ) {
+
+		global $wpdb;
+
+		if ( ! apply_filters( 'wpforms_dash_widget_allow_entries_count_lite', true ) ) {
+			return;
+		}
+
+		$form_id = absint( $form_id );
+
+		if ( empty( $form_id ) ) {
+			return;
+		}
+
+		if ( add_post_meta( $form_id, 'wpforms_entries_count', 1, true ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching
+		$wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->postmeta} 
+					SET meta_value = meta_value + 1 
+					WHERE post_id = %d AND meta_key = 'wpforms_entries_count'",
+				$form_id
+			)
 		);
 	}
 
 	/**
-	 * Notify user that addons are a pro feature.
+	 * Add Lite-specific templates to the list of searchable template paths.
 	 *
-	 * @since 1.0.0
+	 * @since 1.6.6
+	 *
+	 * @param array $paths Paths to templates.
+	 *
+	 * @return array
 	 */
-	public function addons_page() {
+	public function add_templates( $paths ) {
 
-		if ( ! isset( $_GET['page'] ) || 'wpforms-addons' !== $_GET['page'] ) {
-			return;
-		}
+		$paths = (array) $paths;
 
-		$upgrade = wpforms_admin_upgrade_link( 'addons' );
-		$addons  = array(
-			array(
-				'name' => 'Aweber',
-				'desc' => 'WPForms AWeber addon allows you to create AWeber newsletter signup forms in WordPress, so you can grow your email list.',
-				'icon' => 'addon-icon-aweber.png',
-			),
-			array(
-				'name' => 'Campaign Monitor',
-				'desc' => 'WPForms Campaign Monitor addon allows you to create Campaign Monitor newsletter signup forms in WordPress, so you can grow your email list.',
-				'icon' => 'addon-icon-campaign-monitor.png',
-			),
-			array(
-				'name' => 'Conditional Logic',
-				'desc' => 'WPForms\' smart Conditional Logic addon allows you to show or hide fields, sections, and subscribe to newsletters based on user selections, so you can collect the most relevant information.',
-				'icon' => 'addon-icon-conditional-logic.png',
-			),
-			array(
-				'name' => 'Custom Captcha',
-				'desc' => 'WPForms Custom Captcha addon allows you to define custom questions or use random math questions as captcha to combat spam form submissions.',
-				'icon' => 'addon-icon-captcha.png',
-			),
-			array(
-				'name' => 'Drip',
-				'desc' => 'WPForms Drip addon allows you to create Drip newsletter signup forms in WordPress, so you can grow your email list.',
-				'icon' => 'addon-icon-drip.png',
-			),
-			array(
-				'name' => 'Form Abandonment',
-				'desc' => 'Unlock more leads by capturing partial entries from your forms. Easily follow up with interested leads and turn them into loyal customers.',
-				'icon' => 'addon-icon-form-abandonment.png',
-			),
-			array(
-				'name' => 'Geolocation',
-				'desc' => 'WPForms Geolocation addon allows you to collect and store your website visitors geolocation data along with their form submission.',
-				'icon' => 'addon-icon-geolocation.png',
-			),
-			array(
-				'name' => 'GetResponse',
-				'desc' => 'WPForms GetResponse addon allows you to create GetResponse newsletter signup forms in WordPress, so you can grow your email list.',
-				'icon' => 'addon-icon-getresponse.png',
-			),
-			array(
-				'name' => 'MailChimp',
-				'desc' => 'WPForms MailChimp addon allows you to create MailChimp newsletter signup forms in WordPress, so you can grow your email list.',
-				'icon' => 'addon-icon-mailchimp.png',
-			),
-			array(
-				'name' => 'Offline Forms',
-				'desc' => 'WPForms Offline Forms addon allows you to enable offline mode so users can save their entered data and submit when their internet connection is restored.',
-				'icon' => 'addon-icon-offline-forms.png',
-			),
-			array(
-				'name' => 'PayPal Standard',
-				'desc' => 'WPForms PayPal addon allows you to connect your WordPress site with PayPal to easily collect payments, donations, and online orders.',
-				'icon' => 'addon-icon-paypal.png',
-			),
-			array(
-				'name' => 'Post Submissions',
-				'desc' => 'WPForms Post Submissions addon makes it easy to have user-submitted content in WordPress. This front-end post submission form allow your users to submit blog posts without logging into the admin area.',
-				'icon' => 'addon-icon-post-submissions.png',
-			),
-			array(
-				'name' => 'Stripe',
-				'desc' => 'WPForms Stripe addon allows you to connect your WordPress site with Stripe to easily collect payments, donations, and online orders.',
-				'icon' => 'addon-icon-stripe.png',
-			),
-			array(
-				'name' => 'Surveys and Polls',
-				'desc' => 'WPForms Surveys and Polls allows you easily create surveys forms and analyze the data with interactive reports.',
-				'icon' => 'addon-icons-surveys-polls.png',
-			),
-			array(
-				'name' => 'User Registration',
-				'desc' => 'WPForms User Registration addon allows you to create custom WordPress user registration forms.',
-				'icon' => 'addon-icon-user-registration.png',
-			),
-			array(
-				'name' => 'Zapier',
-				'desc' => 'WPForms Zapier addon allows you to connect your WordPress forms with over 500+ web apps. The integration possibilities here are just endless.',
-				'icon' => 'addon-icon-zapier.png',
-			),
-		)
-		?>
+		$paths[102] = trailingslashit( __DIR__ . '/templates' );
 
-		<div id="wpforms-admin-addons" class="wrap wpforms-admin-wrap">
-			<h1 class="page-title">
-				<?php esc_html_e( 'WPForms Addons', 'wpforms-lite' ); ?>
-				<input type="search" placeholder="<?php esc_html_e( 'Search Addons', 'wpforms-lite' ); ?>" id="wpforms-admin-addons-search">
-			</h1>
-			<div class="notice notice-info" style="display: block;">
-				<p><strong><?php esc_html_e( 'Form Addons are a PRO feature.', 'wpforms-lite' ); ?></strong></p>
-				<p><?php esc_html_e( 'Please upgrade to the PRO plan to unlock them and more awesome features.', 'wpforms-lite' ); ?></p>
-				<p>
-					<a href="<?php echo esc_url( $upgrade ); ?>" class="wpforms-btn wpforms-btn-orange wpforms-btn-md" rel="noopener noreferrer">
-						<?php esc_html_e( 'Upgrade Now', 'wpforms-lite' ); ?>
-					</a>
-				</p>
-			</div>
-			<div class="wpforms-admin-content">
-				<div class="addons-container" id="wpforms-admin-addons-list">
-					<div class="list">
-						<?php foreach ( $addons as $addon ) : ?>
-						<div class="addon-container">
-							<div class="addon-item">
-								<div class="details wpforms-clear" style="">
-									<img src="<?php echo WPFORMS_PLUGIN_URL; ?>lite/assets/images/<?php echo $addon['icon']; ?>">
-									<h5 class="addon-name">
-										<?php
-										printf(
-											/* translators: %s - addon name*/
-											esc_html__( '%s Addon', 'wpforms-lite' ),
-											$addon['name']
-										);
-										?>
-									</h5>
-									<p class="addon-desc"><?php echo $addon['desc']; ?></p>
-								</div>
-								<div class="actions wpforms-clear">
-									<div class="upgrade-button">
-										<a href="<?php echo esc_url( $upgrade ); ?>" target="_blank" rel="noopener noreferrer" class="wpforms-btn wpforms-btn-light-grey wpforms-upgrade-modal">
-											<?php esc_html_e( 'Upgrade Now', 'wpforms-lite' ); ?>
-										</a>
-									</div>
-								</div>
-							</div>
-						</div>
-						<?php endforeach; ?>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<?php
+		return $paths;
 	}
 }
 

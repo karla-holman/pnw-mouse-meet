@@ -17,19 +17,19 @@ class Mesh_AJAX {
 	 *
 	 * @access public
 	 */
-	function __construct() {
-		add_action( 'wp_ajax_mesh_add_section',           array( $this, 'mesh_add_section' ) );
-		add_action( 'wp_ajax_mesh_save_section',          array( $this, 'mesh_save_section' ) );
-		add_action( 'wp_ajax_mesh_remove_section',        array( $this, 'mesh_remove_section' ) );
-		add_action( 'wp_ajax_mesh_choose_layout',         array( $this, 'mesh_choose_layout' ) );
-		add_action( 'wp_ajax_mesh_update_order',          array( $this, 'mesh_update_order' ) );
+	public function __construct() {
+		add_action( 'wp_ajax_mesh_add_section', array( $this, 'mesh_add_section' ) );
+		add_action( 'wp_ajax_mesh_save_section', array( $this, 'mesh_save_section' ) );
+		add_action( 'wp_ajax_mesh_remove_section', array( $this, 'mesh_remove_section' ) );
+		add_action( 'wp_ajax_mesh_choose_layout', array( $this, 'mesh_choose_layout' ) );
+		add_action( 'wp_ajax_mesh_update_order', array( $this, 'mesh_update_order' ) );
 		add_action( 'wp_ajax_mesh_update_featured_image', array( $this, 'mesh_update_featured_image' ) );
-		add_action( 'wp_ajax_mesh_dismiss_notification',  array( $this, 'mesh_dismiss_notification' ) );
+		add_action( 'wp_ajax_mesh_dismiss_notification', array( $this, 'mesh_dismiss_notification' ) );
 
 		/**
 		 * Since 1.1
 		 */
-		add_action( 'wp_ajax_mesh_trash_hidden_blocks',          array( $this, 'mesh_trash_hidden_blocks' ) );
+		add_action( 'wp_ajax_mesh_trash_hidden_blocks', array( $this, 'mesh_trash_hidden_blocks' ) );
 	}
 
 	/**
@@ -38,10 +38,10 @@ class Mesh_AJAX {
 	 * @access public
 	 * @return void
 	 */
-	function mesh_add_section() {
+	public function mesh_add_section() {
 		check_ajax_referer( 'mesh_add_section_nonce', 'mesh_add_section_nonce' );
 
-		$post_id = 0;
+		$post_id    = 0;
 		$menu_order = 0;
 
 		if ( ! isset( $_POST['mesh_post_id'] ) ) { // Input var okay.
@@ -56,7 +56,7 @@ class Mesh_AJAX {
 
 		$section_args = array(
 			'post_type'   => 'mesh_section',
-			'post_title'  => esc_html__( 'No Section Title', 'mesh' ),
+			'post_title'  => esc_html__( 'No Section Title', 'mesh' ), // Needs to have a title when created (needs updated once created)
 			'post_status' => 'draft',
 			'post_parent' => $post_id,
 			'menu_order'  => $menu_order,
@@ -66,6 +66,13 @@ class Mesh_AJAX {
 
 		if ( ! empty( $new_section ) ) {
 			$section = get_post( $new_section );
+
+			/**
+			 * Update the post_title to include the post ID
+			 */
+			wp_update_post( $post_id, array(
+				'post_title' => $section->post_title . ' - ' . $new_section,
+			) );
 
 			// Make sure the new section has one block (default number needed).
 			mesh_maybe_create_section_blocks( $section, 1 );
@@ -82,7 +89,7 @@ class Mesh_AJAX {
 	 *
 	 * @since 1.0
 	 */
-	function mesh_save_section() {
+	public function mesh_save_section() {
 		check_ajax_referer( 'mesh_save_section_nonce', 'mesh_save_section_nonce' );
 
 		if ( ! isset( $_POST['mesh_section_id'] ) ) { // Input var ok.
@@ -114,10 +121,10 @@ class Mesh_AJAX {
 
 		// Only need certain arguments to be passed on.
 		$new_data = array(
-			'action' => $passed_args['action'],
-			'mesh_action' => 'mesh_save_section',
+			'action'                      => $passed_args['action'],
+			'mesh_action'                 => 'mesh_save_section',
 			'mesh_content_sections_nonce' => $passed_args['mesh_content_sections_nonce'],
-			'mesh-sections' => array(
+			'mesh-sections'               => array(
 				$section->ID => $section_data,
 			),
 		);
@@ -126,9 +133,16 @@ class Mesh_AJAX {
 
 		$section_args = array(
 			'ID'         => $section->ID,
-			'post_title' => sanitize_text_field( wp_unslash( $_POST['mesh-sections'][ $section->ID ]['post_title'] ) ), // WPCS: input var okay.
 			'menu_order' => intval( wp_unslash( $_POST['mesh-sections'][ $section->ID ]['menu_order'] ) ), // WPCS: input var okay.
 		);
+
+		$section_title = wp_unslash( $_POST['mesh-sections'][ $section->ID ]['post_title'] );
+
+		if ( empty( $section_title ) ) {
+			$section_args['post_title'] = sanitize_text_field( 'No Section Title - ' . $section_id );
+		} else {
+			$section_args['post_title'] = $section_title;
+		}
 
 		wp_update_post( $section_args );
 	}
@@ -138,7 +152,7 @@ class Mesh_AJAX {
 	 *
 	 * @since 0.2.0
 	 */
-	function mesh_choose_layout() {
+	public function mesh_choose_layout() {
 		check_ajax_referer( 'mesh_choose_layout_nonce', 'mesh_choose_layout_nonce' );
 
 		if ( isset( $_POST['mesh_section_id'] ) ) { // Input var okay.
@@ -162,13 +176,11 @@ class Mesh_AJAX {
 		}
 
 		$block_template = mesh_locate_template_files();
-
-		$templates = apply_filters( 'mesh_section_data', $block_template );
+		$templates      = apply_filters( 'mesh_section_data', $block_template );
 
 		// Make sure that a section has enough blocks to fill the template.
-		$block_count       = $templates[ $selected_template ]['blocks'];
-
-		$blocks = mesh_cleanup_section_blocks( $section, $block_count );
+		$block_count = $templates[ $selected_template ]['blocks'];
+		$blocks      = mesh_cleanup_section_blocks( $section, $block_count );
 
 		// Reset our widths on layout change.
 		foreach ( $blocks as $block ) {
@@ -182,7 +194,7 @@ class Mesh_AJAX {
 		 * It's important to pass this to the admin to control if a
 		 * section's blocks have a post_status of publish or draft.
 		 */
-		include( LINCHPIN_MESH___PLUGIN_DIR . '/admin/section-inside.php' );
+		include LINCHPIN_MESH___PLUGIN_DIR . '/admin/section-inside.php';
 		$output = ob_get_contents();
 
 		ob_end_clean();
@@ -198,7 +210,7 @@ class Mesh_AJAX {
 	 *
 	 * @since 1.1
 	 */
-	function mesh_trash_hidden_blocks() {
+	public function mesh_trash_hidden_blocks() {
 		check_ajax_referer( 'mesh_choose_layout_nonce', 'mesh_choose_layout_nonce' );
 
 		if ( isset( $_POST['mesh_section_id'] ) ) { // WPCS: Input var okay.
@@ -252,7 +264,7 @@ class Mesh_AJAX {
 	 *
 	 * @since 1.0
 	 */
-	function mesh_remove_section() {
+	public function mesh_remove_section() {
 		check_ajax_referer( 'mesh_remove_section_nonce', 'mesh_remove_section_nonce' );
 
 		$post_id    = (int) intval( wp_unslash( $_POST['mesh_post_id'] ) ); // Input var okay. WPCS: Sanitization ok.
@@ -281,7 +293,6 @@ class Mesh_AJAX {
 			}
 
 			$statuses = array( 'publish', 'draft' );
-
 			$sections = mesh_get_sections( $post_id, 'array', $statuses );
 
 			// If we don't have any sections remaining. Show the initial set.
@@ -306,7 +317,7 @@ class Mesh_AJAX {
 	 *
 	 * @since 1.0
 	 */
-	function mesh_update_order() {
+	public function mesh_update_order() {
 		check_ajax_referer( 'mesh_reorder_section_nonce', 'mesh_reorder_section_nonce' );
 
 		$post_id     = (int) $_POST['mesh_post_id']; // WPCS: XSS ok, sanitization ok.
@@ -328,7 +339,7 @@ class Mesh_AJAX {
 			}
 
 			$post_args = array(
-				'ID' => $section_id,
+				'ID'         => $section_id,
 				'menu_order' => $key,
 			);
 
@@ -345,10 +356,10 @@ class Mesh_AJAX {
 	 * @access public
 	 * @return void
 	 */
-	function mesh_update_featured_image() {
+	public function mesh_update_featured_image() {
 		check_ajax_referer( 'mesh_featured_image_nonce', 'mesh_featured_image_nonce' );
 
-		$post_id  = (int) $_POST['mesh_section_id']; // WPCS: input var okay.
+		$post_id = (int) $_POST['mesh_section_id']; // WPCS: input var okay.
 
 		if ( ! isset( $_POST['mesh_image_id'] ) || 0 === (int) $_POST['mesh_image_id'] ) {
 			die( 0 );
@@ -380,18 +391,17 @@ class Mesh_AJAX {
 	 *
 	 * @since 1.0
 	 */
-	function mesh_dismiss_notification() {
+	public function mesh_dismiss_notification() {
 		check_ajax_referer( 'mesh_dismiss_notification_nonce', 'mesh_dismiss_notification_nonce' );
 
 		$user_id = get_current_user_id();
 
 		if ( ! isset( $_POST['mesh_notification_type'] ) || empty( $_POST['mesh_notification_type'] ) ) { // Input var okay.
-			return;
+			return -1;
 		}
 
 		$notification_type = sanitize_title( wp_unslash( $_POST['mesh_notification_type'] ) ); // Input var okay.
-
-		$notifications = maybe_unserialize( get_user_option( 'linchpin_mesh_notifications', $user_id ) );
+		$notifications     = maybe_unserialize( get_user_option( 'linchpin_mesh_notifications', $user_id ) );
 
 		if ( empty( $notifications ) ) {
 			$notifications = array();
@@ -400,7 +410,7 @@ class Mesh_AJAX {
 		$notifications[ $notification_type ] = '1';
 
 		if ( current_user_can( 'edit_posts' ) ) {
-			update_user_meta( $user_id, 'linchpin_mesh_notifications', $notifications );
+			update_user_option( $user_id, 'linchpin_mesh_notifications', $notifications );
 			wp_die( 1 );
 		}
 	}

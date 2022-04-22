@@ -18,6 +18,18 @@ class UninstallController_bwg {
   private $page;
  
   public function __construct() {
+    if ( !BWG()->is_pro ) {
+      global $bwg_options;
+      if ( !class_exists("TenWebNewLibConfig") ) {
+        $plugin_dir = apply_filters('tenweb_new_free_users_lib_path', array('version' => '1.1.3', 'path' => BWG()->plugin_dir));
+        include_once($plugin_dir['path'] . "/wd/config.php");
+      }
+      $config = new TenWebNewLibConfig();
+      $config->set_options($bwg_options);
+      $deactivate_reasons = new TenWebNewLibDeactivate($config);
+      $deactivate_reasons->submit_and_deactivate();
+    }
+
     $this->model = new UninstallModel_bwg();
     $this->view = new UninstallView_bwg();
 
@@ -31,6 +43,7 @@ class UninstallController_bwg {
     $task = WDWLibrary::get('task');
 
     if ( method_exists($this, $task) ) {
+      check_admin_referer(BWG()->nonce, BWG()->nonce);
       $this->$task();
     }
     else {
@@ -67,6 +80,7 @@ class UninstallController_bwg {
       $wpdb->prefix . 'bwg_option',
       $wpdb->prefix . 'bwg_theme',
       $wpdb->prefix . 'bwg_shortcode',
+      $wpdb->prefix . 'bwg_file_paths',
     );
 
     return $tables;
@@ -82,10 +96,18 @@ class UninstallController_bwg {
     $this->model->delete_folder();
     $this->model->delete_db_tables($params);
     // Deactivate all addons.
-    WDWLibrary::deactivate_all_addons();
+    WDWLibrary::deactivate_all_addons(BWG()->main_file);
     $params['page_title'] = sprintf(__('Uninstall %s', BWG()->prefix), BWG()->nicename);
-    $params['deactivate'] = TRUE;
-
-    $this->view->display($params);
+    $deactivate_url =
+            add_query_arg(
+                array(
+                    'action'   => 'deactivate',
+                    'plugin'   => BWG()->main_file,
+                    '_wpnonce' => wp_create_nonce('deactivate-plugin_' . BWG()->main_file)
+                ),
+                admin_url('plugins.php')
+            );
+    wp_redirect($deactivate_url);
+    exit();
   }
 }

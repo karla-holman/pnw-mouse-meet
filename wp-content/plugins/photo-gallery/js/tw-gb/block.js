@@ -1,12 +1,18 @@
 /**
  * 10Web plugins Gutenberg integration
- * version 2.0.0
+ * version 2.0.6
  */
 ( function ( blocks, element ) {
   registerAllPluginBlocks();
 
   function registerAllPluginBlocks() {
-    var twPluginsData = window['tw_gb'];
+    var twPluginsData = JSON.parse(tw_obj_translate.blocks);
+    for ( var pluginId in window['tw_gb'] ) {
+      if ( !window['tw_gb'].hasOwnProperty( pluginId ) ) {
+        continue;
+      }
+      twPluginsData[pluginId] = window['tw_gb'][pluginId];
+    }
     if ( !twPluginsData ) {
       return;
     }
@@ -82,7 +88,7 @@
 
         function showPopup( shortcode, shortcode_id ) {
           var shortcodeCbName = generateUniqueCbName( pluginId );
-          // Store shortcode attribute into a global variable to get it from an iframe.
+          /* Store shortcode attribute into a global variable to get it from an iframe. */
           window[shortcodeCbName + '_shortcode'] = shortcode ? shortcode : '';
           window[shortcodeCbName] = function ( shortcode, shortcode_id ) {
             delete window[shortcodeCbName];
@@ -92,10 +98,20 @@
             }
           };
           props.setAttributes( { popupOpened: true } );
+          if (!shortcode_id && undefined != shortcode) {
+            var shortcode_extract = shortcode.split(' ');
+            for (i = 0; i < shortcode_extract.length; i++) {
+              var attributes = shortcode_extract[i].split('=');
+              if ('id'== attributes[0]) {
+                shortcode_id = attributes[1].replace(/"/g, "");
+              }
+            }
+          }
+          jQuery(".edit-post-layout, .edit-post-layout__content").css({"z-index":"99999","overflow":"visible"});
           var elem = el( 'form', { className: 'tw-container' }, el( 'div', { className: 'tw-container-wrap' + (pluginData.containerClass ? ' ' + pluginData.containerClass : '') }, el( 'span', {
             className: "media-modal-close",
             onClick: close
-          }, el( "span", { className: "media-modal-icon" } ) ), el( 'iframe', { src: pluginData.data.shortcodeUrl + '&callback=' + shortcodeCbName + '&edit=' + shortcode_id } ) ) );
+          }, el( "span", { className: "media-modal-icon" } ) ), el( 'iframe', { src: pluginData.data.shortcodeUrl + '&callback=' + shortcodeCbName + '&edit=' + shortcode_id + '&shortcode=' + shortcode} ) ) );
           return elem;
         }
 
@@ -105,7 +121,7 @@
           var shortcodeList = JSON.parse( pluginData.data );
           shortcodeList.inputs.forEach( function ( inputItem ) {
             if ( inputItem.type === 'select' ) {
-              children.push( el( 'option', { value: '', dataId: 0 }, tw_obj.empty_item ) );
+              children.push( el( 'option', { value: '', dataId: 0 }, tw_obj_translate.empty_item ) );
               if ( inputItem.options.length ) {
                 inputItem.options.forEach( function ( optionItem ) {
                   var shortcode = '[' + shortcodeList.shortcode_prefix + ' ' + inputItem.shortcode_attibute_name + '="' + optionItem.id + '"]';
@@ -142,16 +158,24 @@
             onClick: function () {
               props.setAttributes( { popupOpened: true } );
             }.bind( this )
-          }, tw_obj.nothing_selected );
+          }, tw_obj_translate.nothing_selected );
         }
 
         function showShortcode() {
+          if(pluginData.title=="Photo Gallery"){
+            var iconWidth = 'auto';
+            var iconHeight = 'auto';
+          }
+          else {
+            var iconWidth = '36px';
+            var iconHeight = '36px';
+          }
           return el( 'img', {
             src: pluginData.iconUrl,
             alt: pluginData.title,
             style: {
-              'height': "36px",
-              'width': "36px"
+              'height': iconHeight,
+              'width': iconWidth
             },
             onClick: function () {
               props.setAttributes( { popupOpened: true } );
@@ -160,6 +184,7 @@
         }
 
         function close() {
+          jQuery(".edit-post-layout, .edit-post-layout__content").css({"z-index":"0","overflow":"auto"});
           props.setAttributes( { popupOpened: false } );
         }
 

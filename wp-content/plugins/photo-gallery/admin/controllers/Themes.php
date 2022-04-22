@@ -61,8 +61,8 @@ class ThemesController_bwg {
   public function execute() {
     $task = WDWLibrary::get('task');
     $id = (int) WDWLibrary::get('current_id', 0);
-    if ( method_exists($this, $task) ) {
-      if ( $task != 'add' && $task != 'edit' && $task != 'display' ) {
+    if ( $task != 'display' && method_exists($this, $task) ) {
+      if ( $task != 'add' && $task != 'edit' ) {
         check_admin_referer(BWG()->nonce, BWG()->nonce);
       }
       $action = WDWLibrary::get('bulk_action', -1);
@@ -155,8 +155,12 @@ class ThemesController_bwg {
     }
     else {
       global $wpdb;
-      $where = ($all ? '' : ' WHERE id=' . $id);
-      $delete = $wpdb->query('DELETE FROM `' . $wpdb->prefix . 'bwg_theme`' . $where);
+      $where = ($all ? '' : ' WHERE id=%d');
+      if( $where != '' ) {
+          $delete = $wpdb->query($wpdb->prepare('DELETE FROM `' . $wpdb->prefix . 'bwg_theme`' . $where, $id));
+      } else {
+          $delete = $wpdb->query('DELETE FROM `' . $wpdb->prefix . 'bwg_theme`' . $where);
+      }
       if ( $delete ) {
         $message = 3;
       }
@@ -223,13 +227,11 @@ class ThemesController_bwg {
    * @param int  $id
    * @param bool $bulk
    */
-public function edit( $id = 0, $bulk = FALSE ) {
-		$reset = WDWLibrary::get('reset', FALSE);
-		// Get Theme data.
-		$row = $this->model->get_row_data($id, $reset);
-    if (!isset($row->container_margin)) {
-      $row->container_margin = 1;
-    }
+  public function edit( $id = 0, $bulk = FALSE ) {
+    $reset = WDWLibrary::get('reset', FALSE);
+    $active_tab = WDWLibrary::get('active_tab', 'Thumbnail');
+    // Get Theme data.
+    $row = $this->model->get_row_data($id, $reset, $active_tab);
 		$current_type = WDWLibrary::get('current_type', 'Thumbnail');
 		$form_action  = add_query_arg( array(
                                 'page' => 'themes_' . BWG()->prefix,
@@ -250,6 +252,7 @@ public function edit( $id = 0, $bulk = FALSE ) {
 			'Lightbox' => __('Lightbox', BWG()->prefix),
 			'Navigation' => __('Navigation', BWG()->prefix),
 			'Carousel' => __('Carousel', BWG()->prefix),
+			'Tags' => __('Tags', BWG()->prefix),
 		);
 
 		$border_styles = array(
@@ -298,18 +301,18 @@ public function edit( $id = 0, $bulk = FALSE ) {
 			'skew' => __('Skew', BWG()->prefix),
 		);
 
-    $thumbnail_hover_effects = array(
-      'none' => __('None', BWG()->prefix),
-      'rotate' => __('Rotate', BWG()->prefix),
-      'scale' => __('Scale', BWG()->prefix),
-      'zoom' => __('Zoom', BWG()->prefix),
-      'skew' => __('Skew', BWG()->prefix),
-    );
+		$thumbnail_hover_effects = array(
+		  'none' => __('None', BWG()->prefix),
+		  'rotate' => __('Rotate', BWG()->prefix),
+		  'scale' => __('Scale', BWG()->prefix),
+		  'zoom' => __('Zoom', BWG()->prefix),
+		  'skew' => __('Skew', BWG()->prefix),
+		);
 
 		$button_styles = array(
-			'fa-chevron' => __('Chevron', BWG()->prefix),
-			'fa-angle' => __('Angle', BWG()->prefix),
-			'fa-angle-double' => __('Double', BWG()->prefix),
+			'bwg-icon-angle' => __('Angle', BWG()->prefix),
+			'bwg-icon-chevron' => __('Chevron', BWG()->prefix),
+			'bwg-icon-double' => __('Double', BWG()->prefix),
 		);
 
 		$rate_icons = array(
@@ -320,8 +323,6 @@ public function edit( $id = 0, $bulk = FALSE ) {
 			'heart' => __('Heart', BWG()->prefix),
 			'square' => __('Square', BWG()->prefix),
 		);
-
-    $active_tab = WDWLibrary::get('active_tab','Thumbnail');
 
 		$params = array(
 			'id' => $id,
@@ -351,10 +352,12 @@ public function edit( $id = 0, $bulk = FALSE ) {
    * @param int $id
    */
   public function reset( $id = 0 ) {
+    $active_tab = WDWLibrary::get('active_tab', 'Thumbnail');
     WDWLibrary::redirect(add_query_arg(array(
                                          'page' => $this->page,
                                          'task' => 'edit',
                                          'current_id' => $id,
+                                         'active_tab' => $active_tab,
                                          'reset' => '1',
                                        ), admin_url('admin.php')));
   }

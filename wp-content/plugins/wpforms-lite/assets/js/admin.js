@@ -1,4 +1,4 @@
-/* global wp, _, wpforms_admin, jconfirm, wpCookies, Choices, List */
+/* global wpforms_admin, jconfirm, wpCookies, Choices, List */
 
 ;(function($) {
 
@@ -30,10 +30,7 @@
 			s = this.settings;
 
 			// Document ready.
-			$( document ).ready( WPFormsAdmin.ready );
-
-			// Forms Overview.
-			WPFormsAdmin.initFormOverview();
+			$( WPFormsAdmin.ready );
 
 			// Entries Single (Details).
 			WPFormsAdmin.initEntriesSingle();
@@ -45,7 +42,7 @@
 			WPFormsAdmin.initWelcome();
 
 			// Addons List.
-			WPFormsAdmin.initAddons();
+			$( document ).on( 'wpformsReady', WPFormsAdmin.initAddons );
 
 			// Settings.
 			WPFormsAdmin.initSettings();
@@ -105,34 +102,41 @@
 
 			// jquery-confirm defaults.
 			jconfirm.defaults = {
-				closeIcon: true,
-				backgroundDismiss: true,
+				closeIcon: false,
+				backgroundDismiss: false,
 				escapeKey: true,
 				animationBounce: 1,
 				useBootstrap: false,
 				theme: 'modern',
 				boxWidth: '400px',
-				animateFromElement: false
+				animateFromElement: false,
+				content: wpforms_admin.something_went_wrong,
 			};
 
 			// Upgrade information modal for upgrade links.
 			$( document ).on( 'click', '.wpforms-upgrade-modal', function() {
 
 				$.alert({
-					title: false,
+					title: wpforms_admin.almost_done,
 					content: wpforms_admin.upgrade_modal,
 					icon: 'fa fa-info-circle',
 					type: 'blue',
-					boxWidth: '565px',
+					boxWidth: '550px',
 					buttons: {
 						confirm: {
 							text: wpforms_admin.ok,
 							btnClass: 'btn-confirm',
-							keys: [ 'enter' ]
+							keys: [ 'enter' ],
 						}
 					}
 				});
 			});
+
+			// Lity lightbox.
+			WPFormsAdmin.initLity();
+
+			// Flyout Menu.
+			WPFormsAdmin.initFlyoutMenu();
 
 			// Action available for each binding.
 			$( document ).trigger( 'wpformsReady' );
@@ -147,33 +151,64 @@
 
 			$( '.choicesjs-select' ).each( function() {
 				var $this = $( this ),
-					args  = { searchEnabled: false };
+					args  = window.wpforms_admin_choicesjs_config ? { ...window.wpforms_admin_choicesjs_config } : {};
+
 				if ( $this.attr( 'multiple' ) ) {
-					args.searchEnabled = true;
-					args.removeItemButton = true;
+					args.removeItemButton = typeof args.removeItemButton !== 'undefined' ? args.removeItemButton : true;
 				}
-				if ( $this.data( 'placeholder' ) ) {
-					args.placeholderValue = $this.data( 'placeholder' );
-				}
+
 				if ( $this.data( 'sorting' ) === 'off' ) {
 					args.shouldSort = false;
 				}
+
 				if ( $this.data( 'search' ) ) {
 					args.searchEnabled = true;
 				}
 
-				// Translate default strings.
-				args.loadingText = wpforms_admin.choicesjs_loading;
-				args.noResultsText = wpforms_admin.choicesjs_no_results;
-				args.noChoicesText = wpforms_admin.choicesjs_no_choices;
-				args.itemSelectText = wpforms_admin.choicesjs_item_select;
+				if ( $this.data( 'choices-position' ) ) {
+					args.position = $this.data( 'choices-position' );
+				}
 
-				new Choices( $this[0], args );
-			});
+				// Function to run once Choices initialises.
+				// We need to reproduce a behaviour like on public-facing area for "Edit Entry" page.
+				args.callbackOnInit = function() {
+
+					var self      = this,
+						$element  = $( self.passedElement.element ),
+						$input    = $( self.input.element ),
+						sizeClass = $element.data( 'size-class' );
+
+					// Add CSS-class for size.
+					if ( sizeClass ) {
+						$( self.containerOuter.element ).addClass( sizeClass );
+					}
+
+					/**
+					 * If a multiple select has selected choices - hide a placeholder input.
+					 * We use a custom styles like a `.screen-reader-text` for it,
+					 * because it avoid an issue with closing a dropdown.
+					 */
+					if ( $element.prop( 'multiple' ) ) {
+
+						// On init event.
+						if ( self.getValue( true ).length ) {
+							$input.addClass( self.config.classNames.input + '--hidden' );
+						}
+
+						// On change event.
+						$element.on( 'change', function() {
+
+							self.getValue( true ).length ? $input.addClass( self.config.classNames.input + '--hidden' ) : $input.removeClass( self.config.classNames.input + '--hidden' );
+						} );
+					}
+				};
+
+				$this.data( 'choicesjs', new Choices( $this[0], args ) );
+			} );
 		},
 
 		/**
-		 * Initilize checkbox mulit-select columns.
+		 * Initialize checkbox multi-select columns.
 		 *
 		 * @since 1.4.2
 		 */
@@ -216,41 +251,15 @@
 		 * Element bindings for Form Overview page.
 		 *
 		 * @since 1.3.9
+		 * @since 1.7.3 Deprecated.
+		 *
+		 * @deprecated Use `WPFormsForms.Overview.init()` instead.
 		 */
 		initFormOverview: function() {
 
-			// Confirm form entry deletion and duplications.
-			$( document ).on( 'click', '#wpforms-overview .wp-list-table .delete a, #wpforms-overview .wp-list-table .duplicate a', function( event ) {
+			console.warn( 'WARNING! Function "WPFormsAdmin.initFormOverview()" has been deprecated, please use the new "WPFormsForms.Overview.init()" function instead!' );
 
-				event.preventDefault();
-
-				var url = $( this ).attr( 'href' ),
-					msg = $( this ).parent().hasClass( 'delete' ) ? wpforms_admin.form_delete_confirm : wpforms_admin.form_duplicate_confirm;
-
-				// Trigger alert modal to confirm.
-				$.confirm({
-					title: false,
-					content: msg,
-					backgroundDismiss: false,
-					closeIcon: false,
-					icon: 'fa fa-exclamation-circle',
-					type: 'orange',
-					buttons: {
-						confirm: {
-							text: wpforms_admin.ok,
-							btnClass: 'btn-confirm',
-							keys: [ 'enter' ],
-							action: function(){
-								window.location = url;
-							}
-						},
-						cancel: {
-							text: wpforms_admin.cancel,
-							keys: [ 'esc' ]
-						}
-					}
-				});
-			});
+			window.WPFormsForms.Overview.init();
 		},
 
 		//--------------------------------------------------------------------//
@@ -279,10 +288,8 @@
 
 				// Trigger alert modal to confirm.
 				$.confirm({
-					title: false,
+					title: wpforms_admin.heads_up,
 					content: wpforms_admin.entry_delete_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -316,10 +323,10 @@
 				event.preventDefault();
 
 				// Handle cookie.
-				if ( wpCookies.get( 'wpforms_entry_hide_empty' ) === 'true') {
+				if ( wpCookies.get( 'wpforms_entry_hide_empty' ) === 'true' ) {
 
 					// User was hiding empty fields, so now display them.
-					wpCookies.remove('wpforms_entry_hide_empty');
+					wpCookies.remove( 'wpforms_entry_hide_empty' );
 					$( this ).text( wpforms_admin.entry_empty_fields_hide );
 				} else {
 
@@ -328,7 +335,7 @@
 					$( this ).text( wpforms_admin.entry_empty_fields_show );
 				}
 
-				$( '.wpforms-entry-field.empty' ).toggle();
+				$( '.wpforms-entry-field.empty, .wpforms-edit-entry-field.empty' ).toggle();
 			});
 
 			// Display notes editor.
@@ -336,7 +343,7 @@
 
 				event.preventDefault();
 
-				$( this ).hide().next( 'form' ).slideToggle();
+				$( this ).hide().next( 'form' ).stop().slideToggle();
 			});
 
 			// Cancel note.
@@ -344,7 +351,7 @@
 
 				event.preventDefault();
 
-				$( this ).closest( 'form' ).slideToggle();
+				$( this ).closest( 'form' ).stop().slideToggle();
 				$('.wpforms-entry-notes-new .add').show();
 			});
 
@@ -357,10 +364,8 @@
 
 				// Trigger alert modal to confirm.
 				$.confirm({
-					title: false,
+					title: wpforms_admin.heads_up,
 					content: wpforms_admin.entry_note_delete_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -437,6 +442,45 @@
 
 			});
 
+			// Confirm bulk entry deletion.
+			$( document ).on( 'click', '#wpforms-entries-table #doaction', function( event ) {
+
+				var $btn     = $( this ),
+					$form    = $btn.closest( 'form' ),
+					$table   = $form.find( 'table' ),
+					$action  = $form.find( 'select[name=action]' ),
+					$checked = $table.find( 'input[name^=entry_id]:checked' );
+
+				if ( 'delete' !== $action.val() || ! $checked.length ) {
+					return;
+				}
+
+				event.preventDefault();
+
+				// Trigger alert modal to confirm.
+				$.confirm( {
+					title: wpforms_admin.heads_up,
+					content: wpforms_admin.entry_delete_n_confirm.replace( '{entry_count}', $checked.length ),
+					icon: 'fa fa-exclamation-circle',
+					type: 'orange',
+					buttons: {
+						confirm: {
+							text: wpforms_admin.ok,
+							btnClass: 'btn-confirm',
+							keys: [ 'enter' ],
+							action: function() {
+
+								$form.submit();
+							},
+						},
+						cancel: {
+							text: wpforms_admin.cancel,
+							keys: [ 'esc' ],
+						},
+					},
+				} );
+			} );
+
 			// Confirm entry deletion.
 			$( document ).on( 'click', '#wpforms-entries-list .wp-list-table .delete', function( event ) {
 
@@ -446,10 +490,8 @@
 
 				// Trigger alert modal to confirm.
 				$.confirm({
-					title: false,
+					title: wpforms_admin.heads_up,
 					content: wpforms_admin.entry_delete_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -474,10 +516,11 @@
 
 				event.preventDefault();
 
-				var $this = $( this ),
-					task  = '',
-					total = Number( $( '#wpforms-entries-list .starred-num' ).text() ),
-					id    = $this.data( 'id' );
+				var $this  = $( this ),
+					task   = '',
+					total  = Number( $( '#wpforms-entries-list .starred-num' ).text() ),
+					id     = $this.data( 'id' ),
+					formId = $this.data( 'form-id' );
 
 				if ( $this.hasClass( 'star' ) ) {
 					task = 'star';
@@ -495,7 +538,8 @@
 					task    : task,
 					action  : 'wpforms_entry_list_star',
 					nonce   : wpforms_admin.nonce,
-					entry_id: id
+					entryId : id,
+					formId  : formId,
 				};
 				$.post( wpforms_admin.ajax_url, data );
 			});
@@ -526,7 +570,8 @@
 					task    : task,
 					action  : 'wpforms_entry_list_read',
 					nonce   : wpforms_admin.nonce,
-					entry_id: id
+					entryId : id,
+					formId  : $this.data( 'form-id' ),
 				};
 				$.post( wpforms_admin.ajax_url, data );
 			});
@@ -536,14 +581,26 @@
 
 				event.preventDefault();
 
-				var url = $( this ).attr( 'href' );
+				var url           = $( this ).attr( 'href' ),
+					$table        = $( '#wpforms-entries-table' ),
+					filteredCount = $table.data( 'filtered-count' ) ? parseInt( $table.data( 'filtered-count' ), 10 ) : 0,
+					data          = {
+						'action': 'wpforms_entry_list_process_delete_all',
+						'form_id': $table.find( 'input[name="form_id"]' ).val(),
+						'date': $table.find( 'input[name="date"]' ).val(),
+						'search': {
+							'field': $table.find( 'select[name="search[field]"]' ).val(),
+							'comparison': $table.find( 'select[name="search[comparison]"]' ).val(),
+							'term': $table.find( 'input[name="search[term]"]' ).val(),
+						},
+						'nonce': wpforms_admin.nonce,
+						'url': url,
+					};
 
 				// Trigger alert modal to confirm.
-				$.confirm({
+				$.confirm( {
 					title: wpforms_admin.heads_up,
-					content: wpforms_admin.entry_delete_all_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
+					content: filteredCount && $( '#wpforms-reset-filter' ).length ? wpforms_admin.entry_delete_n_confirm.replace( '{entry_count}', filteredCount ) : wpforms_admin.entry_delete_all_confirm,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -551,8 +608,20 @@
 							text: wpforms_admin.ok,
 							btnClass: 'btn-confirm',
 							keys: [ 'enter' ],
-							action: function(){
-								window.location = url;
+							action: function() {
+
+								$.get( wpforms_admin.ajax_url, data )
+									.done( function( response ) {
+
+										if ( response.success ) {
+											window.location = ! _.isEmpty( response.data ) ? response.data : url;
+											return;
+										}
+
+										if ( ! _.isEmpty( response.data ) ) {
+											console.error( response.data );
+										}
+									} );
 							}
 						},
 						cancel: {
@@ -560,8 +629,8 @@
 							keys: [ 'esc' ]
 						}
 					}
-				});
-			});
+				} );
+			} );
 
 			// Check for new form entries using Heartbeat API.
 			$( document ).on( 'heartbeat-send', function ( event, data ) {
@@ -569,12 +638,19 @@
 				var $entriesList = $( '#wpforms-entries-list' );
 
 				// Works on entry list page only.
-				if ( ! $entriesList.length ) {
+				if ( ! $entriesList.length || $entriesList.find( '.wpforms-dash-widget' ).length ) {
 					return;
 				}
 
-				data.wpforms_new_entries_entry_id = $entriesList.find( '#wpforms-entries-table' ).data( 'last-entry-id' );
-				data.wpforms_new_entries_form_id = $entriesList.find( 'input[name=form_id]' ).val();
+				var last_entry_id = $entriesList.find( '#wpforms-entries-table' ).data( 'last-entry-id' );
+
+				// When entries list is filtered, there is no data param at all.
+				if ( typeof last_entry_id === 'undefined' ) {
+					return;
+				}
+
+				data.wpforms_new_entries_entry_id = last_entry_id;
+				data.wpforms_new_entries_form_id  = $entriesList.find( 'input[name=form_id]' ).val();
 			} );
 
 			// Display entries list notification if Heartbeat API new form entries check is successful.
@@ -599,14 +675,18 @@
 						.append( '<tr class="new-entries-notification"><td colspan="' + columnCount + '"><a href=""></a></td></tr>' );
 				}
 
-				$entriesList.find( '.new-entries-notification a' )
+				var $link = $entriesList.find( '.new-entries-notification a' );
+
+				$link
 					.text( data.wpforms_new_entries_notification )
 					.slideDown( {
-						duration: 500,
-						start   : function () {
-							$( this ).css( {
-								display: 'block',
-							} );
+						start: function() {
+
+							$link.css( 'display', 'block' );
+						},
+						always: function() {
+
+							$link.css( 'display', 'block' );
 						},
 					} );
 			} );
@@ -628,10 +708,8 @@
 					var $modalContent = this.$content,
 						$select       = $modalContent.find( 'select' ),
 						choices       = new Choices( $select[0], {
-							maxItemCount: 5,
 							shouldSort: false,
 							removeItemButton: true,
-							placeholderValue: wpforms_admin.choicesjs_fields_select + '...',
 							loadingText: wpforms_admin.choicesjs_loading,
 							noResultsText: wpforms_admin.choicesjs_no_results,
 							noChoicesText: wpforms_admin.choicesjs_no_choices,
@@ -644,15 +722,17 @@
 
 					$( '.jconfirm-content-pane, .jconfirm-box' ).css( 'overflow','visible' );
 
-					choices.passedElement.addEventListener( 'change', function() {
-						choices.hideDropdown();
+					choices.passedElement.element.addEventListener( 'change', function() {
+
+						// Without `true` parameter dropdown will be hidden together with modal window when `Enter` is pressed.
+						choices.hideDropdown( true );
 					}, false );
 				},
 				buttons: {
 					confirm: {
 						text: wpforms_admin.save_refresh,
 						btnClass: 'btn-confirm',
-						keys: ['enter'],
+						keys: [ 'enter' ],
 						action: function() {
 							this.$content.find( 'form' ).submit();
 						}
@@ -681,7 +761,7 @@
 
 				event.preventDefault();
 
-				var video = '<div class="video-container"><iframe width="1280" height="720" src="https://www.youtube-nocookie.com/embed/yDyvSGV7tP4?rel=0&amp;showinfo=0&amp;autoplay=1" frameborder="0" allowfullscreen></iframe></div>';
+				var video = '<div class="video-container"><iframe width="1280" height="720" src="https://www.youtube-nocookie.com/embed/o2nE1P74WxQ?rel=0&amp;showinfo=0&amp;autoplay=1" frameborder="0" allowfullscreen></iframe></div>';
 
 				$.dialog({
 					title: false,
@@ -703,38 +783,38 @@
 		 */
 		initAddons: function() {
 
-			// Some actions have to be delayed to document.ready.
-			$( document ).on( 'wpformsReady', function() {
+			// Only run on the addons page.
+			if ( ! $( '#wpforms-admin-addons' ).length ) {
+				return;
+			}
 
-				// Only run on the addons page.
-				if ( ! $( '#wpforms-admin-addons' ).length ) {
-					return;
-				}
+			// Addons searching.
+			if ( $( '#wpforms-admin-addons-list' ).length ) {
+				var addonSearch = new List( 'wpforms-admin-addons-list', {
+					valueNames: [ 'addon-name' ] } );
 
-				// Display all addon boxes as the same height.
-				$( '.addon-item .details' ).matchHeight( { byrow: false, property: 'height' } );
+				$( '#wpforms-admin-addons-search' ).on( 'keyup', function() {
+					var searchTerm = $( this ).val(),
+						$heading = $( '#addons-heading' );
 
-				// Addons searching.
-				if ( $('#wpforms-admin-addons-list').length ) {
-					var addonSearch = new List( 'wpforms-admin-addons-list', {
-						valueNames: [ 'addon-name' ]
-					} );
+					if ( searchTerm ) {
+						$heading.text( wpforms_admin.addon_search );
+					} else {
+						$heading.text( $heading.data( 'text' ) );
+					}
 
-					$( '#wpforms-admin-addons-search' ).on( 'keyup', function () {
-						var searchTerm = $( this ).val(),
-							$heading = $( '#addons-heading' );
+					/*
+					 * Replace dot and comma with space
+					 * it is workaround for a bug in listjs library.
+					 *
+					 * Note: remove when the issue below is fixed:
+					 * @see https://github.com/javve/list.js/issues/699
+					 */
+					searchTerm = searchTerm.replace( /[.,]/g, ' ' );
 
-						if ( searchTerm ) {
-							$heading.text( wpforms_admin.addon_search );
-						}
-						else {
-							$heading.text( $heading.data( 'text' ) );
-						}
-
-						addonSearch.search( searchTerm );
-					} );
-				}
-			});
+					addonSearch.search( searchTerm );
+				} );
+			}
 
 			// Toggle an addon state.
 			$( document ).on( 'click', '#wpforms-admin-addons .addon-item button', function( event ) {
@@ -746,7 +826,46 @@
 				}
 
 				WPFormsAdmin.addonToggle( $( this ) );
-			});
+			} );
+		},
+
+		/**
+		 * Change plugin/addon state.
+		 *
+		 * @since 1.6.3
+		 *
+		 * @param {string}   plugin     Plugin slug or URL for download.
+		 * @param {string}   state      State status activate|deactivate|install.
+		 * @param {string}   pluginType Plugin type addon or plugin.
+		 * @param {Function} callback   Callback for get result from AJAX.
+		 */
+		setAddonState: function( plugin, state, pluginType, callback ) {
+
+			var actions = {
+					'activate': 'wpforms_activate_addon',
+					'install': 'wpforms_install_addon',
+					'deactivate': 'wpforms_deactivate_addon',
+				},
+				action = actions[ state ];
+
+			if ( ! action ) {
+				return;
+			}
+
+			var data = {
+				action: action,
+				nonce: wpforms_admin.nonce,
+				plugin: plugin,
+				type: pluginType,
+			};
+
+			$.post( wpforms_admin.ajax_url, data, function( res ) {
+
+				callback( res );
+			} ).fail( function( xhr ) {
+
+				console.log( xhr.responseText );
+			} );
 		},
 
 		/**
@@ -758,121 +877,127 @@
 
 			var $addon = $btn.closest( '.addon-item' ),
 				plugin = $btn.attr( 'data-plugin' ),
-				plugin_type = $btn.attr( 'data-type' ),
-				action,
+				pluginType = $btn.attr( 'data-type' ),
+				state,
 				cssClass,
-				statusText,
+				stateText,
 				buttonText,
 				errorText,
 				successText;
+
+			if ( $btn.hasClass( 'status-go-to-url' ) ) {
+
+				// Open url in new tab.
+				window.open( $btn.attr( 'data-plugin' ), '_blank' );
+				return;
+			}
 
 			$btn.prop( 'disabled', true ).addClass( 'loading' );
 			$btn.html( s.iconSpinner );
 
 			if ( $btn.hasClass( 'status-active' ) ) {
+
 				// Deactivate.
-				action     = 'wpforms_deactivate_addon';
-				cssClass   = 'status-inactive';
-				if ( plugin_type === 'plugin' ) {
+				state = 'deactivate';
+				cssClass = 'status-installed';
+				if ( pluginType === 'plugin' ) {
 					cssClass += ' button button-secondary';
 				}
-				statusText = wpforms_admin.addon_inactive;
+				stateText = wpforms_admin.addon_inactive;
 				buttonText = wpforms_admin.addon_activate;
-				if ( plugin_type === 'addon' ) {
+				errorText  = wpforms_admin.addon_deactivate;
+				if ( pluginType === 'addon' ) {
 					buttonText = s.iconActivate + buttonText;
+					errorText  = s.iconDeactivate + errorText;
 				}
-				errorText  = s.iconDeactivate + wpforms_admin.addon_deactivate;
 
-			} else if ( $btn.hasClass( 'status-inactive' ) ) {
+			} else if ( $btn.hasClass( 'status-installed' ) ) {
+
 				// Activate.
-				action     = 'wpforms_activate_addon';
-				cssClass   = 'status-active';
-				if ( plugin_type === 'plugin' ) {
+				state = 'activate';
+				cssClass = 'status-active';
+				if ( pluginType === 'plugin' ) {
 					cssClass += ' button button-secondary disabled';
 				}
-				statusText = wpforms_admin.addon_active;
+				stateText = wpforms_admin.addon_active;
 				buttonText = wpforms_admin.addon_deactivate;
-				if ( plugin_type === 'addon' ) {
+				if ( pluginType === 'addon' ) {
 					buttonText = s.iconDeactivate + buttonText;
-				} else if ( plugin_type === 'plugin' ) {
+					errorText  = s.iconActivate + wpforms_admin.addon_activate;
+				} else if ( pluginType === 'plugin' ) {
 					buttonText = wpforms_admin.addon_activated;
+					errorText  = wpforms_admin.addon_activate;
 				}
-				errorText  = s.iconActivate + wpforms_admin.addon_activate;
 
-			} else if ( $btn.hasClass( 'status-download' ) ) {
+			} else if ( $btn.hasClass( 'status-missing' ) ) {
+
 				// Install & Activate.
-				action     = 'wpforms_install_addon';
-				cssClass   = 'status-active';
-				if ( plugin_type === 'plugin' ) {
+				state = 'install';
+				cssClass = 'status-active';
+				if ( pluginType === 'plugin' ) {
 					cssClass += ' button disabled';
 				}
-				statusText = wpforms_admin.addon_active;
+				stateText = wpforms_admin.addon_active;
 				buttonText = wpforms_admin.addon_activated;
-				if ( plugin_type === 'addon' ) {
+				errorText  = s.iconInstall;
+				if ( pluginType === 'addon' ) {
 					buttonText = s.iconActivate + wpforms_admin.addon_deactivate;
+					errorText += wpforms_admin.addon_install;
 				}
-				errorText  = s.iconInstall + wpforms_admin.addon_activate;
 
 			} else {
 				return;
 			}
-
-			var data = {
-				action: action,
-				nonce : wpforms_admin.nonce,
-				plugin: plugin,
-				type  : plugin_type
-			};
-			$.post( wpforms_admin.ajax_url, data, function( res ) {
+			// eslint-disable-next-line complexity
+			WPFormsAdmin.setAddonState( plugin, state, pluginType, function( res ) {
 
 				if ( res.success ) {
-					if ( 'wpforms_install_addon' === action ) {
+					if ( 'install' === state ) {
 						$btn.attr( 'data-plugin', res.data.basename );
 						successText = res.data.msg;
 						if ( ! res.data.is_activated ) {
-							cssClass = 'status-inactive';
-							if ( plugin_type === 'plugin' ) {
-								cssClass = 'button';
-							}
-							statusText = wpforms_admin.addon_inactive;
-							buttonText = s.iconActivate + wpforms_admin.addon_activate;
+							stateText  = wpforms_admin.addon_inactive;
+							buttonText = 'plugin' === pluginType ? wpforms_admin.addon_activate : s.iconActivate + wpforms_admin.addon_activate;
+							cssClass   = 'plugin' === pluginType ? 'status-installed button button-secondary' : 'status-installed';
 						}
 					} else {
 						successText = res.data;
 					}
-					$addon.find( '.actions' ).append( '<div class="msg success">'+successText+'</div>' );
+					$addon.find( '.actions' ).append( '<div class="msg success">' + successText + '</div>' );
 					$addon.find( 'span.status-label' )
-						  .removeClass( 'status-active status-inactive status-download' )
-						  .addClass( cssClass )
-						  .removeClass( 'button button-primary button-secondary disabled' )
-						  .text( statusText );
+						.removeClass( 'status-active status-installed status-missing' )
+						.addClass( cssClass )
+						.removeClass( 'button button-primary button-secondary disabled' )
+						.text( stateText );
 					$btn
-						.removeClass( 'status-active status-inactive status-download' )
+						.removeClass( 'status-active status-installed status-missing' )
 						.removeClass( 'button button-primary button-secondary disabled' )
 						.addClass( cssClass ).html( buttonText );
 				} else {
-					if ( 'download_failed' === res.data[0].code ) {
-						if ( plugin_type === 'addon' ) {
-							$addon.find( '.actions' ).append( '<div class="msg error">'+wpforms_admin.addon_error+'</div>' );
+					if ( 'object' === typeof res.data ) {
+						if ( pluginType === 'addon' ) {
+							$addon.find( '.actions' ).append( '<div class="msg error"><p>' + wpforms_admin.addon_error + '</p></div>' );
 						} else {
-							$addon.find( '.actions' ).append( '<div class="msg error">'+wpforms_admin.plugin_error+'</div>' );
+							$addon.find( '.actions' ).append( '<div class="msg error"><p>' + wpforms_admin.plugin_error + '</p></div>' );
 						}
 					} else {
-						$addon.find( '.actions' ).append( '<div class="msg error">'+res.data+'</div>' );
+						$addon.find( '.actions' ).append( '<div class="msg error"><p>' + res.data + '</p></div>' );
+					}
+					if ( 'install' === state && 'plugin' === pluginType ) {
+						$btn.addClass( 'status-go-to-url' ).removeClass( 'status-missing' );
 					}
 					$btn.html( errorText );
 				}
 
 				$btn.prop( 'disabled', false ).removeClass( 'loading' );
 
-				// Automatically clear addon messages after 3 seconds.
-				setTimeout( function() {
-					$( '.addon-item .msg' ).remove();
-				}, 3000 );
+				if ( ! $addon.find( '.actions' ).find( '.msg.error' ).length ) {
+					setTimeout( function() {
 
-			}).fail( function( xhr ) {
-				console.log( xhr.responseText );
-			});
+						$( '.addon-item .msg' ).remove();
+					}, 3000 );
+				}
+			} );
 		},
 
 		//--------------------------------------------------------------------//
@@ -929,7 +1054,72 @@
 							}
 						},
 						effect: 'appear'
-					}
+					},
+
+					// CAPTCHA > Type.
+					{
+						conditions: {
+							element:   'input[name=captcha-provider]:checked',
+							type:      'value',
+							operator:  '=',
+							condition: 'hcaptcha',
+						},
+						actions: {
+							if: [
+								{
+									element: '.wpforms-setting-row',
+									action: 'show',
+								},
+								{
+									element: '.wpforms-setting-recaptcha, #wpforms-setting-row-captcha-provider .desc, #wpforms-setting-row-recaptcha-site-key, #wpforms-setting-row-recaptcha-secret-key, #wpforms-setting-row-recaptcha-fail-msg',
+									action: 'hide',
+								},
+							],
+						},
+						effect: 'appear',
+					},
+					{
+						conditions: {
+							element:   'input[name=captcha-provider]:checked',
+							type:      'value',
+							operator:  '=',
+							condition: 'recaptcha',
+						},
+						actions: {
+							if: [
+								{
+									element: '.wpforms-setting-row',
+									action: 'show',
+								},
+								{
+									element: '#wpforms-setting-row-captcha-provider .desc, #wpforms-setting-row-hcaptcha-heading, #wpforms-setting-row-hcaptcha-site-key, #wpforms-setting-row-hcaptcha-secret-key, #wpforms-setting-row-hcaptcha-fail-msg',
+									action: 'hide',
+								},
+							],
+						},
+						effect: 'appear',
+					},
+					{
+						conditions: {
+							element:   'input[name=captcha-provider]:checked',
+							type:      'value',
+							operator:  '=',
+							condition: 'none',
+						},
+						actions: {
+							if: [
+								{
+									element: '.wpforms-setting-row',
+									action: 'hide',
+								},
+								{
+									element: '.wpforms-setting-captcha-heading, #wpforms-setting-row-captcha-provider, #wpforms-setting-row-captcha-provider .desc',
+									action: 'show',
+								},
+							],
+						},
+						effect: 'appear',
+					},
 				] );
 			});
 
@@ -953,7 +1143,25 @@
 				event.preventDefault();
 
 				WPFormsAdmin.licenseVerify( $( this ) );
-			});
+			} );
+
+			// Show message for license field.
+			$( document ).on( 'click', '.wpforms-setting-license-wrapper', function( event ) {
+
+				event.preventDefault();
+
+				var $keyField = $( '#wpforms-setting-license-key' );
+
+				if ( ! $keyField.length ) {
+					return;
+				}
+
+				if ( ! $keyField.prop( 'disabled' ) ) {
+					return;
+				}
+
+				WPFormsAdmin.licenseEditMessage();
+			} );
 
 			// Deactivate license key.
 			$( document ).on( 'click', '#wpforms-setting-license-key-deactivate', function( event ) {
@@ -994,13 +1202,20 @@
 			});
 
 			// Integration individual display toggling.
-			$( document ).on( 'click', '.wpforms-settings-provider-header', function( event ) {
+			$( document ).on( 'click', '.wpforms-settings-provider:not(.focus-out) .wpforms-settings-provider-header', function( event ) {
 
 				event.preventDefault();
 
-				$( this ).parent().find( '.wpforms-settings-provider-accounts' ).slideToggle();
-				$( this ).parent().find( '.wpforms-settings-provider-logo i' ).toggleClass( 'fa-chevron-right fa-chevron-down' );
-			});
+				var $this = $( this );
+
+				$this
+					.parent()
+					.find( '.wpforms-settings-provider-accounts' )
+					.stop()
+					.slideToggle( '', function() {
+						$this.parent().find( '.wpforms-settings-provider-logo i' ).toggleClass( 'fa-chevron-right fa-chevron-down' );
+					} );
+			} );
 
 			// Integration accounts display toggling.
 			$( document ).on( 'click', '.wpforms-settings-provider-accounts-toggle a', function( event ) {
@@ -1009,8 +1224,34 @@
 
 				var $connectFields = $( this ).parent().next( '.wpforms-settings-provider-accounts-connect' );
 				$connectFields.find( 'input[type=text], input[type=password]' ).val('');
-				$connectFields.slideToggle();
+				$connectFields.stop().slideToggle();
 			});
+
+			// CAPTCHA settings page: type toggling.
+			$( document ).on( 'change', '#wpforms-setting-row-captcha-provider input', function() {
+
+				var $preview = $( '#wpforms-setting-row-captcha-preview' );
+
+				if ( 'hcaptcha' === this.value ) {
+					$preview.removeClass( 'wpforms-hidden' );
+				} else if ( 'none' === this.value ) {
+					$preview.addClass( 'wpforms-hidden' );
+				} else {
+					$( '#wpforms-setting-row-recaptcha-type input:checked' ).trigger( 'change' );
+				}
+
+				if ( $preview.find( '.wpforms-captcha-preview' ).length ) {
+					$preview.find( '.wpforms-captcha-preview' ).empty();
+					$preview.find( '.wpforms-captcha-placeholder' ).removeClass( 'wpforms-hidden' );
+				}
+			} );
+
+			// CAPTCHA settings page: reCATCHA type toggling.
+			$( document ).on( 'change', '#wpforms-setting-row-recaptcha-type input', function() {
+
+				$( '#wpforms-setting-row-captcha-preview' ).toggleClass( 'wpforms-hidden', 'v2' !== this.value );
+				$( '#wpforms-setting-row-recaptcha-v3-threshold' ).toggleClass( 'wpforms-hidden', 'v3' !== this.value );
+			} );
 		},
 
 		/**
@@ -1032,15 +1273,13 @@
 			$.alert({
 				title: wpforms_admin.heads_up,
 				content: msg,
-				backgroundDismiss: false,
-				closeIcon: false,
 				icon: 'fa fa-exclamation-circle',
 				type: 'orange',
 				buttons: {
 					confirm: {
 						text: wpforms_admin.ok,
 						btnClass: 'btn-confirm',
-						keys: [ 'enter' ]
+						keys: [ 'enter' ],
 					}
 				}
 			});
@@ -1091,20 +1330,22 @@
 		 * Verify a license key.
 		 *
 		 * @since 1.3.9
+		 *
+		 * @param {jQuery} $el Verify button element.
 		 */
-		licenseVerify: function( el ) {
+		licenseVerify: function( $el ) {
 
-			var $this       = $( el ),
-				$row        = $this.closest( '.wpforms-setting-row' ),
-				buttonWidth = $this.outerWidth(),
-				buttonLabel = $this.text(),
+			var $row        = $el.closest( '.wpforms-setting-row' ),
+				$keyField   = $( '#wpforms-setting-license-key' ),
+				buttonWidth = $el.outerWidth(),
+				buttonLabel = $el.text(),
 				data        = {
 					action: 'wpforms_verify_license',
 					nonce:   wpforms_admin.nonce,
-					license: $('#wpforms-setting-license-key').val()
+					license: $keyField.val(),
 				};
 
-			$this.html( s.iconSpinner ).css( 'width', buttonWidth ).prop( 'disabled', true );
+			$el.html( s.iconSpinner ).css( 'width', buttonWidth ).prop( 'disabled', true );
 
 			$.post( wpforms_admin.ajax_url, data, function( res ) {
 
@@ -1112,19 +1353,21 @@
 					color = 'green',
 					msg;
 
-				if ( res.success ){
+				if ( res.success ) {
 					msg = res.data.msg;
 					$row.find( '.type, .desc, #wpforms-setting-license-key-deactivate' ).show();
 					$row.find( '.type strong' ).text( res.data.type );
-					$('.wpforms-license-notice').remove();
+					$( '.wpforms-license-notice' ).remove();
+					$keyField.prop( 'disabled', true );
 				} else {
 					icon  = 'fa fa-exclamation-circle';
 					color = 'orange';
 					msg   = res.data;
 					$row.find( '.type, .desc, #wpforms-setting-license-key-deactivate' ).hide();
+					$keyField.prop( 'disabled', false );
 				}
 
-				$.alert({
+				$.alert( {
 					title: false,
 					content: msg,
 					icon: icon,
@@ -1133,32 +1376,57 @@
 						confirm: {
 							text: wpforms_admin.ok,
 							btnClass: 'btn-confirm',
-							keys: [ 'enter' ]
-						}
-					}
-				});
+							keys: [ 'enter' ],
+						},
+					},
+				} );
 
-				$this.html( buttonLabel ).css( 'width', 'auto' ).prop( 'disabled', false );
+				$el.html( buttonLabel ).css( 'width', 'auto' ).prop( 'disabled', false );
 
-			}).fail( function( xhr ) {
+			} ).fail( function( xhr ) {
+				$keyField.prop( 'disabled', false );
 				console.log( xhr.responseText );
-			});
+			} );
+		},
+
+		/**
+		 * Show message that license key editing is disabled.
+		 *
+		 * @since 1.6.5
+		 */
+		licenseEditMessage: function() {
+
+			$.alert( {
+				title: wpforms_admin.heads_up,
+				content: wpforms_admin.edit_license,
+				icon: 'fa fa-exclamation-circle',
+				type: 'orange',
+				buttons: {
+					confirm: {
+						text: wpforms_admin.ok,
+						btnClass: 'btn-confirm',
+						keys: [ 'enter' ],
+					},
+				},
+			} );
 		},
 
 		/**
 		 * Verify a license key.
 		 *
 		 * @since 1.3.9
+		 *
+		 * @param {Element} el Button element.
 		 */
 		licenseDeactivate: function( el ) {
 
-			var $this       = $( el ),
-				$row        = $this.closest( '.wpforms-setting-row' ),
+			var $this = $( el ),
+				$row = $this.closest( '.wpforms-setting-row' ),
 				buttonWidth = $this.outerWidth(),
 				buttonLabel = $this.text(),
-				data        = {
+				data = {
 					action: 'wpforms_deactivate_license',
-					nonce:   wpforms_admin.nonce
+					nonce: wpforms_admin.nonce,
 				};
 
 			$this.html( s.iconSpinner ).css( 'width', buttonWidth ).prop( 'disabled', true );
@@ -1167,18 +1435,20 @@
 
 				var icon  = 'fa fa-info-circle',
 					color = 'blue',
-					msg   = res.data;
+					msg   = res.data,
+					title = wpforms_admin.success;
 
-				if ( res.success ){
-					$row.find( '#wpforms-setting-license-key' ).val('');
+				if ( res.success ) {
+					$row.find( '#wpforms-setting-license-key' ).val( '' ).prop( 'disabled', false );
 					$row.find( '.type, .desc, #wpforms-setting-license-key-deactivate' ).hide();
 				} else {
-					icon  = 'fa fa-exclamation-circle';
+					icon = 'fa fa-exclamation-circle';
 					color = 'orange';
+					title = wpforms_admin.oops;
 				}
 
-				$.alert({
-					title: false,
+				$.alert( {
+					title: title,
 					content: msg,
 					icon: icon,
 					type: color,
@@ -1186,16 +1456,16 @@
 						confirm: {
 							text: wpforms_admin.ok,
 							btnClass: 'btn-confirm',
-							keys: [ 'enter' ]
-						}
-					}
-				});
+							keys: [ 'enter' ],
+						},
+					},
+				} );
 
 				$this.html( buttonLabel ).css( 'width', 'auto' ).prop( 'disabled', false );
 
-			}).fail( function( xhr ) {
+			} ).fail( function( xhr ) {
 				console.log( xhr.responseText );
-			});
+			} );
 		},
 
 		/**
@@ -1238,7 +1508,7 @@
 						confirm: {
 							text: wpforms_admin.ok,
 							btnClass: 'btn-confirm',
-							keys: [ 'enter' ]
+							keys: [ 'enter' ],
 						}
 					}
 				});
@@ -1261,45 +1531,41 @@
 				buttonLabel = $btn.text(),
 				$provider   = $btn.closest( '.wpforms-settings-provider' ),
 				data        = {
-					action  : 'wpforms_settings_provider_add',
+					action  : 'wpforms_settings_provider_add_' + $btn.data( 'provider' ),
 					data    : $btn.closest( 'form' ).serialize(),
 					provider: $btn.data( 'provider' ),
-					nonce   : wpforms_admin.nonce
-				};
+					nonce   : wpforms_admin.nonce,
+				},
+				errorMessage = wpforms_admin.provider_auth_error;
 
 			$btn.html( 'Connecting...' ).css( 'width', buttonWidth ).prop( 'disabled', true );
 
-			$.post( wpforms_admin.ajax_url, data, function( res ) {
+			$.post( wpforms_admin.ajax_url, data, function( response ) {
 
-				if ( res.success ){
-					$provider.find( '.wpforms-settings-provider-accounts-list ul' ).append( res.data.html );
+				if ( response.success ) {
+					$provider.find( '.wpforms-settings-provider-accounts-list ul' ).append( response.data.html );
 					$provider.addClass( 'connected' );
-					$btn.closest( '.wpforms-settings-provider-accounts-connect' ).slideToggle();
+					$btn.closest( '.wpforms-settings-provider-accounts-connect' ).stop().slideToggle();
+
 				} else {
-					var msg = wpforms_admin.provider_auth_error;
-					if ( res.hasOwnProperty( 'data' ) && res.data.hasOwnProperty( 'error_msg' ) ) {
-						msg += "\n" + res.data.error_msg; // jshint ignore:line
+
+					if (
+						Object.prototype.hasOwnProperty.call( response, 'data' ) &&
+						Object.prototype.hasOwnProperty.call( response.data, 'error_msg' )
+					) {
+						errorMessage += '<br>' + response.data.error_msg;
 					}
-					$.alert({
-						title: false,
-						content: msg,
-						icon: 'fa fa-exclamation-circle',
-						type: 'orange',
-						buttons: {
-							confirm: {
-								text: wpforms_admin.ok,
-								btnClass: 'btn-confirm',
-								keys: [ 'enter' ]
-							}
-						}
-					});
+
+					WPFormsAdmin.integrationError( errorMessage );
 				}
 
-				$btn.html( buttonLabel ).css( 'width', 'auto' ).prop( 'disabled', false );
+			} ).fail( function() {
 
-			}).fail( function( xhr ) {
-				console.log( xhr.responseText );
-			});
+				WPFormsAdmin.integrationError( errorMessage );
+			} ).complete( function() {
+
+				$btn.html( buttonLabel ).css( 'width', 'auto' ).prop( 'disabled', false );
+			} );
 		},
 
 		/**
@@ -1309,20 +1575,19 @@
 		 */
 		integrationDisconnect: function( el ) {
 
-			var $this = $( el ),
-				$provider = $this.parents('.wpforms-settings-provider'),
-				data = {
-					action  : 'wpforms_settings_provider_disconnect',
+			var $this     = $( el ),
+				$provider = $this.parents( '.wpforms-settings-provider' ),
+				data      = {
+					action  : 'wpforms_settings_provider_disconnect_' + $this.data( 'provider' ),
 					provider: $this.data( 'provider' ),
-					key     : $this.data( 'key'),
-					nonce   : wpforms_admin.nonce
-				};
+					key     : $this.data( 'key' ),
+					nonce   : wpforms_admin.nonce,
+				},
+				errorMessage = wpforms_admin.provider_delete_error;
 
-			$.confirm({
+			$.confirm( {
 				title: wpforms_admin.heads_up,
 				content: wpforms_admin.provider_delete_confirm,
-				backgroundDismiss: false,
-				closeIcon: false,
 				icon: 'fa fa-exclamation-circle',
 				type: 'orange',
 				buttons: {
@@ -1330,30 +1595,67 @@
 						text: wpforms_admin.ok,
 						btnClass: 'btn-confirm',
 						keys: [ 'enter' ],
-						action: function(){
-							$.post( wpforms_admin.ajax_url, data, function( res ) {
-								if ( res.success ){
+						action: function() {
+
+							$.post( wpforms_admin.ajax_url, data, function( response ) {
+
+								if ( response.success ) {
 									$this.parent().parent().remove();
 
 									// Hide Connected status label if no more integrations are linked.
 									var numberOfIntegrations = $provider.find( '.wpforms-settings-provider-accounts-list li' ).length;
+
 									if ( typeof numberOfIntegrations === 'undefined' || numberOfIntegrations === 0 ) {
 										$provider.removeClass( 'connected' );
 									}
+
 								} else {
-									console.log( res );
+
+									if (
+										Object.prototype.hasOwnProperty.call( response, 'data' ) &&
+										Object.prototype.hasOwnProperty.call( response.data, 'error_msg' )
+									) {
+										errorMessage += '<br>' + response.data.error_msg;
+									}
+
+									WPFormsAdmin.integrationError( errorMessage );
 								}
-							}).fail( function( xhr ) {
-								console.log( xhr.responseText );
-							});
-						}
+							} ).fail( function() {
+
+								WPFormsAdmin.integrationError( errorMessage );
+							} );
+						},
 					},
 					cancel: {
 						text: wpforms_admin.cancel,
-						keys: [ 'esc' ]
-					}
-				}
-			});
+						keys: [ 'esc' ],
+					},
+				},
+			} );
+		},
+
+		/**
+		 * Error handling.
+		 *
+		 * @since 1.6.4
+		 *
+		 * @param {string} error Error message.
+		 */
+		integrationError: function( error ) {
+
+			$.alert( {
+				title: wpforms_admin.something_went_wrong,
+				content: error,
+				icon: 'fa fa-exclamation-circle',
+				type: 'orange',
+				buttons: {
+					confirm: {
+						text: wpforms_admin.ok,
+						btnClass: 'btn-confirm',
+						keys: [ 'enter' ],
+					},
+				},
+			} );
 		},
 
 		//--------------------------------------------------------------------//
@@ -1401,7 +1703,7 @@
 
 					// User didn't actually select a form so alert them.
 					$.alert({
-						title: false,
+						title: wpforms_admin.heads_up,
 						content: wpforms_admin.importer_forms_required,
 						icon: 'fa fa-info-circle',
 						type: 'blue',
@@ -1409,7 +1711,7 @@
 							confirm: {
 								text: wpforms_admin.ok,
 								btnClass: 'btn-confirm',
-								keys: [ 'enter' ]
+								keys: [ 'enter' ],
 							}
 						}
 					});
@@ -1454,8 +1756,13 @@
 
 				if ( res.success ){
 					$btn.before( '<div class="wpforms-alert wpforms-alert-success">' + res.data.msg + '</div>' );
-				} else {
+				}
+
+				if ( ! res.success && res.data.msg ) {
 					$btn.before( '<div class="wpforms-alert wpforms-alert-danger">' + res.data.msg + '</div>' );
+				}
+
+				if ( ! res.success && res.data.debug ) {
 					$btn.before( '<div class="wpforms-ssl-error pre-error">' + res.data.debug + '</div>' );
 				}
 
@@ -1717,6 +2024,97 @@
 					}
 				}
 			});
+		},
+
+		/**
+		 * Element bindings for Flyout Menu.
+		 *
+		 * @since 1.5.7
+		 */
+		initFlyoutMenu: function() {
+
+			// Flyout Menu Elements.
+			var $flyoutMenu    = $( '#wpforms-flyout' );
+
+			if ( $flyoutMenu.length === 0 ) {
+				return;
+			}
+
+			var	$head   = $flyoutMenu.find( '.wpforms-flyout-head' ),
+				$sullie = $head.find( 'img' ),
+				menu    = {
+					state: 'inactive',
+					srcInactive: $sullie.attr( 'src' ),
+					srcActive: $sullie.data( 'active' ),
+				};
+
+			// Click on the menu head icon.
+			$head.on( 'click', function( e ) {
+
+				e.preventDefault();
+
+				if ( menu.state === 'active' ) {
+					$flyoutMenu.removeClass( 'opened' );
+					$sullie.attr( 'src', menu.srcInactive );
+					menu.state = 'inactive';
+				} else {
+					$flyoutMenu.addClass( 'opened' );
+					$sullie.attr( 'src', menu.srcActive );
+					menu.state = 'active';
+				}
+			} );
+
+			// Page elements and other values.
+			var $wpfooter = $( '#wpfooter' );
+
+			if ( $wpfooter.length === 0 ) {
+				return;
+			}
+
+			var	$overlap = $(
+				'#wpforms-overview, ' +
+				'#wpforms-entries-list, ' +
+				'#wpforms-tools.wpforms-tools-tab-action-scheduler, ' +
+				'#wpforms-tools.wpforms-tools-tab-logs'
+			);
+
+			// Hide menu if scrolled down to the bottom of the page.
+			$( window ).on( 'resize scroll', _.debounce( function( e ) {
+
+				var wpfooterTop    = $wpfooter.offset().top,
+					wpfooterBottom = wpfooterTop + $wpfooter.height(),
+					overlapBottom  = $overlap.length > 0 ? $overlap.offset().top + $overlap.height() + 85 : 0,
+					viewTop        = $( window ).scrollTop(),
+					viewBottom     = viewTop + $( window ).height();
+
+				if ( wpfooterBottom <= viewBottom && wpfooterTop >= viewTop && overlapBottom > viewBottom ) {
+					$flyoutMenu.addClass( 'out' );
+				} else {
+					$flyoutMenu.removeClass( 'out' );
+				}
+			}, 50 ) );
+
+			$( window ).trigger( 'scroll' );
+		},
+
+		/**
+		 * Lity improvements.
+		 *
+		 * @since 1.5.8
+		 */
+		initLity: function() {
+
+			// Use `data-lity-srcset` opener's attribute for add srcset to full image in opened lightbox.
+			$( document ).on( 'lity:ready', function( event, instance ) {
+
+				var $el     = instance.element(),
+					$opener = instance.opener(),
+					srcset = typeof $opener !== 'undefined' ? $opener.data( 'lity-srcset' ) : '';
+
+				if ( typeof srcset !== 'undefined' && srcset !== '' ) {
+					$el.find( '.lity-content img' ).attr( 'srcset', srcset );
+				}
+			} );
 		},
 
 		//--------------------------------------------------------------------//

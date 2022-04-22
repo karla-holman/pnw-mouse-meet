@@ -2,7 +2,7 @@
 Contributors: codeinwp, themeisle
 Tags: menu, nav-menu, icons, navigation
 Requires at least: 4.3
-Tested up to: 5.0
+Tested up to: 5.9
 Stable tag: trunk
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -45,9 +45,9 @@ Menu icons works with most of the themes out there, especially with popular ones
 
 Development of this plugin is done on [GitHub](https://github.com/codeinwp/wp-menu-icons). **Pull requests welcome**. Please see [issues reported](https://github.com/codeinwp/wp-menu-icons/issues) there before going to the plugin forum.
 
-== If you like this plugin, then consider checking out our other projects: == 
+== If you like this plugin, then consider checking out our other projects: ==
 
-[CodeinWP Blog](https://codeinwp.com/blog/) – Designer's Guide To WordPress
+[CodeinWP Blog](https://www.codeinwp.com/blog/) – Designer's Guide To WordPress
 [Revive.Social](https://revive.social) – Social Media Tools
 [JustFreeThemes](https://justfreethemes.com) - Free WordPress Themes directory
 
@@ -224,27 +224,100 @@ add_filter( 'menu_icons_menu_settings', 'my_menu_icons_menu_settings', 10, 2 );
 Read [this blog post](http://kucrut.org/add-custom-image-sizes-right-way/).
 
 == Changelog ==
-= 0.11.4 - 2018-12-10  = 
+
+##### [Version 0.12.11](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.10...v0.12.11) (2022-03-16)
+
+Add font awesome 5 support
+Enhance compatibility with Otter/Neve
+
+
+
+
+##### [Version 0.12.10](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.9...v0.12.10) (2022-02-07)
+
+- [Fix] Add support for alt attribute for SVG icons
+- Tested up with WordPress 5.9
+
+
+
+
+##### [Version 0.12.9](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.8...v0.12.9) (2021-08-04)
+
+* Tested compatibility with WordPress 5.8
+
+
+
+
+##### [Version 0.12.8](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.7...v0.12.8) (2021-05-12)
+
+* Fix issue when the image is not accessible to fetch the width/height metadata.
+
+
+
+
+##### [Version 0.12.7](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.6...v0.12.7) (2021-05-07)
+
+Fix PHP fatal error when uploading SVG with the image uploader
+
+
+
+
+##### [Version 0.12.6](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.5...v0.12.6) (2021-05-05)
+
+* Adds explicit width/height to icons to prevent layout shifts issues
+
+
+= 0.12.4 - 2020-07-13  =
+
+* Fix Font Awesome not loading
+
+
+= 0.12.3 - 2020-07-13  =
+
+* Fixed Menu Icons in Block Editor not working
+* Fixed CWP links.
+
+
+= 0.12.2 - 2019-11-15  =
+
+
+
+= 0.12.1 - 2019-11-15  =
+
+* Improve legacy compatibility
+
+
+= 0.12.0 - 2019-11-15  =
+
+* Fix issues with WordPress 5.3.
+
+
+= 0.11.5 - 2019-05-23  =
+
+* Sync composer dependencies with the latest version
+
+
+= 0.11.4 - 2018-12-10  =
 
 * fix issue with composer libraries.
 
 
-= 0.11.3 - 2018-12-10  = 
+= 0.11.3 - 2018-12-10  =
 
 * Tested with WP 5.0
 
 
-= 0.11.2 - 2018-03-05  = 
+= 0.11.2 - 2018-03-05  =
 
 * Improve popup sidebar layout.
 
 
-= 0.11.1 - 2018-02-24  = 
+= 0.11.1 - 2018-02-24  =
 
 * Add recommendation boxes in the menu icon popup.
 
 
-= 0.11.0 - 2018-01-05  = 
+= 0.11.0 - 2018-01-05  =
 
 * Change ownership to ThemeIsle.
 * Improves compatibility with various ThemeIsle products.

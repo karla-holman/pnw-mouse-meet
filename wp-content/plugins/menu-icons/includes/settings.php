@@ -55,6 +55,12 @@ final class Menu_Icons_Settings {
 	 * @since 0.3.0
 	 */
 	public static function init() {
+		// Include Menu Icons for Block Editor
+		if ( class_exists( '\ThemeIsle\GutenbergMenuIcons' ) ) {
+			\ThemeIsle\GutenbergMenuIcons::instance();
+			add_action( 'enqueue_block_assets', array( __CLASS__, '_enqueue_font_awesome' ) );
+		}
+
 		/**
 		 * Allow themes/plugins to override the default settings
 		 *
@@ -380,8 +386,13 @@ final class Menu_Icons_Settings {
 								esc_attr( $field->id ),
 								esc_html( $field->label )
 							);
+							// Help text.
+							if ( $field->help_text ) :
+								printf( '<i>%s</i>', esc_html( $field->help_text ) );
+							endif;
+
+							$field->render();
 							?>
-							<?php $field->render() ?>
 						</div>
 					<?php endforeach; ?>
 				</div>
@@ -452,6 +463,13 @@ final class Menu_Icons_Settings {
 						'label'   => __( 'Icon Types', 'menu-icons' ),
 						'choices' => $icon_types,
 						'value'   => self::get( 'global', 'icon_types' ),
+					),
+					array(
+						'id'        => 'fa5_extra_icons',
+						'type'      => 'textarea',
+						'label'     => __( 'FA5 Custom Icon Classes', 'menu-icons' ),
+						'value'     => self::get( 'global', 'fa5_extra_icons' ),
+						'help_text' => '( comma separated icons )',
 					),
 				),
 				'args'        => array(),
@@ -642,6 +660,21 @@ final class Menu_Icons_Settings {
 	}
 
 	/**
+	 * Enqueue scripts & styles for Block Icons
+	 *
+	 * @since   0.3.0
+	 * @wp_hook action enqueue_block_assets
+	 */
+	public static function _enqueue_font_awesome() {
+		$url = Menu_Icons::get( 'url' );
+
+		wp_register_style(
+			'font-awesome-5',
+			"{$url}css/fontawesome/css/all.min.css"
+		);
+	}
+
+	/**
 	 * Enqueue scripts & styles for Appearance > Menus page
 	 *
 	 * @since   0.3.0
@@ -690,79 +723,54 @@ final class Menu_Icons_Settings {
 		$menu_current_theme = '';
 		$theme              = wp_get_theme();
 		if ( ! empty( $theme ) ) {
-			if ( is_child_theme() ) {
+			if ( is_child_theme() && $theme->parent() ) {
 				$menu_current_theme = $theme->parent()->get( 'Name' );
 			} else {
 				$menu_current_theme = $theme->get( 'Name' );
 			}
 		}
+		$upsell_notices = array();
 		$box_data = '<div id="menu-icons-sidebar">';
-		if ( ( $menu_current_theme != 'Hestia' ) && ( $menu_current_theme != 'Hestia Pro' ) ) {
 
-			$menu_upgrade_hestia_box_text = 'Check-out our latest FREE multi-purpose theme: <strong>Hestia</strong>';
-
-			if ( $menu_current_theme == 'Zerif Lite' ) {
-				$menu_upgrade_hestia_box_text = 'Check-out our latest FREE multi-purpose theme: <strong>Hestia</strong>, your Zerif Lite content will be imported automatically! ';
-			}
-
-			$menu_upgrade_hestia_url = add_query_arg(
-				array(
-					'theme' => 'hestia',
-				), admin_url( 'theme-install.php' )
-			);
-			$box_data                .= '<div class="menu-icons-upgrade-hestia postbox new-card">';
-			$box_data                .= '<p>' . wp_kses_post( $menu_upgrade_hestia_box_text ) . '</p>';
-			$box_data                .= '<a class="button" href="' . $menu_upgrade_hestia_url . '" target="_blank">Preview Hestia</a>';
-			$box_data                .= '</div>';
-		}
-
-		if ( ! empty( $_POST['menu_icons_mail'] ) ) {
-			require( plugin_dir_path( __DIR__ ) . 'mailin.php' );
-			$user_info = get_userdata( 1 );
-			$mailin    = new Mailin( 'https://api.sendinblue.com/v2.0', 'cHW5sxZnzE7mhaYb' );
-			$data      = array(
-				'email'           => $_POST['menu_icons_mail'],
-				'attributes'      => array(
-					'NAME'    => $user_info->first_name,
-					'SURNAME' => $user_info->last_name,
+		if ( ( $menu_current_theme != 'Neve' ) ) {
+			$upsell_notices['neve'] = array(
+				'content' => wp_sprintf( '<div class="menu-icon-notice-popup-img"><img src="%s"/></div><div class="menu-icon-notice-popup"><h4>%s</h4>%s', plugin_dir_url( __FILE__ ) . '../images/neve-theme.jpg', __( 'Check-out our latest lightweight FREE theme - Neve', 'menu-icons' ), __( 'Neve’s mobile-first approach, compatibility with AMP and popular page-builders makes website building accessible for everyone.', 'menu-icons' ) ),
+				'url' => add_query_arg(
+					array(
+						'theme' => 'neve',
+					),
+					admin_url( 'theme-install.php' )
 				),
-				'blacklisted'     => 0,
-				'listid'          => array( 145 ),
-				'blacklisted_sms' => 0,
+				'btn_text' => __( 'Preview Neve', 'menu-icons' ),
 			);
-			$status    = $mailin->create_update_user( $data );
-			if ( $status['code'] == 'success' ) {
-				update_option( 'menu_icons_subscribe', true );
-			}
 		}
-		$email_output = '<div class="menu-icons-subscribe postbox new-card">';
-		$email_output .= '<h3 class="title">' . esc_html__( 'Get Our Free Email Course', 'menu-icons' ) . '</h3>';
-		$email_output .= '<div id="formdata"><p>' . esc_html__( 'Ready to learn how to reduce your website loading times by half? Come and join the 1st lesson here!', 'menu-icons' ) . ' </p><form class="menu-icons-submit-mail" method="post"><input name="menu_icons_mail" type="email" value="' . get_option( 'admin_email' ) . '" /><input id="ebutton" class="button" type="submit" value="Submit"></form></div>';
-		$email_output .= '<p id="success">' . esc_html__( 'Thank you for subscribing! You have been added to the mailing list and will receive the next email information in the coming weeks. If you ever wish to unsubscribe, simply use the "Unsubscribe" link included in each newsletter.', 'menu-icons' ) . '</p>';
-		$email_output .= '<p id="failiure">' . esc_html__( 'Unable to Subscribe.', 'menu-icons' ) . '</p>';
-		$email_output .= '</div>';
-		$email_output .= '</div>';
-		$email_output .= '<script>';
-		$email_output .= '$( \'#failiure\' ).hide();';
-		$email_output .= '$( \'#success\' ).hide();';
-		$email_output .= '$( \'form.menu-icons-submit-mail\' ).submit(function(event) {';
-		$email_output .= 'event.preventDefault();';
-		$email_output .= '$.ajax({';
-		$email_output .= 'type: \'POST\',';
-		$email_output .= 'data: $( \'form.menu-icons-submit-mail\' ).serialize(),';
-		$email_output .= 'success: function(result) {';
-		$email_output .= '$( \'#formdata\' ).hide();';
-		$email_output .= '$( \'#success\' ).show();';
-		$email_output .= '},';
-		$email_output .= 'error: function(result) { $( \'#failiure\' ).show(); }';
-		$email_output .= '}); });';
-		$email_output .= '</script>';
-		$shown        = (bool) get_option( 'menu_icons_subscribe', false );
 
-		if ( $shown === true ) {
-			$email_output = '';
+		if ( ! in_array( 'otter-blocks/otter-blocks.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ), true ) ) {
+			$upsell_notices['otter-blocks'] = array(
+				'content' => wp_sprintf( '<div class="menu-icon-notice-popup-img"><img src="%s"/></div><div class="menu-icon-notice-popup"><h4>%s</h4>%s', plugin_dir_url( __FILE__ ) . '../images/otter-block.png', __( 'Build professional pages with Otter Blocks', 'menu-icons' ), __( 'Otter is a dynamic collection of page building blocks and templates,  covering all the elements you need to build your WordPress site.', 'menu-icons' ) ),
+				'url' => add_query_arg(
+					array(
+						'tab'       => 'plugin-information',
+						'plugin'    => 'otter-blocks',
+						'TB_iframe' => true,
+						'width'     => 772,
+						'height'    => 551,
+					),
+					admin_url( 'plugin-install.php' )
+				),
+				'btn_text' => __( 'Preview Otter Blocks', 'menu-icons' ),
+			);
 		}
-		$box_data .= $email_output;
+
+		if ( ! empty( $upsell_notices ) ) {
+			$rand_key                     = array_rand( $upsell_notices );
+			$menu_upgrade_hestia_box_text = $upsell_notices[ $rand_key ]['content'];
+
+			$box_data               .= '<div class="nv-upgrade-notice postbox new-card">';
+			$box_data               .= wp_kses_post( wpautop( $menu_upgrade_hestia_box_text ) );
+			$box_data               .= '<a class="button" href="' . $upsell_notices[ $rand_key ]['url'] . '" target="_blank">' . $upsell_notices[ $rand_key ]['btn_text'] . '</a>';
+			$box_data               .= '</div></div>';
+		}
 		$js_data = apply_filters(
 			'menu_icons_settings_js_data',
 			array(

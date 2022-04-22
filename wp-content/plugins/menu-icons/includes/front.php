@@ -380,9 +380,24 @@ final class Menu_Icons_Front_End {
 	 * @return string
 	 */
 	public static function get_font_icon( $meta ) {
-		$classes = sprintf( '%s %s %s', self::get_icon_classes( $meta ), $meta['type'], $meta['icon'] );
-		$style   = self::get_icon_style( $meta, array( 'font_size', 'vertical_align' ) );
+		$type = $meta['type'];
+		$icon = $meta['icon'];
 
+		$font_awesome5 = font_awesome5_backward_compatible();
+		if ( ! empty( $type ) && 'fa' === $type ) {
+			$icon    = explode( ' ', $icon );
+			$type    = reset( $icon );
+			$icon    = end( $icon );
+			$fa_icon = sprintf( '%s-%s', $type, $icon );
+			if ( array_key_exists( $fa_icon, $font_awesome5 ) ) {
+				$fa5_icon  = $font_awesome5[ $fa_icon ];
+				$fa5_class = explode( ' ', $fa5_icon );
+				$type      = reset( $fa5_class );
+				$icon      = end( $fa5_class );
+			}
+		}
+		$classes = sprintf( '%s %s %s', self::get_icon_classes( $meta ), $type, $icon );
+		$style   = self::get_icon_style( $meta, array( 'font_size', 'vertical_align' ) );
 		return sprintf( '<i class="%s" aria-hidden="true"%s></i>', esc_attr( $classes ), $style );
 	}
 
@@ -420,10 +435,48 @@ final class Menu_Icons_Front_End {
 		$classes = sprintf( '%s _svg', self::get_icon_classes( $meta ) );
 		$style   = self::get_icon_style( $meta, array( 'svg_width', 'vertical_align' ) );
 
+		$svg_icon = esc_url( wp_get_attachment_url( $meta['icon'] ) );
+		$width  = '';
+		$height = '';
+		if ( 'image/svg+xml' === get_post_mime_type( $meta['icon'] ) ) {
+
+			// Check `WP_Filesystem` function exists OR not.
+			require_once ABSPATH . '/wp-admin/includes/file.php';
+			\WP_Filesystem();
+			global $wp_filesystem;
+
+			$svg_icon = get_attached_file( $meta['icon'] );
+			$svg_icon_content = $wp_filesystem->get_contents( $svg_icon );
+			if ( $svg_icon_content ) {
+				$xmlget = simplexml_load_string( $svg_icon_content );
+				$xmlattributes = $xmlget->attributes();
+				$width  = (string) $xmlattributes->width;
+				$width  = (int) filter_var( $xmlattributes->width, FILTER_SANITIZE_NUMBER_INT );
+				$height = (string) $xmlattributes->height;
+				$height = (int) filter_var( $xmlattributes->height, FILTER_SANITIZE_NUMBER_INT );
+			}
+		} else {
+			$attachment_meta = wp_get_attachment_metadata( $meta['icon'] );
+			if ( $attachment_meta ) {
+				$width = isset( $attachment_meta['width'] ) ? $attachment_meta['width'] : $width;
+				$height = isset( $attachment_meta['height'] ) ? $attachment_meta['height'] : $height;
+			}
+		}
+		if ( ! empty( $width ) ) {
+			$width = sprintf( ' width="%dpx"', $width );
+		}
+		if ( ! empty( $height ) ) {
+			$height = sprintf( ' height="%dpx"', $height );
+		}
+		$image_alt = get_post_meta( $meta['icon'], '_wp_attachment_image_alt', true );
+		$image_alt = $image_alt ? wp_strip_all_tags( $image_alt ) : '';
 		return sprintf(
-			'<img src="%s" class="%s" aria-hidden="true"%s />',
+			'<img src="%s" class="%s" aria-hidden="true" alt="%s"%s%s%s/>',
 			esc_url( wp_get_attachment_url( $meta['icon'] ) ),
 			esc_attr( $classes ),
+			$image_alt,
+			$width,
+			$height,
 			$style
 		);
 	}

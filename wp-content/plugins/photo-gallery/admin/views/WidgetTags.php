@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class WidgetTagsView_bwg
  */
@@ -21,7 +20,7 @@ class WidgetTagsView_bwg {
 		$height = (isset($instance['height']) ? $instance['height'] : 250);
 		$background_transparent = (isset($instance['background_transparent']) ? $instance['background_transparent'] : 1);
 		$background_color = (isset($instance['background_color']) ? $instance['background_color'] : "000000");
-		$text_color = (isset($instance['text_color']) ? $instance['text_color'] : "ffffff");
+		$text_color = (isset($instance['text_color']) ? $instance['text_color'] : "eeeeee");
 		$theme_id = (isset($instance['theme_id']) ? $instance['theme_id'] : 0);
 		// Before widget.
 		echo $before_widget;
@@ -33,9 +32,9 @@ class WidgetTagsView_bwg {
 		require_once(BWG()->plugin_dir . '/frontend/controllers/BWGControllerWidget.php');
 		$controller_class = 'BWGControllerWidgetFrontEnd';
 		$controller = new $controller_class();
-		global $bwg;
 		$params = array (
 		  'type' => $type,
+		  'bwg' => ( !WDWLibrary::elementor_is_active() ? WDWLibrary::unique_number() : 0 ),
 		  'show_name' => $show_name,
 		  'open_option' => $open_option,
 		  'count' => $count, 
@@ -46,7 +45,6 @@ class WidgetTagsView_bwg {
 		  'text_color' => $text_color,
 		  'theme_id' => $theme_id);
 		$controller->execute($params);
-		$bwg++;
 		// After widget.
 		echo $after_widget;
 	}
@@ -58,7 +56,7 @@ class WidgetTagsView_bwg {
 	 * @param $instance
 	 */
 	function form($params, $instance) {
-    wp_register_script(BWG()->prefix . '_jscolor', BWG()->plugin_url . '/js/jscolor/jscolor.js', array('jquery'), '1.3.9');
+		wp_register_script(BWG()->prefix . '_jscolor', BWG()->plugin_url . '/js/jquery.jscolor.js', array('jquery'), '2.4.5');
 		wp_enqueue_script(BWG()->prefix . '_jscolor');
 		extract($params);
 		$defaults = array(
@@ -71,14 +69,14 @@ class WidgetTagsView_bwg {
 		  'height' => 250,
 		  'background_transparent' => 1,
 		  'background_color' => '000000',
-		  'text_color' => 'ffffff',
+		  'text_color' => 'eeeeee',
 		  'theme_id' => 0,
 		);
 		$instance = wp_parse_args((array) $instance, $defaults);   
 		?>    
 		<p>
 		  <label for="<?php echo $id_title; ?>"><?php _e('Title:', BWG()->prefix); ?></label>
-		  <input class="widefat" id="<?php echo $id_title; ?>" name="<?php echo $name_title; ?>'" type="text" value="<?php echo $instance['title']; ?>"/>
+		  <input class="widefat" id="<?php echo $id_title; ?>" name="<?php echo $name_title; ?>'" type="text" value="<?php echo htmlspecialchars( $instance['title'] ); ?>"/>
 		</p>    
 		<p>
 		  <label for="<?php echo $id_title; ?>"><?php _e('Type:', BWG()->prefix); ?></label><br>
@@ -101,7 +99,7 @@ class WidgetTagsView_bwg {
 		<p>
 		  <label for="<?php echo $id_count; ?>"><?php _e('Number:', BWG()->prefix); ?></label><br>
 		  <input class="widefat" style="width:25%;" id="<?php echo $id_count; ?>" name="<?php echo $name_count; ?>'" type="text" value="<?php echo $instance['count']; ?>"/><br>
-      <small><?php _e('0 for all.', BWG()->prefix); ?></small>
+		  <small><?php _e('0 for all.', BWG()->prefix); ?></small>
 		</p>
 		<p>
 		  <label for="<?php echo $id_width; ?>"><?php _e('Dimensions:', BWG()->prefix); ?></label><br>
@@ -116,11 +114,11 @@ class WidgetTagsView_bwg {
 		</p>
 		<p id="p_bg_color" style="display:<?php echo (!$instance['background_transparent']) ? "" : "none" ?>;">
 		  <label for="<?php echo $id_background_color; ?>"><?php _e('Background Color:', BWG()->prefix); ?></label><br>
-		  <input class="color" style="width:25%;" id="<?php echo $id_background_color; ?>" name="<?php echo $name_background_color; ?>'" type="text" value="<?php echo $instance['background_color']; ?>"/>
+		  <input class="jscolor" style="width:25%;" id="<?php echo $id_background_color; ?>" name="<?php echo $name_background_color; ?>'" type="text" value="<?php echo $instance['background_color']; ?>"/>
 		</p> 
 		<p>
 		  <label for="<?php echo $id_text_color; ?>"><?php _e('Text Color:', BWG()->prefix); ?></label><br>
-		  <input class="color" style="width:25%;" id="<?php echo $id_text_color; ?>" name="<?php echo $name_text_color; ?>'" type="text" value="<?php echo $instance['text_color']; ?>"/>
+		  <input class="jscolor" style="width:25%;" id="<?php echo $id_text_color; ?>" name="<?php echo $name_text_color; ?>'" type="text" value="<?php echo $instance['text_color']; ?>"/>
 		</p> 
 		<p>
 		  <label for="<?php echo $id_theme_id; ?>"><?php _e('Themes:', BWG()->prefix); ?></label><br>

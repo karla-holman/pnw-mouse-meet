@@ -2,11 +2,7 @@
 /**
  * Load the field types.
  *
- * @package    WPForms
- * @author     WPForms
- * @since      1.0.0
- * @license    GPL-2.0+
- * @copyright  Copyright (c) 2016, WPForms LLC
+ * @since 1.0.0
  */
 class WPForms_Fields {
 
@@ -40,32 +36,39 @@ class WPForms_Fields {
 	 */
 	public function load() {
 
-		$fields = apply_filters( 'wpforms_load_fields', array(
-			'text',
-			'textarea',
-			'select',
-			'radio',
-			'checkbox',
-			'divider',
-			'email',
-			'url',
-			'hidden',
-			'html',
-			'name',
-			'password',
-			'address',
-			'phone',
-			'date-time',
-			'number',
-			'page-break',
-			'rating',
-			'file-upload',
-			'payment-single',
-			'payment-multiple',
-			'payment-dropdown',
-			'payment-credit-card',
-			'payment-total',
-		) );
+		$fields = apply_filters(
+			'wpforms_load_fields',
+			array(
+				'text',
+				'textarea',
+				'select',
+				'radio',
+				'checkbox',
+				'divider',
+				'entry-preview',
+				'email',
+				'url',
+				'hidden',
+				'html',
+				'name',
+				'password',
+				'address',
+				'phone',
+				'date-time',
+				'number',
+				'page-break',
+				'rating',
+				'file-upload',
+				'payment-single',
+				'payment-multiple',
+				'payment-checkbox',
+				'payment-dropdown',
+				'payment-credit-card',
+				'payment-total',
+				'number-slider',
+				'richtext',
+			)
+		);
 
 		// Include GDPR Checkbox field if GDPR enhancements are enabled.
 		if ( wpforms_setting( 'gdpr', false ) ) {
@@ -76,10 +79,12 @@ class WPForms_Fields {
 
 			if ( file_exists( WPFORMS_PLUGIN_DIR . 'includes/fields/class-' . $field . '.php' ) ) {
 				require_once WPFORMS_PLUGIN_DIR . 'includes/fields/class-' . $field . '.php';
-			} elseif ( wpforms()->pro && file_exists( WPFORMS_PLUGIN_DIR . 'pro/includes/fields/class-' . $field . '.php' ) ) {
+			} elseif ( wpforms()->is_pro() && file_exists( WPFORMS_PLUGIN_DIR . 'pro/includes/fields/class-' . $field . '.php' ) ) {
 				require_once WPFORMS_PLUGIN_DIR . 'pro/includes/fields/class-' . $field . '.php';
 			}
 		}
+
+		new \WPForms_Field_Email();
 	}
 }
 new WPForms_Fields();
