@@ -61,9 +61,9 @@
               <a href="#resources">Videos & More</a>
             <?php endif; ?>
           <?php else : ?>
+            <a href="#guest-speakers">Guest Speakers</a>
             <a href="#event-hotel">Hotel Information</a>
             <a href="#event-location">Event Location</a>
-            <a href="#guest-speakers">Guest Speakers</a>
             <?php if( have_rows('mini_meets') ): ?>
               <a href="#mini-meets">Related Events</a>
             <?php endif; ?>
@@ -123,7 +123,7 @@
       </div><!-- Container -->
     </div> <!-- End Meet Ups -->
     <?php endif; ?>
-    
+
     <?php if(!$past) : ?>
       <!-- Tickets -->
       <a name="get-tickets"></a>
@@ -157,98 +157,6 @@
           </div><!-- row -->
         </div>
       <?php endif; ?>
-
-      <!-- Location -->
-      <a name="event-hotel"></a>
-      <?php $post_object = get_field('hotel'); ?>
-      <?php if( $post_object ): ?>
-
-        <?php
-          // override $post
-        	$post = $post_object;
-        	setup_postdata( $post );
-        ?>
-        <div class="color-background info" style="background-color: #E5F7F8">
-          <div class="container page-section">
-            <div class="row">
-              <div class="col-md-4">
-                <h6>Where to Stay</h6>
-                <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
-                <p><?php the_field('overview'); ?></p>
-                <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
-                <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
-              </div>
-
-              <!-- Map -->
-              <div class="col-md-4">
-                  <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
-              </div>
-
-              <!-- Image -->
-              <div class="col-md-4">
-                  <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
-              </div>
-            </div><!-- row -->
-          </div>
-        </div>
-        <?php wp_reset_postdata(); ?>
-      <?php else : ?>
-        <p><?php esc_html_e( 'Oops! No Location Found.' ); ?></p>
-      <?php endif; ?><!-- END Location -->
-
-      <!-- Location -->
-      <a name="event-location"></a>
-      <?php $post_object = get_field('location'); ?>
-      <?php if( $post_object ): ?>
-
-        <?php
-          // override $post
-        	$post = $post_object;
-        	setup_postdata( $post );
-        ?>
-        <div class="container page-section">
-          <div class="row">
-            <div class="col-md-4">
-              <h6>Event Venue</h6>
-              <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
-              <p><?php the_field('overview'); ?></p>
-              <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
-              <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
-            </div>
-
-            <!-- Map -->
-            <div class="col-md-4">
-                <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
-            </div>
-
-            <!-- Image -->
-            <div class="col-md-4">
-                <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
-            </div>
-          </div><!-- row -->
-        </div>
-        <?php wp_reset_postdata(); ?>
-      <?php else : ?>
-        <p><?php esc_html_e( 'Oops! No Location Found.' ); ?></p>
-      <?php endif; ?><!-- END Location -->
-    <?php else : ?>
-
-      <!-- Image Gallery -->
-      <?php $past_gallery = get_field('past_gallery'); ?>
-      <?php if( $past_gallery['external_photo_gallery'] || $past_gallery['photo_gallery'] ): ?>
-        <a name="event-photos"></a>
-        <div class="container page-section align-center">
-          <div class="row">
-            <div class="col-md-12">
-              <h2>Photos From the Event</h2>
-              <p class="intro_text">Check out some highlights from the event!</p>
-              <a href="<?php echo $past_gallery['external_photo_gallery']; ?>" class="btn btn-info" style="margin-bottom: 40px;" target="_blank">View More</a>
-
-              <?php echo $past_gallery['photo_gallery']; ?>
-            </div>
-          </div>
-        </div>
-      <?php endif; ?>
     <?php endif; ?>
 
     <!-- Guest Speakers -->
@@ -279,12 +187,17 @@
         <div class="row">
           <!-- Guest Speakers -->
           <?php if( have_rows('event_speakers') ): ?>
+            <?php $numguests = count( get_field( 'event_speakers' ) ); ?>
             <?php while ( have_rows('event_speakers') ) : ?>
               <?php $guest = get_post(the_row()); ?>
               <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $guest->ID ), 'single-post-thumbnail' ); ?>
               <?php $speaker_legend = $guest->disney_legend ? 'legend' : ''; ?>
               <?php $speaker_link = $guest->replacement_link ? $guest->replacement_link : get_permalink($guest->ID); ?>
-              <div class="col-md-4">
+              <?php if($numguests > 3): ?>
+                <div class="col-md-3">
+              <?php else : ?>
+                <div class="col-md-4 col-sm-6">
+              <?php endif; ?>
                 <div class="card event-card">
                   <div class="main-image" style="background-image: url('<?php echo $speaker_image[0]; ?>')"></div>
                   <div class="card-body">
@@ -296,7 +209,37 @@
               </div>
             <?php endwhile; ?>
           <?php else : ?>
-            <div class="col-md-4">
+            <div class="col-md-3">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title">Coming Soon</h5>
+                  <p class="card-text">Guest Speakers will be announced soon.</p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title">Coming Soon</h5>
+                  <p class="card-text">Guest Speakers will be announced soon.</p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title">Coming Soon</h5>
+                  <p class="card-text">Guest Speakers will be announced soon.</p>
+                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
               <div class="card event-card">
                 <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
                 <div class="card-body">
@@ -322,6 +265,162 @@
         <?php endif; ?>
       </div><!-- Container -->
     </div> <!-- End Speakers -->
+
+    <?php if(!$past) : ?>
+      <!-- Testimonials -->
+      <?php
+        $args = array(
+          'post_type' => 'testimonials',
+          'meta_key' => 'related_event'
+        );
+
+        $testimonial_query = new WP_Query( $args );
+      ?>
+
+      <a name="guest-responses"></a>
+      <div class="testimonial-background">
+        <img class="mountain" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/mountain.svg">
+        <div class="container page-section align-center">
+          <div class="row intro-paragraph">
+            <div class="col-md-12">
+              <h2>Guest Feedback</h2>
+            </div>
+          </div>
+
+            <div id="carouselTestimonial" class="carousel slide" data-ride="carousel">
+              <ol class="carousel-indicators">
+                <?php for( $i = 0; $i < $testimonial_query->post_count; $i++ ): ?>
+                  <li data-target="#carouselTestimonial" data-slide-to="0" class="<?php echo ($i == 0 ? 'active' : '') ?>"></li>
+                <?php endfor; ?>
+              </ol>
+              <div class="carousel-inner row w-75 mx-auto">
+                <?php $first_iteration = true; ?>
+                <?php if( $testimonial_query->have_posts() ) : while( $testimonial_query->have_posts() ) : $testimonial_query->the_post(); ?>
+                  <div class="carousel-item <?php echo ($first_iteration ? 'active' : '') ?>">
+                    <?php $first_iteration = false; ?>
+                    <div class="d-block w-100">
+                      <div class="card">
+                        <div class="card-body">
+                          <?php the_content(); ?>
+                        </div>
+                        <!-- Comment out
+                        <div class="card-footer">
+                          <h6><?php the_field('name'); ?></h6>
+                        </div>
+                        -->
+                      </div>
+                    </div>
+                  </div>
+                <?php endwhile; else : ?>
+                  <h4>No Quotes Available.</h4>
+                <?php endif; wp_reset_postdata(); ?>
+              </div>
+              <a class="carousel-control-prev" href="#carouselTestimonial" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+              </a>
+              <a class="carousel-control-next" href="#carouselTestimonial" role="button" data-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+              </a>
+            </div>
+          </div>
+
+      </div>
+
+      <!-- Location -->
+      <a name="event-hotel"></a>
+      <?php $post_object = get_field('hotel'); ?>
+      <?php if( $post_object ): ?>
+
+        <?php
+          // override $post
+        	$post = $post_object;
+        	setup_postdata( $post );
+        ?>
+
+          <div class="container page-section">
+            <div class="row">
+              <div class="col-md-4">
+                <h6>Where to Stay</h6>
+                <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
+                <p><?php the_field('overview'); ?></p>
+                <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
+                <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
+              </div>
+
+              <!-- Map -->
+              <div class="col-md-4">
+                  <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
+              </div>
+
+              <!-- Image -->
+              <div class="col-md-4">
+                  <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
+              </div>
+            </div><!-- row -->
+          </div>
+        <?php wp_reset_postdata(); ?>
+      <?php else : ?>
+        <p><?php esc_html_e( 'Oops! No Location Found.' ); ?></p>
+      <?php endif; ?><!-- END Location -->
+
+      <!-- Location -->
+      <a name="event-location"></a>
+      <?php $post_object = get_field('location'); ?>
+      <?php if( $post_object ): ?>
+
+        <?php
+          // override $post
+        	$post = $post_object;
+        	setup_postdata( $post );
+        ?>
+        <div class="color-background info" style="background-color: #E5F7F8">
+          <div class="container page-section">
+            <div class="row">
+              <div class="col-md-4">
+                <h6>Event Venue</h6>
+                <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
+                <p><?php the_field('overview'); ?></p>
+                <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
+                <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
+              </div>
+
+              <!-- Map -->
+              <div class="col-md-4">
+                  <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
+              </div>
+
+              <!-- Image -->
+              <div class="col-md-4">
+                  <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
+              </div>
+            </div><!-- row -->
+          </div>
+        </div>
+        <?php wp_reset_postdata(); ?>
+      <?php else : ?>
+        <p><?php esc_html_e( 'Oops! No Location Found.' ); ?></p>
+      <?php endif; ?><!-- END Location -->
+    <?php else : ?>
+
+      <!-- Image Gallery -->
+      <?php $past_gallery = get_field('past_gallery'); ?>
+      <?php if( $past_gallery['external_photo_gallery'] || $past_gallery['photo_gallery'] ): ?>
+        <a name="event-photos"></a>
+        <div class="container page-section align-center">
+          <div class="row">
+            <div class="col-md-12">
+              <h2>Photos From the Event</h2>
+              <p class="intro_text">Check out some highlights from the event!</p>
+              <a href="<?php echo $past_gallery['external_photo_gallery']; ?>" class="btn btn-info" style="margin-bottom: 40px;" target="_blank">View More</a>
+
+              <?php echo $past_gallery['photo_gallery']; ?>
+            </div>
+          </div>
+        </div>
+      <?php endif; ?>
+    <?php endif; ?>
 
     <!-- Things to Do -->
     <a name="things-to-do"></a>

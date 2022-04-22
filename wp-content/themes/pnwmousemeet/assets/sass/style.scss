@@ -565,6 +565,10 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
   }
 }
 
+.event-card, .resource-card {
+  height: 100%;
+}
+
 // Popover
 .popover-header {
   background: linear-gradient(to bottom right, $brand-success, $brand-primary);
