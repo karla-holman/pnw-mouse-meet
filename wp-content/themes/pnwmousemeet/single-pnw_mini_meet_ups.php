@@ -66,7 +66,7 @@
     <!-- The Content -->
     <a name="description"></a>
     <?php if( get_the_content() ): ?>
-      <div class="color-background success">
+      <div class="color-background gray" style="background-color: #EEEEEE;">
         <div class="container page-section">
           <div class="row">
             <div class="card mouse-meet">
@@ -242,7 +242,7 @@
                     <div class="card-body">
                       <!-- Header -->
                       <?php if($resource->external_link): ?>
-                        <h5 class="card-title"><a href="<?php echo $resource->external_link ?>"><?php echo get_the_title($resource); ?></a></h5>
+                        <h5 class="card-title"><a href="<?php echo $resource->external_link ?>" target="_blank"><?php echo get_the_title($resource); ?></a></h5>
                       <?php elseif($resource->file_upload): ?>
                         <h5 class="card-title"><a target="_blank" href="<?php echo wp_get_attachment_url( $resource->file_upload ) ?>"><?php echo get_the_title($resource); ?></a></h5>
                       <?php else: ?>

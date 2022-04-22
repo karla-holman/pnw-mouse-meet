@@ -234,6 +234,10 @@ footer.footer {
   display: flex;
   align-items: center;
 
+  @media(max-width: map-get($grid-breakpoints, md)) {
+    align-items: flex-end;
+  }
+
   background-image: url("../images/hero.png");
 
   .row {
@@ -349,6 +353,12 @@ footer.footer {
       color: #fff;
     }
   }
+  &.gray {
+    background-color: #EEEEEE;
+  }
+  &.yellow {
+    background-color: rgba(255, 204, 51, 0.3);
+  }
   &.primary-light {
     background-color: $brand-primary-light;
   }
@@ -377,6 +387,29 @@ footer.footer {
   }
   .carousel-indicators {
     bottom: -40px;
+  }
+  .card {
+    background: linear-gradient(to bottom right, $brand-success, $brand-primary);
+    text-align: left;
+    .card-body {
+      color: #fff;
+      font-size: 36px;
+      @media(max-width: map-get($grid-breakpoints, sm)) {
+        font-size: 24px;
+      }
+    }
+    .card-footer {
+      background-color: $brand-warning;
+    }
+  }
+}
+
+.intro-background {
+  // z-index: -100;
+  background-color: $brand-gray;
+  position: relative;
+  p {
+    font-size: 1rem;
   }
   .card {
     background: linear-gradient(to bottom right, $brand-success, $brand-primary);
@@ -484,6 +517,7 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
         }
         border-radius: 100%;
         background-size: cover;
+        background-position: center top;
         margin-top: 5px;
 
         .speaker-btn {
@@ -557,6 +591,72 @@ h4 {
 
 p.intro {
   font-size: 24px;
+}
+
+// Tinkerbell
+div.tinkerbell {
+  animation: MoveUpDown 2s ease-in-out infinite;
+  position: fixed;
+  background-image: url("../images/tinkerbell.gif");
+  height: 200px;
+  width: 200px;
+  bottom: 0;
+  left: 0;
+  z-index: 1100;
+
+  .quote {
+    background-color: #FFF;
+    border: 1px solid $brand-primary;
+    position: fixed;
+    left: 160px;
+    padding: 20px;
+    border-radius: 10px;
+    bottom: 200px;
+    box-shadow: 0px 2px 11px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    display: none;
+
+    .close {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+    }
+  }
+
+  .bubble1, .bubble2, .bubble3 {
+    background-color: #FFF;
+    border: 1px solid $brand-primary;
+    width: 30px;
+    height: 30px;
+    position: fixed;
+    border-radius: 100%;
+  }
+
+  .bubble1 {
+    bottom: 160px;
+    left: 240px;
+  }
+  .bubble2 {
+    bottom: 140px;
+    left: 210px;
+    width: 20px;
+    height: 20px;
+  }
+  .bubble3 {
+    bottom: 130px;
+    left: 180px;
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@keyframes MoveUpDown {
+  0%, 100% {
+    bottom: 0;
+  }
+  50% {
+    bottom: 50px;
+  }
 }
 
 //**************** Custom Post Types
@@ -648,7 +748,7 @@ p.intro {
 // Individual Templates
 .single-guest_speakers {
   .hero {
-    background-position: right;
+    background-position: top right;
     background-size: contain;
     background-color: $brand-primary-light;
   }

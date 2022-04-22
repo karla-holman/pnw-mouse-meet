@@ -66,7 +66,7 @@
      $mini_meet_html .= "<p><i class=\"fa fa-calendar\"></i> " . $date->format('F j, Y') . "</p>";
      $mini_meet_html .= "<p><a href=\"" . $link . "\" class=\"btn btn-info\">Learn More</a></p>";
    endwhile; else :
-     $mouse_meet_html .= "No Mini Meets Upcoming";
+     $mini_meet_html .= "No Mini Meets Upcoming";
    endif;
  ?>
 
@@ -136,8 +136,20 @@
       <div class="container">
         <div class="d-flex justify-content-between align-content-center">
           <p><?php the_field('cta_text'); ?></p>
-          <a href="<?php the_field('cta_link'); ?>"><?php the_field('cta_label'); ?> <i class="fa fa-arrow-right"></i></a>
+          <a href="<?php the_field('cta_link'); ?>"<?php echo (get_field('cta_link_new_window') ? 'target="_blank"' : ''); ?>><?php the_field('cta_label'); ?> <i class="fa fa-arrow-right"></i></a>
         </div>
+      </div>
+    </div>
+
+    <div class="tinkerbell">
+      <img src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/tinkerbell.gif"></img>
+      <div class="quote">
+        <a class="close" href="#"><i class="fa fa-close"></i></a>
+        <p><?php the_field('tinkerbell_quote'); ?></p>
+        <div class="bubble1"></div>
+        <div class="bubble2"></div>
+        <div class="bubble3"></div>
+        <a href="<?php the_field('tinkerbell_link'); ?>">Learn More!</a>
       </div>
     </div>
 
@@ -241,9 +253,11 @@
                         <div class="card-body">
                           <?php the_content(); ?>
                         </div>
+                        <!-- Comment out
                         <div class="card-footer">
                           <h6><?php the_field('name'); ?></h6>
                         </div>
+                        -->
                       </div>
                     </div>
                   </div>
@@ -274,14 +288,15 @@
        );
        $query = new WP_Query( $args );
       ?>
-      <!-- PAST EVENTS -->
+      <!-- Sponsors -->
       <div class="container page-section">
         <!-- Introduction -->
         <div class="row intro-paragraph">
           <div class="col-md-8">
             <h2>Our Sponsors</h2>
             <p class="intro">
-              We have been lucky to have some fabulous years and events! Outlines denote Disney Legends. Hover over our guests to learn more.
+              We are so proud to partner with these amazing Sponsors of the Pacific Northwest Mouse Meet.
+              Please consider clicking on their logos to learn more about them and let them know the PNWMM sent you!
             </p>
           </div>
         </div>
@@ -296,18 +311,50 @@
                   $value = $field['value'];
                   $sponsor_file = ($value == 'diamond') ? 'diamond.svg' : 'platinum.svg';
                 ?>
-                <div class="sponsor-icon d-flex justify-content-center align-items-center <?php echo $value ?>">
+                <!-- div class="sponsor-icon d-flex justify-content-center align-items-center <?php echo $value ?>">
                   <img src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/sponsors/<?php echo $sponsor_file ?>" />
-                </div>
+                </div-->
                 <img class="logo-image" src="<?php the_field('logo'); ?>" />
               </div>
               <h4><a href="<?php the_field('site_link'); ?>" target="_blank"><?php the_title(); ?></a></h4>
-              <p class="intro"><?php echo $field['choices'][ $value ]; ?></p>
+              <!-- p class="intro"><?php echo $field['choices'][ $value ]; ?></p-->
             </div>
 
-          <?php endwhile; endif; wp_reset_postdata(); ?>
+          <?php endwhile; ?>
+        <?php else : ?>
+          <p>We will be announcing our sponsors soon!</p>
+        <?php endif; wp_reset_postdata(); ?>
         </div>
       </div>
+
+      <!-- Store Section -->
+      <?php // $store_section = get_field('store_section'); ?>
+      <!--div class="color-background primary-light">
+        <div class="container page-section">
+          <div class="row">
+            <div class="col-md-6">
+              <?php // if ($store_section['store_text']) : ?>
+                <?php // echo $store_section['store_text']; ?>
+              <?php //else : ?>
+                <h2>Find your PNW Mouse Meet Logo gear here</h2>
+                <p>
+                  Share your Pacific Northwest Mouse Meet spirit with PNWMM Logo items at our new
+                  Online Store! Here you can find shirts, notebooks, phone cases, art, mugs, sweatshirts
+                  totes and more!
+                </p>
+                <p>
+                  A portion of all sales goes to support PNW Mouse Meet events.
+                </p>
+              <?php //endif; ?>
+            </div>
+            <div class="col-md-6">
+              <?php //if ($store_section['store_image']) : ?>
+                <img src="<?php //echo $store_section['store_image']; ?>')"></img>
+              <?php //endif; ?>
+            </div>
+          </div>
+        </div>
+      </div-->
 
       <!-- About Us -->
       <div class="wheel-background">

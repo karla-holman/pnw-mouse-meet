@@ -73,6 +73,21 @@
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
 <script>window.jQuery || document.write('<script src="../../../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
 -->
+<script type="text/javascript">
+  $(document).ready(function(){
+    /***** TINKERBELL *****/
+    $('.tinkerbell .quote .close').on('click', function(e){
+      e.preventDefault();
+      console.log("Closing tinkerbell's quote");
+      $('.tinkerbell .quote').hide();
+    });
+
+    $('.tinkerbell img').on('click', function(){
+      console.log("Opening tinkerbell's quote");
+      $('.tinkerbell .quote').show();
+    });
+  });
+</script>
 
 <?php wp_footer(); ?>
 </body>

@@ -54,17 +54,21 @@
           <?php if($past) : ?>
             <a href="#event-photos">Event Photos</a>
             <a href="#guest-speakers">Guest Speakers</a>
-            <a href="#mini-meets">Related Events</a>
+            <?php if( have_rows('mini_meets') ): ?>
+              <a href="#mini-meets">Related Events</a>
+            <?php endif; ?>
             <?php if( have_rows('resources') ): ?>
               <a href="#resources">Videos & More</a>
             <?php endif; ?>
           <?php else : ?>
+            <a href="#event-hotel">Hotel Information</a>
             <a href="#event-location">Event Location</a>
             <a href="#guest-speakers">Guest Speakers</a>
-            <a href="#mini-meets">Related Events</a>
+            <?php if( have_rows('mini_meets') ): ?>
+              <a href="#mini-meets">Related Events</a>
+            <?php endif; ?>
             <a href="#things-to-do">Things to Do</a>
             <a href="#mouse-meet-info">Mouse Meet Info</a>
-            <a href="#event-hotel">Hotel Information</a>
           <?php endif; ?>
         </div>
       </div>
@@ -73,7 +77,7 @@
 
     <!-- The Content -->
     <?php if( get_the_content() ): ?>
-      <div class="color-background success">
+      <div class="intro-background color-background gray" style="background-color: #EEEEEE;">
         <div class="container page-section">
           <div class="row">
             <div class="card mouse-meet">
@@ -86,7 +90,40 @@
       </div>
     <?php endif; ?>
 
-
+    <!-- Related Mini Meets -->
+    <?php if( get_field('mini_meets') ): ?>
+    <a name="mini-meets"></a>
+    <div class="color-background primary">
+      <div class="container page-section align-center">
+        <div class="row intro-paragraph">
+          <div class="col-md-12">
+            <?php if( get_field('related_events_title') ): ?>
+              <h2><?php the_field('related_events_title') ?></h2>
+            <?php else: ?>
+              <h2>Other Related Events</h2>
+            <?php endif; ?>
+          </div>
+        </div>
+        <div class="row">
+          <?php while ( have_rows('mini_meets') ) : ?>
+            <?php $meet_up = get_post(the_row()); ?>
+            <?php $meet_up_image = wp_get_attachment_image_src( get_post_thumbnail_id( $meet_up->ID ), 'single-post-thumbnail' ); ?>
+            <div class="col-md-4">
+              <div class="card event-card">
+                <div class="main-image" style="background-image: url('<?php echo $meet_up_image[0]; ?>')"></div>
+                <div class="card-body">
+                  <h5 class="card-title"><?php echo get_the_title($meet_up); ?></h5>
+                  <p class="card-text"><?php echo $meet_up->description; ?></p>
+                  <a href="<?php the_permalink($meet_up->ID); ?>" class="btn btn-info">Learn More</a>
+                </div>
+              </div>
+            </div>
+          <?php endwhile; ?>
+        </div><!-- Row -->
+      </div><!-- Container -->
+    </div> <!-- End Meet Ups -->
+    <?php endif; ?>
+    
     <?php if(!$past) : ?>
       <!-- Tickets -->
       <a name="get-tickets"></a>
@@ -131,26 +168,28 @@
         	$post = $post_object;
         	setup_postdata( $post );
         ?>
-        <div class="container page-section" style="border-bottom: 1px solid #016E73">
-          <div class="row">
-            <div class="col-md-4">
-              <h6>Where to Stay</h6>
-              <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
-              <p><?php the_field('overview'); ?></p>
-              <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
-              <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
-            </div>
+        <div class="color-background info" style="background-color: #E5F7F8">
+          <div class="container page-section">
+            <div class="row">
+              <div class="col-md-4">
+                <h6>Where to Stay</h6>
+                <h2><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h2>
+                <p><?php the_field('overview'); ?></p>
+                <a class="btn btn-primary" href="<?php the_permalink(); ?>">More Information</a>
+                <a class="btn btn-info" href="<?php the_field('directions_link'); ?>" target="_blank">Directions</a>
+              </div>
 
-            <!-- Map -->
-            <div class="col-md-4">
-                <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
-            </div>
+              <!-- Map -->
+              <div class="col-md-4">
+                  <div class="fill-image" style="background-image: url('<?php echo the_field('map'); ?>')"></div>
+              </div>
 
-            <!-- Image -->
-            <div class="col-md-4">
-                <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
-            </div>
-          </div><!-- row -->
+              <!-- Image -->
+              <div class="col-md-4">
+                  <div class="fill-image" style="background-image: url('<?php echo get_the_post_thumbnail_url(); ?>')"></div>
+              </div>
+            </div><!-- row -->
+          </div>
         </div>
         <?php wp_reset_postdata(); ?>
       <?php else : ?>
@@ -202,7 +241,7 @@
           <div class="row">
             <div class="col-md-12">
               <h2>Photos From the Event</h2>
-              <p class="intro_text">Check out some highlights from the event or view more on our external gallery!</p>
+              <p class="intro_text">Check out some highlights from the event!</p>
               <a href="<?php echo $past_gallery['external_photo_gallery']; ?>" class="btn btn-info" style="margin-bottom: 40px;" target="_blank">View More</a>
 
               <?php echo $past_gallery['photo_gallery']; ?>
@@ -232,6 +271,9 @@
         <div class="row intro-paragraph">
           <div class="col-md-12">
             <h2>Guest Speakers</h2>
+            <?php if(get_field('guest_speaker_intro')): ?>
+              <p class="intro"><?php the_field('guest_speaker_intro'); ?></p>
+            <?php endif; ?>
           </div>
         </div>
         <div class="row">
@@ -271,38 +313,15 @@
             <?php endif; ?>
           <?php endif; ?>
         </div><!-- Row -->
+        <?php if(get_field('guest_speaker_close')): ?>
+          <div class="row intro-paragraph">
+            <div class="col-md-12">
+              <?php the_field('guest_speaker_close'); ?>
+            </div>
+          </div>
+        <?php endif; ?>
       </div><!-- Container -->
     </div> <!-- End Speakers -->
-
-    <!-- Related Mini Meets -->
-    <?php if( have_rows('mini_meets') ): ?>
-    <a name="mini-meets"></a>
-    <div class="color-background primary">
-      <div class="container page-section align-center">
-        <div class="row intro-paragraph">
-          <div class="col-md-12">
-            <h2>Other Related Events</h2>
-          </div>
-        </div>
-        <div class="row">
-          <?php while ( have_rows('mini_meets') ) : ?>
-            <?php $meet_up = get_post(the_row()); ?>
-            <?php $meet_up_image = wp_get_attachment_image_src( get_post_thumbnail_id( $meet_up->ID ), 'single-post-thumbnail' ); ?>
-            <div class="col-md-4">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo $meet_up_image[0]; ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title"><?php echo get_the_title($meet_up); ?></h5>
-                  <p class="card-text"><?php echo $meet_up->description; ?></p>
-                  <a href="<?php the_permalink($meet_up->ID); ?>" class="btn btn-info">Learn More</a>
-                </div>
-              </div>
-            </div>
-          <?php endwhile; ?>
-        </div><!-- Row -->
-      </div><!-- Container -->
-    </div> <!-- End Meet Ups -->
-    <?php endif; ?>
 
     <!-- Things to Do -->
     <a name="things-to-do"></a>
@@ -336,6 +355,9 @@
             </div>
 
           <?php endwhile; endif; wp_reset_postdata(); ?>
+        </div>
+        <div class="row intro-paragraph">
+          <a class="btn btn-info" href="/things-to-do-at-the-mouse-meet/">View All</a>
         </div>
       </div>
 
@@ -402,7 +424,7 @@
                     <div class="card-body">
                       <!-- Header -->
                       <?php if($resource->external_link): ?>
-                        <h5 class="card-title"><a href="<?php echo $resource->external_link ?>"><?php echo get_the_title($resource); ?></a></h5>
+                        <h5 class="card-title"><a href="<?php echo $resource->external_link ?>" target="_blank"><?php echo get_the_title($resource); ?></a></h5>
                       <?php elseif($resource->file_upload): ?>
                         <h5 class="card-title"><a target="_blank" href="<?php echo wp_get_attachment_url( $resource->file_upload ) ?>"><?php echo get_the_title($resource); ?></a></h5>
                       <?php else: ?>

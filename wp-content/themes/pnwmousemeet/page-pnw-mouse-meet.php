@@ -30,12 +30,14 @@
 
   <!-- Handle Hero -->
   <?php if( $upcoming_query->have_posts() ) : while( $upcoming_query->have_posts() ) : $upcoming_query->the_post(); ?>
+    <?php $date = get_field('event_date'); ?>
+    <?php $date_object = new DateTime($date); ?>
     <div class="hero full">
       <div class="container">
         <div class="text-overlay col-md-5">
           <div class="content">
             <h1>Pacific Northwest Mouse Meet</h1>
-            <h5>The <?php the_title(); ?> PNWMM - Coming Soon!</h5>
+            <h5>The <?php the_title(); ?> PNWMM - Coming <?php echo $date_object->format('F j, Y'); ?>!</h5>
             <p><?php the_field('description'); ?></p>
           </div>
           <div class="hero-buttons">
@@ -169,6 +171,28 @@
         </div>
 
       <?php endwhile; endif; wp_reset_postdata(); ?>
+    </div>
+  </div>
+  <!-- Store Section -->
+  <!--div class="color-background primary-light">
+    <div class="container page-section">
+      <div class="row">
+        <div class="col-md-6">
+          <h2>Find your PNW Mouse Meet Logo gear here</h2>
+          <p>
+            Share your Pacific Northwest Mouse Meet spirit with PNWMM Logo items at our new
+            Online Store! Here you can find shirts, notebooks, phone cases, art, mugs, sweatshirts
+            totes and more!
+          </p>
+          <p>
+            A portion of all sales goes to support PNW Mouse Meet events.
+          </p>
+          <a class="btn btn-primary" href="https://www.teepublic.com/user/pnwmousemeet" target="_blank" rel="noopener">Visit the Store</a>
+        </div>
+        <div class="col-md-6">
+          <img src="http://pnwmousemeet.com/wp-content/uploads/2019/04/pnwmm-logo-items-group-1.png"></img>
+        </div>
+      </div>
     </div>
   </div>
 </main><!-- /.container -->

@@ -7,6 +7,16 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-135433363-1"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'UA-135433363-1');
+    </script>
+
     <title><?php wp_title(); ?></title>
 
     <?php wp_head(); ?>
