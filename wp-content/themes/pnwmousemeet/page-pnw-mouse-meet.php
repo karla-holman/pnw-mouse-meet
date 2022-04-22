@@ -74,40 +74,65 @@
     </div>
   </div>
 
-  <!-- Handle Info -->
-  <?php // Get Mouse Meet Popover
+  <!-- Testimonials -->
+  <?php
     $args = array(
-      'post_type' => 'mouse_meet_info_item',
-      'orderby' => 'meta_value',
-      'order' => 'ASC'
+      'post_type' => 'testimonials',
+      'meta_key' => 'related_event'
     );
 
-    $info_query = new WP_Query( $args );
+    $testimonial_query = new WP_Query( $args );
   ?>
 
-  <!-- Mouse Meet Info -->
-  <div class="grizzly-background">
-    <img class="peak" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/grizzly-peak.svg">
+  <a name="guest-responses"></a>
+  <div class="testimonial-background">
+    <img class="mountain" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/mountain.svg">
     <div class="container page-section align-center">
       <div class="row intro-paragraph">
         <div class="col-md-12">
-          <h2>Mouse Meet Info</h2>
+          <h2>Guest Feedback</h2>
         </div>
       </div>
-      <div class="row">
-        <?php if( $info_query->have_posts() ) : while( $info_query->have_posts() ) : $info_query->the_post(); ?>
-          <div class="col-md-4">
-            <img src="<?php the_field('info_icon'); ?>" />
-            <h4><?php the_title(); ?></h4>
-            <p><?php the_field('info_intro'); ?></p>
-            <a href="<?php the_permalink(); ?>" class="btn btn-primary">Learn More</a>
+
+        <div id="carouselTestimonial" class="carousel slide" data-ride="carousel">
+          <ol class="carousel-indicators">
+            <?php for( $i = 0; $i < $testimonial_query->post_count; $i++ ): ?>
+              <li data-target="#carouselTestimonial" data-slide-to="0" class="<?php echo ($i == 0 ? 'active' : '') ?>"></li>
+            <?php endfor; ?>
+          </ol>
+          <div class="carousel-inner row w-75 mx-auto">
+            <?php $first_iteration = true; ?>
+            <?php if( $testimonial_query->have_posts() ) : while( $testimonial_query->have_posts() ) : $testimonial_query->the_post(); ?>
+              <div class="carousel-item <?php echo ($first_iteration ? 'active' : '') ?>">
+                <?php $first_iteration = false; ?>
+                <div class="d-block w-100">
+                  <div class="card">
+                    <div class="card-body">
+                      <?php the_content(); ?>
+                    </div>
+                    <!-- Comment out
+                    <div class="card-footer">
+                      <h6><?php the_field('name'); ?></h6>
+                    </div>
+                    -->
+                  </div>
+                </div>
+              </div>
+            <?php endwhile; else : ?>
+              <h4>No Quotes Available.</h4>
+            <?php endif; wp_reset_postdata(); ?>
           </div>
-        <?php endwhile; else : ?>
-          <h4>No Information Available.</h4>
-        <?php endif; ?>
+          <a class="carousel-control-prev" href="#carouselTestimonial" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="carousel-control-next" href="#carouselTestimonial" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div>
       </div>
     </div>
-  </div>
 
   <!-- Handle mouse meet entries -->
   <?php
@@ -171,6 +196,41 @@
         </div>
 
       <?php endwhile; endif; wp_reset_postdata(); ?>
+    </div>
+  </div>
+
+  <!-- Handle Info -->
+  <?php // Get Mouse Meet Popover
+    $args = array(
+      'post_type' => 'mouse_meet_info_item',
+      'orderby' => 'meta_value',
+      'order' => 'ASC'
+    );
+
+    $info_query = new WP_Query( $args );
+  ?>
+
+  <!-- Mouse Meet Info -->
+  <div class="grizzly-background">
+    <img class="peak" src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/grizzly-peak.svg">
+    <div class="container page-section align-center">
+      <div class="row intro-paragraph">
+        <div class="col-md-12">
+          <h2>Mouse Meet Info</h2>
+        </div>
+      </div>
+      <div class="row">
+        <?php if( $info_query->have_posts() ) : while( $info_query->have_posts() ) : $info_query->the_post(); ?>
+          <div class="col-md-4">
+            <img src="<?php the_field('info_icon'); ?>" />
+            <h4><?php the_title(); ?></h4>
+            <p><?php the_field('info_intro'); ?></p>
+            <a href="<?php the_permalink(); ?>" class="btn btn-primary">Learn More</a>
+          </div>
+        <?php endwhile; else : ?>
+          <h4>No Information Available.</h4>
+        <?php endif; ?>
+      </div>
     </div>
   </div>
   <!-- Store Section -->
