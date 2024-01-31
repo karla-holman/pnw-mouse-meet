@@ -19,7 +19,7 @@
 
             <p><?php the_content(); ?></p>
             <a name="get-tickets"></a>
-            <?php if( $ticket_info['ticket_text'] || $ticket_info['ticket_code'] ): ?>
+            <?php if( $ticket_info && ($ticket_info['ticket_text'] || $ticket_info['ticket_code'] )): ?>
               <!--div class="container page-section">
                 <div class="row">
                   <div class="col-md-4">

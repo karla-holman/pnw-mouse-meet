@@ -1,3 +1,147 @@
+##### [Version 3.3.11](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.10...v3.3.11) (2023-12-12)
+
+- fix: cached requests for wp options
+- fix: php notice on failed xml feed
+
+##### [Version 3.3.10](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.9...v3.3.10) (2023-12-11)
+
+feat: add new filter for tsdk_utmify query arguments
+
+##### [Version 3.3.9](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.8...v3.3.9) (2023-11-16)
+
+- Fix: a debugging error when you activate Neve Pro after installing Otter & Otter Pro without the license.
+
+##### [Version 3.3.8](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.7...v3.3.8) (2023-11-14)
+
+- Add Product Telemetry
+
+##### [Version 3.3.7](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.6...v3.3.7) (2023-10-31)
+
+- fix: deprecating notice in Dashboard Widget
+
+##### [Version 3.3.6](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.5...v3.3.6) (2023-10-05)
+
+- Fix duplicate notification in Neve FSE
+- Fix SDK breaking Enfold theme builder
+
+##### [Version 3.3.5](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.4...v3.3.5) (2023-09-29)
+
+Fix TPC message.
+Fix TPC typo.
+
+##### [Version 3.3.4](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.3...v3.3.4) (2023-09-18)
+
+- Allow users to activate plugins from the About page
+
+##### [Version 3.3.3](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.2...v3.3.3) (2023-08-22)
+
+- Disable install buttons on the About page if users can not install plugins
+
+##### [Version 3.3.2](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.1...v3.3.2) (2023-08-02)
+
+- Added a new product page for Otter
+
+##### [Version 3.3.1](https://github.com/Codeinwp/themeisle-sdk/compare/v3.3.0...v3.3.1) (2023-06-21)
+
+- Fix Neve FSE promo typo
+
+#### [Version 3.3.0](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.41...v3.3.0) (2023-05-30)
+
+- Adds About Page Integration
+- Adds promos for Neve FSE, Sparks & PPOM
+
+##### [Version 3.2.41](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.40...v3.2.41) (2023-05-10)
+
+- Delay product recommendation mentions
+- Allow upselling notifications for new users
+
+##### [Version 3.2.40](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.39...v3.2.40) (2023-03-30)
+
+- Add ROP upsell to all products
+
+##### [Version 3.2.39](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.38...v3.2.39) (2023-03-17)
+
+* Adds direct utility function for a direct support link.
+
+##### [Version 3.2.38](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.37...v3.2.38) (2023-03-10)
+
+Fix promotions path-breaking
+
+##### [Version 3.2.37](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.36...v3.2.37) (2023-03-01)
+
+Fix array casting
+
+##### [Version 3.2.36](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.35...v3.2.36) (2023-03-01)
+
+fix perfomance issues on attachments count https://github.com/Codeinwp/themeisle-sdk/issues/159
+
+##### [Version 3.2.35](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.34...v3.2.35) (2023-02-22)
+
+Added Codeinwp and wpshout feeds to dashboard widget
+
+##### [Version 3.2.34](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.33...v3.2.34) (2023-01-31)
+
+Improve promotions
+
+##### [Version 3.2.33](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.32...v3.2.33) (2023-01-30)
+
+* Adds PHP 8.2 compatibility
+* Update promotions
+
+##### [Version 3.2.32](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.31...v3.2.32) (2022-11-30)
+
+Release
+
+##### [Version 3.2.31](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.30...v3.2.31) (2022-11-23)
+
+- improve the promotions module
+
+##### [Version 3.2.30](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.29...v3.2.30) (2022-09-15)
+
+- fix filesystem wrong use - ref [#138](https://github.com/Codeinwp/themeisle-sdk/issues/138), props [@ethanclevenger91](https://github.com/ethanclevenger91) for reporting
+
+##### [Version 3.2.29](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.28...v3.2.29) (2022-09-08)
+
+* Adds compatibility mechanism
+* Adds content utms
+* Adds usage time on uninstall feedback
+
+##### [Version 3.2.28](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.27...v3.2.28) (2022-08-30)
+
+* Adds utm handler
+* Improve promotions
+
+##### [Version 3.2.27](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.26...v3.2.27) (2022-08-23)
+
+- Add Promotion Module
+Add the Promotion module for free plugins
+
+##### [Version 3.2.26](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.25...v3.2.26) (2022-05-12)
+
+- [Fix] Solve rollback sometimes not available
+
+##### [Version 3.2.25](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.24...v3.2.25) (2022-03-28)
+
+- Force update request after rollback
+
+##### [Version 3.2.24](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.23...v3.2.24) (2022-02-09)
+
+Fix edge case issue on dismiss
+Avoid issues with open_basedir restrictions
+
+##### [Version 3.2.23](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.22...v3.2.23) (2022-02-02)
+
+Fix php 8.1 issues
+Fix edge case when update_themes site transient was empty and a fatal error was thrown
+
+##### [Version 3.2.22](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.21...v3.2.22) (2021-10-27)
+
+Fix edge case when reset failed checks was not working properly
+
+##### [Version 3.2.21](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.20...v3.2.21) (2021-06-30)
+
+review and improve compatibility with auto-updates on custom updates endpoint
+
 ##### [Version 3.2.20](https://github.com/Codeinwp/themeisle-sdk/compare/v3.2.19...v3.2.20) (2021-03-30)
 
 add wp-config support

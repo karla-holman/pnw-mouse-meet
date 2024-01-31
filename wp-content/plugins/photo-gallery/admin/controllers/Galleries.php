@@ -31,20 +31,20 @@ class GalleriesController_bwg {
 
     $this->actions = array(
       'publish' => array(
-        'title' => __('Publish', BWG()->prefix),
-        'bulk_action' => __('published', BWG()->prefix),
+        'title' => __('Publish', 'photo-gallery'),
+        'bulk_action' => __('published', 'photo-gallery'),
       ),
       'unpublish' => array(
-        'title' => __('Unpublish', BWG()->prefix),
-        'bulk_action' => __('unpublished', BWG()->prefix),
+        'title' => __('Unpublish', 'photo-gallery'),
+        'bulk_action' => __('unpublished', 'photo-gallery'),
       ),
       'duplicate' => array(
-        'title' => __('Duplicate', BWG()->prefix),
-        'bulk_action' => __('duplicated', BWG()->prefix),
+        'title' => __('Duplicate', 'photo-gallery'),
+        'bulk_action' => __('duplicated', 'photo-gallery'),
       ),
       'delete' => array(
-        'title' => __('Delete', BWG()->prefix),
-        'bulk_action' => __('deleted', BWG()->prefix),
+        'title' => __('Delete', 'photo-gallery'),
+        'bulk_action' => __('deleted', 'photo-gallery'),
       ),
     );
 
@@ -94,7 +94,7 @@ class GalleriesController_bwg {
     // Set params for view.
     $params = array();
     $params['page'] = $this->page;
-    $params['page_title'] = __('Galleries', BWG()->prefix);
+    $params['page_title'] = __('Galleries', 'photo-gallery');
     $params['actions'] = $this->actions;
     $params['order'] = WDWLibrary::get('order', 'asc');
     $params['orderby'] = WDWLibrary::get('orderby', 'order');
@@ -159,7 +159,9 @@ class GalleriesController_bwg {
 
     if ( method_exists($this, $task) ) {
       if ( $all ) {
-        $message = $this->$task(0, TRUE, TRUE);
+        $get_excludeIds = WDWLibrary::get('ids_exclude', FALSE);
+        $excludeIds = ( !empty($get_excludeIds) ) ? explode(',', $get_excludeIds) : array();
+        $message = $this->$task(0, TRUE, TRUE, $excludeIds);
         $url_arg['message'] = $message;
       }
       else {
@@ -173,14 +175,14 @@ class GalleriesController_bwg {
           }
         }
         if ( $successfully_updated ) {
-          $message = sprintf(_n('%s item successfully %s.', '%s items successfully %s.', $successfully_updated, BWG()->prefix), $successfully_updated, $this->actions[$task]['bulk_action']);
+          $message = sprintf(_n('%s item successfully %s.', '%s items successfully %s.', $successfully_updated, 'photo-gallery'), $successfully_updated, $this->actions[$task]['bulk_action']);
         }
         $key = ($message === 2 ? 'message' : 'msg');
         $url_arg[$key] = $message;
       }
     }
 
-   WDWLibrary::redirect(add_query_arg($url_arg, admin_url('admin.php')));
+    WDWLibrary::redirect(add_query_arg($url_arg, admin_url('admin.php')));
   }
 
   /**
@@ -189,21 +191,21 @@ class GalleriesController_bwg {
    * @param      $id
    * @param bool $bulk
    * @param bool $all
+   * @param array $excludeIds
    *
    * @return int
    */
-  public function delete( $id, $bulk = FALSE, $all = FALSE ) {
-    $message = $this->model->delete($id, $all);
-
+  public function delete( $id, $bulk = FALSE, $all = FALSE, $excludeIds = array() ) {
+    $message = $this->model->delete($id, $all, $excludeIds);
     if ( $bulk ) {
       return $message;
     }
 
-    WDWLibrary::redirect(add_query_arg(array(
+    WDWLibrary::redirect( add_query_arg(array(
                                          'page' => $this->page,
                                          'task' => 'display',
                                          'message' => $message,
-                                       ), admin_url('admin.php')));
+                                       ), admin_url('admin.php')) );
   }
 
   /**
@@ -212,19 +214,24 @@ class GalleriesController_bwg {
    * @param $id
    * @param bool $bulk
    * @param bool $all
+   * @param array $excludeIds
    *
    * @return int
    */
-  public function publish( $id, $bulk = FALSE, $all = FALSE ) {
-
+  public function publish( $id, $bulk = FALSE, $all = FALSE, $excludeIds = array() ) {
     global $wpdb;
     $where = ($all ? '' : ' WHERE id=%d');
-    if( $where != '' ) {
-      $updated = $wpdb->query($wpdb->prepare('UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=1' . $where, $id));
-    } else {
-      $updated = $wpdb->query('UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=1' . $where);
+    if ( $where != '' ) {
+      $query = $wpdb->prepare('UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=1' . $where, $id);
+      $updated = $wpdb->query( $query );
     }
-
+    else {
+      if ( !empty($excludeIds) ) {
+        $where = ' WHERE `id` NOT IN (' . WDWLibrary::escape_array($excludeIds) . ')';
+      }
+      $query = 'UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=1' . $where;
+      $updated = $wpdb->query( $query );
+    }
     if ( $updated !== FALSE ) {
       $message = 9;
     }
@@ -250,19 +257,24 @@ class GalleriesController_bwg {
    * @param $id
    * @param bool $bulk
    * @param bool $all
+   * @param array $excludeIds
    *
    * @return int
    */
-  public function unpublish( $id, $bulk = FALSE, $all = FALSE ) {
+  public function unpublish( $id, $bulk = FALSE, $all = FALSE, $excludeIds = array() ) {
     global $wpdb;
     $where = ($all ? '' : ' WHERE id=%d');
-
-    if( $where != '' ) {
-        $updated = $wpdb->query($wpdb->prepare('UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=0' . $where, $id));
-    } else {
-        $updated = $wpdb->query('UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=0' . $where);
+    if ( $where != '' ) {
+        $query = $wpdb->prepare('UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=0' . $where, $id);
+        $updated = $wpdb->query( $query );
     }
-
+    else {
+      if ( !empty($excludeIds) ) {
+        $where = ' WHERE `id` NOT IN (' . WDWLibrary::escape_array($excludeIds) . ')';
+      }
+      $query = 'UPDATE `' . $wpdb->prefix . 'bwg_gallery` SET published=0' . $where;
+      $updated = $wpdb->query( $query );
+    }
     if ( $updated !== FALSE ) {
       $message = 10;
     }
@@ -288,12 +300,13 @@ class GalleriesController_bwg {
    * @param      $id
    * @param bool $bulk
    * @param bool $all
+   * @param array $excludeIds
    *
    * @return int
   */
   
-  public function duplicate( $id, $bulk = FALSE, $all = FALSE ) {
-    $message_id = $this->model->duplicate($id, $all);
+  public function duplicate( $id, $bulk = FALSE, $all = FALSE, $excludeIds = array() ) {
+    $message_id = $this->model->duplicate($id, $all, $excludeIds);
     if ($bulk) {
       return $message_id;
     }
@@ -358,6 +371,8 @@ class GalleriesController_bwg {
     $params['facebook_post_gallery'] = (!$params['instagram_post_gallery']) ? ($params['row']->gallery_type == 'facebook_post' ? TRUE : FALSE) : FALSE;
     $params['gallery_type'] = ($params['row']->gallery_type == 'instagram' || $params['row']->gallery_type == 'instagram_post') ? 'instagram' : (($params['row']->gallery_type == 'facebook_post' || $params['row']->gallery_type == 'facebook') ? 'facebook' : $params['row']->gallery_type);
 
+    $params['booster_page_url'] = add_query_arg(array( 'page' => 'twbbwg_photo-gallery' ), admin_url('admin.php'));
+
     // Image display params.
     $params['actions'] = WDWLibrary::image_actions( $params['gallery_type'] );
     $params['page_url'] = $params['form_action'];
@@ -371,6 +386,12 @@ class GalleriesController_bwg {
     $params['orderby'] = $order_by[0];
     $params['items_per_page'] = $this->items_per_page;
     $page = WDWLibrary::get('paged', 1, 'intval');
+    // In case of "Select All" removal, when there is an exception, you need to reset "page".
+    $select_all = WDWLibrary::get('check_all_items', FALSE);
+    $image_action = WDWLibrary::get('image_bulk_action', '-1');
+    if ( $select_all && !empty($image_action) && $image_action == 'image_delete' ) {
+      $page = 1;
+    }
     if ( $page < 0 ) {
       $page = 1;
     }
@@ -380,12 +401,16 @@ class GalleriesController_bwg {
     $params['message'] = $message;
     $params['total'] = $this->model->image_total($id, $params);
     $params['rows'] = $this->model->get_image_rows_data($id, $params);
+    // Get the Booster status to show the banner.
+    $data = WDWLibrary::get_booster_data();
+    // Get the total size of the images in gallery to show banner. Do not show banner if Booster is connected.
+    $params['total_size'] = $data['booster_is_connected'] ? 0 : $this->model->get_images_total_size($id);
     $params['pager'] = 0;
     $params['facebook_embed'] = $this->get_facebook_embed();
 
-    $gallery_types = array('' => __('Mixed', BWG()->prefix), 'instagram' => __('Instagram only', BWG()->prefix));
+    $gallery_types = array('' => __('Mixed', 'photo-gallery'));
     if ( has_action('init_display_facebook_gallery_options_bwg') && $id != 0 ) {
-      $gallery_types['facebook'] = __('Facebook', BWG()->prefix);
+      $gallery_types['facebook'] = __('Facebook', 'photo-gallery');
     }
     $params['gallery_types'] = apply_filters('bwg_get_gallery_types', $gallery_types);
 
@@ -415,7 +440,7 @@ class GalleriesController_bwg {
         $message['image_message'] = WDWLibrary::get('bwg_action_last_message', '', 'intval');
         /* check if image_id is not defined in the portion 50 ids_string skip ajax_task action */
         if ( in_array($image_id, $ids) ) {
-          if( $action_image_id != '' ) {
+          if ( !empty($action_image_id) ) {
             $image_id = $action_image_id;
           }
           $message['image_message'] = $this->model->$ajax_task($image_id, $data['id'], $all);

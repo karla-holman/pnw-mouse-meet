@@ -4,7 +4,7 @@ Plugin Name: Video Background
 Plugin URI: https://pushlabs.co/documentation/video-background
 Description: WordPress plugin to easily assign a video background to any element. Awesome.
 Author: Push Labs
-Version: 2.7.1
+Version: 2.7.5
 Author URI: https://pushlabs.co
 Text Domain: video-background
 Domain Path: /languages
@@ -19,7 +19,7 @@ if ( !defined( 'ABSPATH' ) ) {
 define( 'VIDBG_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'VIDBG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'VIDBG_PLUGIN_BASE', plugin_basename(__FILE__) );
-define( 'VIDBG_PLUGIN_VERSION', '2.7.1' );
+define( 'VIDBG_PLUGIN_VERSION', '2.7.5' );
 
 /**
  * Install the plugin
@@ -457,6 +457,7 @@ add_action( 'wp_footer', 'vidbg_initialize_footer' );
  *
  * @uses shortcode_atts()
  * @uses do_shortcode()
+ * @uses esc_js()
  */
 function candide_video_background( $atts , $content = null ) {
 
@@ -479,22 +480,26 @@ function candide_video_background( $atts , $content = null ) {
       )
     );
 
+    $has_overlay = ($overlay == 'true') ? 'true' : 'false';
+    $has_loop = ($loop == 'true') ? 'true' : 'false';
+    $has_tap_to_unmute = ($tap_to_unmute == 'true') ? 'true' : 'false';
+
     $tap_to_unmute_text = __( 'Tap to Unmute', 'video-background' );
     $tap_to_unmute_text = apply_filters( 'vidbg_tap_to_unmute_text', $tap_to_unmute_text );
-    $tap_to_unmute_button = '<img src="' . plugins_url( 'img/volume-icon.svg', __FILE__ ) . '" width="20" height="20" /><span>' . $tap_to_unmute_text . '</span>';
+    $tap_to_unmute_button = '<img src="' . plugins_url( 'img/volume-icon.svg', __FILE__ ) . '" width="20" height="20" /><span>' . esc_js($tap_to_unmute_text) . '</span>';
 
     $output = "
       jQuery(function($){
-        // Source: " . $source . "
-        $( '" . $container . "' ).vidbg( {
-          mp4: '" . $mp4 . "',
-          webm: '" . $webm . "',
-          poster: '" . $poster . "',
-          repeat: " . $loop . ",
-          overlay: " . $overlay . ",
-          overlayColor: '" . $overlay_color . "',
-          overlayAlpha: '" . $overlay_alpha . "',
-          tapToUnmute: " . $tap_to_unmute . ",
+        // Source: " . esc_js($source) . "
+        $( '" . esc_js($container) . "' ).vidbg( {
+          mp4: '" . esc_js($mp4) . "',
+          webm: '" . esc_js($webm) . "',
+          poster: '" . esc_js($poster) . "',
+          repeat: " . $has_loop . ",
+          overlay: " . $has_overlay . ",
+          overlayColor: '" . esc_js($overlay_color) . "',
+          overlayAlpha: '" . esc_js($overlay_alpha) . "',
+          tapToUnmute: " . $has_tap_to_unmute . ",
           tapToUnmuteText: '" . $tap_to_unmute_button . "',
         });
       });

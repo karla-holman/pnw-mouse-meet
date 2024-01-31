@@ -22,7 +22,7 @@ class BWGModelGalleryBox {
     if ( $sort_by == 'size' || $sort_by == 'resolution' ) {
       $sort_by = ' CAST(image.' . $sort_by . ' AS SIGNED) ';
     }
-    elseif ( $sort_by == 'casual' ) {
+    elseif ( $sort_by == 'casual' || $sort_by == 'random' ) {
       $sort_by = 'RAND()';
     }
     elseif (($sort_by != 'alt') && ($sort_by != 'date') && ($sort_by != 'filetype') && ($sort_by != 'filename')) {
@@ -48,7 +48,6 @@ class BWGModelGalleryBox {
     else {
       $filter_tags = array_map('intval', explode(",", $bwg_filter_tag_temp));
     }
-
     $filter_search_name_temp = WDWLibrary::get('filter_search_name', '');
     $filter_search_name = '';
     if ( $filter_search_name_temp == '' ) {  /* for thumbnail view */
@@ -97,12 +96,16 @@ class BWGModelGalleryBox {
       if ( !BWG()->options->tags_filter_and_or ) {
         // To find images which have at least one from tags filtered by.
         $compare_sign = "|";
+        $where .= ' AND CONCAT(",", tags.tags_combined, ",") REGEXP ",(' . implode( $compare_sign, $filter_tags ) . ')," ';
       }
       else {
         // To find images which have all tags filtered by.
         // For this case there is need to sort tags by ascending to compare with comma.
-        sort($filter_tags);
         $compare_sign = ",";
+        // To find images which have all tags filtered by.
+        foreach ( $filter_tags as $filter_tag ) {
+          $where .= ' AND tags.tags_combined REGEXP "' . $filter_tag . '" ';
+        }
       }
       if( $gallery_id ) {
           $join .= ' LEFT JOIN (SELECT GROUP_CONCAT(tag_id order by tag_id SEPARATOR ",") AS tags_combined, image_id FROM  ' . $wpdb->prefix . 'bwg_image_tag WHERE gallery_id=%d GROUP BY image_id) AS tags ON image.id=tags.image_id';
@@ -110,8 +113,6 @@ class BWGModelGalleryBox {
       } else {
           $join .= ' LEFT JOIN (SELECT GROUP_CONCAT(tag_id order by tag_id SEPARATOR ",") AS tags_combined, image_id FROM  ' . $wpdb->prefix . 'bwg_image_tag GROUP BY image_id) AS tags ON image.id=tags.image_id';
       }
-      $where .= ' AND CONCAT(",", tags.tags_combined, ",") REGEXP ",( %s )," ';
-      $prepareArgs[] = implode($compare_sign, $filter_tags);
     }
 
     $rate_join = '';

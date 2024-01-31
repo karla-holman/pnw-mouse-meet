@@ -57,14 +57,17 @@ class System extends View {
 	public function display() {
 		?>
 
-		<div class="wpforms-setting-row tools">
+		<div class="wpforms-setting-row tools wpforms-settings-row-system-information">
 			<h4 id="form-export"><?php esc_html_e( 'System Information', 'wpforms-lite' ); ?></h4>
-			<textarea class="info-area" readonly><?php echo esc_textarea( $this->get_system_info() ); ?></textarea>
+			<textarea id="wpforms-system-information" class="info-area" readonly><?php echo esc_textarea( $this->get_system_info() ); ?></textarea>
+			<button type="button" id="wpforms-system-information-copy" class="wpforms-btn wpforms-btn-md wpforms-btn-light-grey">
+				<?php esc_html_e( 'Copy System Information', 'wpforms-lite' ); ?>
+			</button>
 		</div>
 
-		<div class="wpforms-setting-row tools">
+		<div class="wpforms-setting-row tools wpforms-settings-row-test-ssl">
 			<h4 id="ssl-verify"><?php esc_html_e( 'Test SSL Connections', 'wpforms-lite' ); ?></h4>
-			<p><?php esc_html_e( 'Click the button below to verify your web server can perform SSL connections successfully.', 'wpforms-lite' ); ?></p>
+			<p class="desc"><?php esc_html_e( 'Click the button below to verify your web server can perform SSL connections successfully.', 'wpforms-lite' ); ?></p>
 			<button type="button" id="wpforms-ssl-verify" class="wpforms-btn wpforms-btn-md wpforms-btn-orange">
 				<?php esc_html_e( 'Test Connection', 'wpforms-lite' ); ?>
 			</button>
@@ -113,13 +116,14 @@ class System extends View {
 		$data      = '-- WPForms Info' . "\n\n";
 
 		if ( ! empty( $activated['pro'] ) ) {
-			$date  = $activated['pro'] + ( get_option( 'gmt_offset' ) * 3600 );
-			$data .= 'Pro:                      ' . date_i18n( esc_html__( 'M j, Y @ g:ia', 'wpforms-lite' ), $date ) . "\n";
+			$data .= 'Pro:                      ' . $this->get_formatted_datetime( $activated['pro'] ) . "\n";
 		}
+
 		if ( ! empty( $activated['lite'] ) ) {
-			$date  = $activated['lite'] + ( get_option( 'gmt_offset' ) * 3600 );
-			$data .= 'Lite:                     ' . date_i18n( esc_html__( 'M j, Y @ g:ia', 'wpforms-lite' ), $date ) . "\n";
+			$data .= 'Lite:                     ' . $this->get_formatted_datetime( $activated['lite'] ) . "\n";
 		}
+
+		$data .= 'Lite Connect:             ' . $this->get_lite_connect_info() . "\n";
 
 		return $data;
 	}
@@ -376,4 +380,43 @@ class System extends View {
 		return $data;
 	}
 
+	/**
+	 * Get Lite Connect status info string.
+	 *
+	 * @since 1.7.5
+	 *
+	 * @return string
+	 */
+	private function get_lite_connect_info() {
+
+		$lc_enabled       = wpforms_setting( 'lite-connect-enabled' );
+		$lc_enabled_since = wpforms_setting( 'lite-connect-enabled-since' );
+		$date             = $this->get_formatted_datetime( $lc_enabled_since );
+
+		if ( $lc_enabled ) {
+			$string = $lc_enabled_since ? 'Backup is enabled since ' . $date : 'Backup is enabled';
+		} else {
+			$string = $lc_enabled_since ? 'Backup is not enabled. Previously was enabled since ' . $date : 'Backup is not enabled';
+		}
+
+		return $string;
+	}
+
+	/**
+	 * Get formatted datetime.
+	 *
+	 * @since 1.8.5
+	 *
+	 * @param int|string $date Date.
+	 *
+	 * @return string
+	 */
+	private function get_formatted_datetime( $date ) {
+
+		return sprintf(
+			'%1$s at %2$s (GMT)',
+			gmdate( 'M j, Y', $date ),
+			gmdate( 'g:ia', $date )
+		);
+	}
 }

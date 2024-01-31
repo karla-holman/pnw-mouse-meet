@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Pre-configured packaged templates.
  *
@@ -42,6 +46,7 @@ class WPForms_Templates {
 			'wpforms_load_templates',
 			[
 				'blank',
+				'simple-contact-form',
 			]
 		);
 

@@ -38,7 +38,7 @@
         <div class="container page-section align-center">
           <div class="row intro-paragraph">
             <div class="col-md-12">
-              <h2>Books & More</h2>
+              <h2>Videos, Books & More</h2>
               <p class="intro_text"><?php the_field('resource_intro'); ?>
             </div>
           </div>

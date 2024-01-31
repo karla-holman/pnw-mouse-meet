@@ -123,7 +123,7 @@ jQuery( function () {
     form.attr( "action", action );
 
     form.submit();
-  } );
+  });
 
   /* Options form. */
   if ( jQuery( "form#bwg_options_form" ).length > 0 ) {
@@ -165,6 +165,8 @@ jQuery( function () {
     } );
   });
 
+  /* Move the 'tr_tempid' element to the beginning of the table */
+  jQuery('#tr_tempid').prependTo('#images_table #tbody_arr');
   /* Change the popup dimensions. */
   bwg_tb_window();
   /* Hide loading */
@@ -231,7 +233,7 @@ jQuery( function () {
       e.preventDefault();
       return;
     }
-  } );
+  });
   jQuery( '.search_in_options:visible' ).keyup( function ( e ) {
     var w_key = e.key;
     if ( ( typeof w_key == 'string' && w_key.length == 1 ) || !w_key || w_key == 'Backspace') {
@@ -334,7 +336,7 @@ function bwg_lazy_load_gallery() {
     var src = currImg.data('src');
         src = src.split('?bwg=');
     if ( src.length > 0 && typeof src !== 'undefined' && typeof src[0] !== 'undefined' ) {
-      src = src[0] + ( (is_instagram) ? '&' : '?' ) + 'bwg=' + d.getTime();
+      src = src[0] + ( (is_instagram && currImg.data('type') != 'EMBED_OEMBED_INSTAGRAM_POST') ? '&' : '?' ) + 'bwg=' + d.getTime();
       currImg.attr('src', src);
       currImg.removeAttr('data-src');
       currImg.on('load', function () {
@@ -418,10 +420,16 @@ function spider_ajax_save( form_id, tr_group, is_last_ajax, content_message_id )
   post_data[ "image_current_id" ] = jQuery( "#image_current_id" ).val(); /* Current image id.*/
   var ids_string = jQuery( "#ids_string" ).val(); /* Images ids separated by comma.*/
   ids_string = ids_string.replace( /,\s*$/, "" );
+  post_data[ "check_all_items" ] = jQuery( "[name=check_all_items]" ).is( ":checked" ) ? 1 : 0; /* Select all.*/
   post_data[ "image_bulk_action" ] = jQuery( "[name=image_bulk_action]" ).val(); /* Bulk action for images.*/
   post_data[ "order_by" ] = jQuery( "select[name='order_by']" ).val(); /* Images sorting.*/
   post_data[ "s" ] = jQuery( "input[name='s']" ).val(); /* Images filter.*/
-  post_data[ "paged" ] = jQuery( "#paged" ).val(); /* Images page number.*/
+  var paged = jQuery( "#paged" ).val(); /* Images page number.*/
+  // In case of "Select All" removal, when there is an exception, you need to reset "page".
+  if ( post_data["check_all_items"] && post_data["image_bulk_action"] == "image_delete" ) {
+    paged = 1;
+  }
+  post_data[ "paged" ] = paged;
   post_data[ "bwg_nonce" ] = jQuery( "#bwg_nonce" ).val(); /* Nonce*/
   post_data[ "image_pricelist_id" ] = jQuery( "#image_pricelist_id" ).val();
   post_data[ "remove_pricelist" ] = jQuery( "#remove_pricelist" ).val();
@@ -436,8 +444,7 @@ function spider_ajax_save( form_id, tr_group, is_last_ajax, content_message_id )
 
   /* Selected images count for message.*/
   post_data[ "checked_items_count" ] = jQuery( "[name^=check]:not([id=check_all_items]):checked" ).length;
-  /* Select all.*/
-  post_data[ "check_all_items" ] = jQuery( "[name=check_all_items]" ).is( ":checked" ) ? 1 : 0;
+
   var limit = ( ajax_task == 'image_set_watermark'
     || ajax_task == 'image_reset'
     || ajax_task == 'image_recreate_thumbnail'
@@ -486,6 +493,7 @@ function spider_ajax_save( form_id, tr_group, is_last_ajax, content_message_id )
 
   post_data[ "ajax_task" ] = ajax_task;
   post_data[ "ids_string" ] = ids_string;
+  post_data[ "ids_exclude" ] = jQuery( "#ids_exclude" ).val(); /* Exclude ids.*/
   post_data[ "bwg_action_last_message" ] = content_message_id;
 
   /* Images dimensions to resize. */
@@ -555,10 +563,10 @@ function spider_ajax_save( form_id, tr_group, is_last_ajax, content_message_id )
     var msg = jQuery( data ).find( '#bwg_action_last_message' ).attr( "value" );
     if ( tr_count > bwg_save_count * tr_group || (limit != false && limit < jQuery("#total").val()) ) {
       if ( tr_count > bwg_save_count * (tr_group + 1) ) {
-        spider_ajax_save(form_id, ++tr_group, false, msg);
+        spider_ajax_save(form_id, ++tr_group, 0, msg);
       }
       else {
-        spider_ajax_save(form_id, ++tr_group, true, msg);
+        spider_ajax_save(form_id, ++tr_group, 1, msg);
       }
       return;
     }
@@ -596,6 +604,8 @@ function spider_ajax_save( form_id, tr_group, is_last_ajax, content_message_id )
       jQuery( '#task' ).html( str );
       var str = jQuery( data ).find( '#current_id' ).html();
       jQuery( '#current_id' ).html( str );
+      var str = jQuery( data ).find( '.bwg-total-size-banner-cont' ).html();
+      jQuery( '.bwg-total-size-banner-cont' ).html( str );
 
       if ( ajax_task != '' ) {
         jQuery( ".ajax-msg" ).removeClass( "wd-hide" );
@@ -614,15 +624,20 @@ function spider_ajax_save( form_id, tr_group, is_last_ajax, content_message_id )
       } );
       jQuery( "#loading_div" ).hide();
       bwg_lazy_load_gallery();
-      wd_howto_src_change();
+      if ( typeof wd_howto_src_change === 'function' ) {
+        wd_howto_src_change();
+      }
 
       /* Add click event to toggle button to expand columns.*/
       jQuery( "tbody" ).on( "click", ".toggle-row", function () {
         jQuery( this ).closest( "tr" ).toggleClass( "is-expanded" );
       } );
-
+      /* Move the 'tr_tempid' element to the beginning of the table */
+      jQuery('#tr_tempid').prependTo('#images_table #tbody_arr');
       /* Change the popup dimensions. */
       bwg_tb_window( "#images_table" );
+
+      bwg_smt_changed = false;
 
       /* Show popup for install manager if first gallery inserted */
       var popup_status = jQuery( data ).find( '#twbb_layout' ).attr( "data-status" );
@@ -765,7 +780,6 @@ function spider_check_all_items_checkbox( event ) {
         .html( "<div class='notice notice-warning wd-notice'><p><strong>" + ( items_count == 1 ? bwg_objectL10B.selected_item : bwg_objectL10B.selected_items ).replace( "%d", items_count ) + "</strong></p></div>" )
         .removeClass( "wd-hide" );
     }
-
     if ( !jQuery( "#check_all" ).is( ':checked' ) ) {
       jQuery( '#check_all' ).trigger( 'click' );
     }
@@ -780,11 +794,10 @@ function spider_check_all_items_checkbox( event ) {
 
 function spider_check_all( current ) {
   if ( !jQuery( current ).is( ':checked' ) ) {
-    jQuery( '#check_all_items' ).prop( 'checked', false );
-    jQuery( ".ajax-msg" ).addClass( "wd-hide" );
+    jQuery( '.ajax-msg' ).addClass( 'wd-hide' );
   }
+  bwg_set_excludeids_input_value(current);
 }
-
 /* Set uploader to button class. */
 function spider_uploader( button_id, input_id, delete_id, img_id ) {
   if ( typeof img_id == 'undefined' ) {
@@ -1034,6 +1047,7 @@ function bwg_add_tag( image_id, tagIds, titles ) {
   jQuery( ".ajax-msg", window.parent.document ).addClass( "wd-hide" );
   tb_remove();
   window.parent.bwg_remove_loading_block();
+  bwg_smt_changed = true;
 }
 
 function bwg_remove_tag( tag_id, image_id ) {
@@ -1047,6 +1061,7 @@ function bwg_remove_tag( tag_id, image_id ) {
     }
     jQuery( ".unsaved-msg" ).removeClass( "wd-hide" );
     jQuery( ".ajax-msg" ).addClass( "wd-hide" );
+    bwg_smt_changed = true;
   }
 }
 
@@ -1446,6 +1461,8 @@ function bwg_change_gallery_type( type_to_set, warning_type, instagram_client_id
 
 /*bulk embed handling*/
 function bwg_bulk_embed( from, key ) {
+  /* Move the 'tr_tempid' element to the beginning of the table */
+  jQuery('#tr_tempid').prependTo('#images_table #tbody_arr');
   switch ( from ) {
     case 'instagram': {
       bwg_add_instagram_gallery( key, true );
@@ -1612,7 +1629,9 @@ function bwg_get_embed_info( input_id ) {
       else {
         fileData = response_JSON;
         filesValid.push(fileData);
-        bwg_add_image(filesValid);
+        bwg_add_image(filesValid, 'bulk-actions');
+        /* Move the 'tr_tempid' element to the beginning of the table */
+        jQuery('#tr_tempid').prependTo('#images_table #tbody_arr');
         document.getElementById(input_id).value = '';
         jQuery('#loading_div').hide();
         return 'ok';
@@ -1642,6 +1661,8 @@ function bwg_change_fonts( cont, google_fonts ) {
  * @param multiple
  */
 function spider_media_uploader( e, multiple ) {
+  /* Move the 'tr_tempid' element to the beginning of the table */
+  jQuery('#tr_tempid').prependTo('#images_table #tbody_arr');
   if ( typeof multiple == "undefined" ) {
     var multiple = false;
   }
@@ -1687,7 +1708,7 @@ function spider_media_uploader( e, multiple ) {
           result[i].description = attachment[i].description;
           result[i].description = bwg_media_name_clean(result[i].description);
         }
-        bwg_add_image( result );
+        bwg_add_image( result, 'media-library' );
       }
       else {
         alert(bwg_objectL10B.import_failed);
@@ -1931,8 +1952,10 @@ var bwg_j = 'pr_' + j_int;
  * Add image to images list.
  *
  * @param files
+ * @param add_type
  */
-function bwg_add_image( files ) {
+function bwg_add_image( files, add_type ) {
+  var add_type = (typeof add_type != "undefined" ) ? add_type : 'default';
   var gallery_type = jQuery('#gallery_type option:selected').val();
   var ids_string = jQuery('#ids_string').val();
   var tr_first_id = '';
@@ -2024,6 +2047,8 @@ function bwg_add_image( files ) {
     if ( is_embed ) {
       html = html.replace(/tempalt/g, name);
       html = html.replace(/wd-image-actions/g, 'wd-image-actions wd-hide');
+      /* Remove Total size/Optimize now for embed images.*/
+      html = html.replace(/bwg-total-size/g, 'bwg-total-size wd-hide');
     }
     else {
       html = html.replace(/tempalt/g, files[i]['alt']);
@@ -2040,19 +2065,33 @@ function bwg_add_image( files ) {
       description += ( ( files[ i ][ 'orientation' ] != 0 && files[ i ][ 'orientation' ] != '' ) ? 'Orientation: ' + files[ i ][ 'orientation' ] + '\n' : '' );
     }
     html = html.replace( /tempdescription/g, description );
-
+    /* The sequence of creating new elements. */
     if ( tr_first_id != '' ) {
       if ( is_embed ) {
-        jQuery("#tbody_arr").prepend("<tr id='tr_" + bwg_j + "'>");
+        if ( add_type == 'instagram' ) {
+          jQuery("<tr id='tr_" + bwg_j + "'>").insertBefore("#tbody_arr #tr_tempid");
+        }
+        else if ( add_type == 'bulk-actions' ) {
+          jQuery("#tbody_arr").prepend("<tr id='tr_" + bwg_j + "'>");
+        }
       }
       else {
-        jQuery("<tr id='tr_" + bwg_j + "'>" ).insertBefore('#' + tr_first_id);
+        if ( add_type == 'media-library' ) {
+          jQuery("<tr id='tr_" + bwg_j + "'>").insertAfter("#tbody_arr #tr_tempid");
+        }
+        else {
+          jQuery("<tr id='tr_" + bwg_j + "'>").insertBefore('#' + tr_first_id);
+        }
       }
     }
     else {
-      jQuery('#tbody_arr').append( "<tr id='tr_" + bwg_j + "'>" );
+      jQuery('#tbody_arr').append("<tr id='tr_" + bwg_j + "'>");
     }
     jQuery('#tr_' + bwg_j ).html( html );
+    // Disabled OEMBED_INSTAGRAM_POST preview.
+    if ( filetype == 'EMBED_OEMBED_INSTAGRAM_POST' ) {
+      jQuery('#tr_' + bwg_j ).find('.has-media-icon').html(jQuery('#tr_' + bwg_j ).find('.thickbox.thickbox-preview').html());
+    }
 
     /* Change the popup dimensions. */
     bwg_tb_window( "#tr_" + bwg_j );
@@ -2089,12 +2128,15 @@ function bwg_add_image( files ) {
   /* Set number column values after adding rows. */
   var i = 0;
   jQuery( "#tbody_arr .col_num" ).each( function () {
-    jQuery( this ).html( ++i );
-  } );
+    if ( ! jQuery( this ).parents('tr').hasClass('wd-template') ) {
+      jQuery(this).html(++i);
+    }
+  });
   window.parent.jQuery( ".no-items" ).remove();
   jQuery( ".unsaved-msg", window.parent.document ).removeClass( "wd-hide" );
   jQuery( ".ajax-msg", window.parent.document ).addClass( "wd-hide" );
   jQuery( ".bwg-type-allowed", window.parent.document ).removeClass( "wd-hide" );
+  bwg_smt_changed = true;
 }
 
 /**
@@ -2296,24 +2338,27 @@ function bwg_recreate_thumb( limit ) {
   if ( limit == 0 ) {
     jQuery( '#loading_div' ).show();
     jQuery( '.updated' ).remove();
+    jQuery( '.error' ).remove();
   }
   jQuery.ajax( {
     type: "POST",
+    dataType: "json",
     url: bwg_options_url_ajax,
     data: post_data,
-    success: function () {
+    success: function ( data ) {
       if ( limit < imgcount ) {
         limit += 50;
         bwg_recreate_thumb( limit );
       }
       else {
-        jQuery( '#loading_div' ).hide();
-        jQuery( "<div class=\"updated inline\">\n" +
-          "      <p><strong>" + bwg_objectL10B.recreate_success + "</strong></p>" +
-          "      </div>" ).insertBefore( jQuery( "#bwg_options_form" ).parent() );
+        var class_name = ((data.status) ? 'updated' : 'error');
+        jQuery('#loading_div').hide();
+        jQuery("<div class='" + class_name + " inline' style='display: block;'>\n" +
+          "<p><strong>" + data.message + "</strong></p>" +
+          "</div>" ).insertBefore( jQuery( "#bwg_options_form" ).parent() );
       }
     }
-  } );
+  });
   return false;
 }
 
@@ -2970,7 +3015,6 @@ jQuery(document).mouseup(function(e){
   }
 });
 
-
 function applyGoogleFont(that, font) {
   // Replace + signs with spaces for css
   font = font.replace(/\+/g, ' ');
@@ -2987,3 +3031,52 @@ function applyGoogleFont(that, font) {
   fontWeight = +fontSpecs;
   that.val(fontFamily);
 }
+
+function bwg_get_exclude_check_ids( that ) {
+  var excludeIds = '';
+  var excludeIdArr = new Array();
+  if ( jQuery('#check_all_items').is(':checked') && jQuery('#check_all').is(':checked') && that == '#check_all' ) {
+    excludeIds = '';
+  }
+  else if ( jQuery('#check_all_items').is(':checked') && !jQuery('#check_all').is(':checked') && that == '#check_all' ) {
+    jQuery('.images_table .bwg-ordering .check-column input[type="checkbox"]:checked').each(function () {
+      if ( jQuery(this).attr('id') != 'check_tempid' ) {
+        var excludeId = jQuery(this).attr('id');
+        if ( excludeId ) {
+          excludeIdArr.push(excludeId);
+        }
+      }
+    });
+  }
+  else if ( jQuery('#check_all_items').is(':checked') && that != '#check_all' ) {
+    jQuery('.images_table .bwg-ordering .check-column input[type="checkbox"]:not(:checked)').each(function () {
+      if ( jQuery(this).attr('id') != 'check_tempid' ) {
+        var excludeId = jQuery(this).attr('id');
+        if ( excludeId ) {
+          excludeIdArr.push(excludeId);
+        }
+      }
+    });
+  }
+  if ( excludeIdArr.length > 0 ) {
+    excludeIds = excludeIdArr.join(',').replaceAll('check_', '')
+  }
+
+  return excludeIds;
+}
+
+function bwg_set_excludeids_input_value( that ) {
+  var exclude_ids = bwg_get_exclude_check_ids(that);
+  jQuery( '#ids_exclude' ).val(exclude_ids);
+}
+
+var bwg_smt_changed = false;
+jQuery(".bwg_galleries input[id='name'], textarea[id^='image_alt_text_'], textarea[id^='image_description_'], textarea[id^='redirect_url_']").on("keyup", function() {
+  bwg_smt_changed = true;
+});
+
+jQuery(window).on('beforeunload', function() {
+  if (bwg_smt_changed) {
+    return 'Changes you made may not be saved.';
+  }
+});

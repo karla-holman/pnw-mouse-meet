@@ -11,7 +11,7 @@
  * Plugin name: Menu Icons
  * Plugin URI:  https://github.com/Codeinwp/wp-menu-icons
  * Description: Spice up your navigation menus with pretty icons, easily.
- * Version:     0.12.11
+ * Version:     0.13.8
  * Author:      ThemeIsle
  * Author URI:  https://themeisle.com
  * License:     GPLv2
@@ -29,7 +29,7 @@ final class Menu_Icons {
 
 	const DISMISS_NOTICE = 'menu-icons-dismiss-notice';
 
-	const VERSION = '0.12.11';
+	const VERSION = '0.13.8';
 
 	/**
 	 * Holds plugin data
@@ -91,16 +91,23 @@ final class Menu_Icons {
 
 		Menu_Icons_Meta::init();
 
-		// Font awesome 5 backward compatible functionalities.
-		require_once self::$data['dir'] . 'includes/library/font-awesome5/backward-compatible-icons.php';
-		require_once self::$data['dir'] . 'includes/library/font-awesome5/font-awesome.php';
+		// Font awesome backward compatible functionalities.
+		require_once self::$data['dir'] . 'includes/library/font-awesome/backward-compatible-icons.php';
+		require_once self::$data['dir'] . 'includes/library/font-awesome/font-awesome.php';
 		Menu_Icons_Font_Awesome::init();
 
 		add_action( 'icon_picker_init', array( __CLASS__, '_init' ), 9 );
 
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, '_admin_enqueue_scripts' ) );
 		add_action( 'wp_dashboard_setup', array( __CLASS__, '_wp_menu_icons_dashboard_notice' ) );
-		add_action( 'wp_ajax_wp_menu_icons_dismiss_dashboard_notice', array( __CLASS__, 'wp_menu_icons_dismiss_dashboard_notice' ) );
+		add_action( 'admin_action_menu_icon_hide_notice', array( __CLASS__, 'wp_menu_icons_dismiss_dashboard_notice' ) );
+
+		add_filter(
+			'menu_icons_load_promotions',
+			function() {
+				return array( 'otter' );
+			}
+		);
 	}
 
 
@@ -172,34 +179,11 @@ final class Menu_Icons {
 		$url    = self::get( 'url' );
 		$suffix = kucrut_get_script_suffix();
 
-		if ( defined( 'MENU_ICONS_SCRIPT_DEBUG' ) && MENU_ICONS_SCRIPT_DEBUG ) {
-			$script_url = '//localhost:8081/';
-		} else {
-			$script_url = $url;
-		}
-
 		wp_register_style(
 			'menu-icons-dashboard',
 			"{$url}css/dashboard-notice{$suffix}.css",
 			false,
 			self::VERSION
-		);
-
-		wp_register_script(
-			'menu-icons-dashboard',
-			"{$script_url}js/dashboard-notice{$suffix}.js",
-			array( 'jquery' ),
-			self::VERSION,
-			true
-		);
-
-		wp_localize_script(
-			'menu-icons-dashboard',
-			'menuIcons',
-			array(
-				'ajaxUrls' => admin_url( 'admin-ajax.php' ),
-				'_nonce'   => wp_create_nonce( self::DISMISS_NOTICE ),
-			)
 		);
 	}
 
@@ -207,9 +191,15 @@ final class Menu_Icons {
 	 * Render dashboard notice.
 	 */
 	public static function _wp_menu_icons_dashboard_notice() {
-		if ( false === get_transient( self::DISMISS_NOTICE ) ) {
+		$show_notice = true;
+		if ( ! empty( get_option( self::DISMISS_NOTICE, false ) ) ) {
+			$show_notice = false;
+		}
+		if ( ! empty( get_transient( self::DISMISS_NOTICE ) ) ) {
+			$show_notice = false;
+		}
+		if ( $show_notice ) {
 			wp_enqueue_style( 'menu-icons-dashboard' );
-			wp_enqueue_script( 'menu-icons-dashboard' );
 			add_action( 'admin_notices', array( __CLASS__, '_upsell_admin_notice' ) );
 		}
 	}
@@ -218,17 +208,15 @@ final class Menu_Icons {
 	 * Ajax request handle for dissmiss dashboard notice.
 	 */
 	public static function wp_menu_icons_dismiss_dashboard_notice() {
-		check_ajax_referer( self::DISMISS_NOTICE, '_nonce' );
+		// Verify WP nonce and store hide notice flag.
+		if ( isset( $_GET['_wp_notice_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wp_notice_nonce'] ) ), self::DISMISS_NOTICE ) ) {
+			update_option( self::DISMISS_NOTICE, 1 );
+		}
 
-		$dismiss = ! empty( $_POST['dismiss'] ) ? intval( $_POST['dismiss'] ) : 0;
-		set_transient( self::DISMISS_NOTICE, $dismiss, 365 * DAY_IN_SECONDS );
-
-		wp_send_json_success(
-			array(
-				'status' => 0,
-			)
-		);
-		die();
+		if ( ! headers_sent() ) {
+			wp_safe_redirect( admin_url() );
+			exit;
+		}
 	}
 
 	/**
@@ -241,11 +229,20 @@ final class Menu_Icons {
 			),
 			admin_url( 'theme-install.php' )
 		);
+
+		$action_url = add_query_arg(
+			array(
+				'action'           => 'menu_icon_hide_notice',
+				'_wp_notice_nonce' => wp_create_nonce( self::DISMISS_NOTICE ),
+			),
+			admin_url( 'index.php' )
+		);
 		?>
-		<div class="notice notice-info is-dismissible menu-icon-dashboard-notice">
+		<div class="notice notice-info menu-icon-dashboard-notice">
 			<h2><?php esc_html_e( 'Thank you for installing Menu Icons!', 'menu-icons' ); ?></h2>
 			<p><?php esc_html_e( 'Have you heard about our latest FREE theme - Neve? Using a mobile-first approach, compatibility with AMP and popular page-builders, Neve makes website building accessible for everyone.', 'menu-icons' ); ?></p>
 			<a href="<?php echo esc_url( $neve_theme_url ); ?>" class="button button-primary button-large"><?php esc_html_e( 'Preview Neve', 'menu-icons' ); ?></a>
+			<a href="<?php echo esc_url( $action_url ); ?>" class="notice-dismiss"></a>
 		</div>
 		<?php
 	}

@@ -69,10 +69,10 @@ gulp.task( 'images-min', function() {
     .pipe( gulp.dest( 'dist/images' ) );
 });
 
-gulp.task('default', gulp.series('css', 'scripts', 'images', 'images-min'));
+gulp.task('default', [ 'css', 'scripts', 'images', 'images-min' ]);
 
 // watch tasks
 gulp.task('watch', function() {
-	gulp.watch(config.sassPath + '/**/*.scss', gulp.series('css'));
-	gulp.watch([ config.jsPath + '/**/*.js', '!' + config.jsPath + '/**/*.min.js' ], gulp.series('scripts'));
+	gulp.watch(config.sassPath + '/**/*.scss', ['css']);
+	gulp.watch([ config.jsPath + '/**/*.js', '!' + config.jsPath + '/**/*.min.js' ], ['scripts']);
 });

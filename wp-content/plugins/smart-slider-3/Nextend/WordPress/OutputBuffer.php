@@ -85,16 +85,40 @@ class OutputBuffer {
             });
         }
 
-        if (defined('PERFMATTERS_VERSION')) {
+        if (class_exists('Ionos\Performance\Caching')) {
             /**
-             * @see SSDEV-3398
+             * @see SSDEV-3780
              */
             add_action('template_redirect', function () {
                 ob_start(array(
                     $this,
                     "outputCallback"
                 ));
-            }, 11);
+            });
+        }
+
+        if (class_exists('WP_Grid_Builder\Autoload')) {
+            /**
+             * @see SSDEV-3888
+             */
+            add_action('template_redirect', function () {
+                ob_start(array(
+                    $this,
+                    "outputCallback"
+                ));
+            });
+        }
+
+        if (class_exists('wps_ic')) {
+            /**
+             * @see SSDEV-3916
+             */
+            add_action('template_redirect', function () {
+                ob_start(array(
+                    $this,
+                    "outputCallback"
+                ));
+            });
         }
     }
 
@@ -219,14 +243,16 @@ class OutputBuffer {
 
     public function closeOutputBuffers() {
 
-        $handlers = ob_list_handlers();
-        $callback = self::class . '::outputCallback';
-        if (in_array($callback, $handlers)) {
-            for ($i = count($handlers) - 1; $i >= 0; $i--) {
-                ob_end_flush();
+        if (!defined('WC_DOING_AJAX') || !WC_DOING_AJAX) {
+            $handlers = ob_list_handlers();
+            $callback = self::class . '::outputCallback';
+            if (in_array($callback, $handlers)) {
+                for ($i = count($handlers) - 1; $i >= 0; $i--) {
+                    ob_end_flush();
 
-                if ($handlers[$i] === $callback) {
-                    break;
+                    if ($handlers[$i] === $callback) {
+                        break;
+                    }
                 }
             }
         }

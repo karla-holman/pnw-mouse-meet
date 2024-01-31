@@ -2,17 +2,17 @@
     "packages": [
         {
             "name": "codeinwp/gutenberg-menu-icons",
-            "version": "1.0.4",
-            "version_normalized": "1.0.4.0",
+            "version": "1.0.5",
+            "version_normalized": "1.0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Codeinwp/gutenberg-menu-icons.git",
-                "reference": "121ef82c57a556301265cbd1032d28619235e488"
+                "reference": "fce0fae088cc85001620d83253568aeec2af51c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Codeinwp/gutenberg-menu-icons/zipball/121ef82c57a556301265cbd1032d28619235e488",
-                "reference": "121ef82c57a556301265cbd1032d28619235e488",
+                "url": "https://api.github.com/repos/Codeinwp/gutenberg-menu-icons/zipball/fce0fae088cc85001620d83253568aeec2af51c0",
+                "reference": "fce0fae088cc85001620d83253568aeec2af51c0",
                 "shasum": ""
             },
             "require-dev": {
@@ -22,7 +22,7 @@
                 "squizlabs/php_codesniffer": "^3.3",
                 "wp-coding-standards/wpcs": "^1"
             },
-            "time": "2020-05-17T21:08:46+00:00",
+            "time": "2021-06-23T20:23:12+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -43,10 +43,7 @@
             ],
             "description": "Menu Icons for Gutenberg",
             "homepage": "https://github.com/Codeinwp/gutenberg-menu-icons",
-            "support": {
-                "issues": "https://github.com/Codeinwp/gutenberg-menu-icons/issues",
-                "source": "https://github.com/Codeinwp/gutenberg-menu-icons/tree/v1.0.4"
-            },
+            "abandoned": true,
             "install-path": "../codeinwp/gutenberg-menu-icons"
         },
         {
@@ -71,7 +68,6 @@
                 "wp-coding-standards/wpcs": "^0.10.0"
             },
             "time": "2021-05-05T18:52:26+00:00",
-            "default-branch": true,
             "type": "wordpress-plugin",
             "installation-source": "dist",
             "notification-url": "https://packagist.org/downloads/",
@@ -90,9 +86,6 @@
                 "plugin",
                 "wordpress"
             ],
-            "support": {
-                "source": "https://github.com/Codeinwp/icon-picker/tree/master"
-            },
             "install-path": "../codeinwp/icon-picker"
         },
         {
@@ -117,7 +110,6 @@
                 "wp-coding-standards/wpcs": "^0.10.0"
             },
             "time": "2021-05-05T18:49:57+00:00",
-            "default-branch": true,
             "type": "wordpress-plugin",
             "installation-source": "dist",
             "notification-url": "https://packagist.org/downloads/",
@@ -132,31 +124,27 @@
                 "plugin",
                 "wordpress"
             ],
-            "support": {
-                "source": "https://github.com/Codeinwp/menu-item-custom-fields/tree/master"
-            },
             "install-path": "../codeinwp/menu-item-custom-fields"
         },
         {
             "name": "codeinwp/themeisle-sdk",
-            "version": "dev-master",
-            "version_normalized": "dev-master",
+            "version": "3.3.11",
+            "version_normalized": "3.3.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Codeinwp/themeisle-sdk.git",
-                "reference": "24668ab249d8fb6596cc908c323205648aad0ed8"
+                "reference": "583c474d8b5a8d12592f4a78ab8fa335aaf42fc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Codeinwp/themeisle-sdk/zipball/24668ab249d8fb6596cc908c323205648aad0ed8",
-                "reference": "24668ab249d8fb6596cc908c323205648aad0ed8",
+                "url": "https://api.github.com/repos/Codeinwp/themeisle-sdk/zipball/583c474d8b5a8d12592f4a78ab8fa335aaf42fc0",
+                "reference": "583c474d8b5a8d12592f4a78ab8fa335aaf42fc0",
                 "shasum": ""
             },
             "require-dev": {
                 "codeinwp/phpcs-ruleset": "dev-main"
             },
-            "time": "2021-05-05T17:45:51+00:00",
-            "default-branch": true,
+            "time": "2023-12-12T10:06:27+00:00",
             "type": "library",
             "installation-source": "dist",
             "notification-url": "https://packagist.org/downloads/",
@@ -175,10 +163,6 @@
             "keywords": [
                 "wordpress"
             ],
-            "support": {
-                "issues": "https://github.com/Codeinwp/themeisle-sdk/issues",
-                "source": "https://github.com/Codeinwp/themeisle-sdk/tree/master"
-            },
             "install-path": "../codeinwp/themeisle-sdk"
         }
     ],

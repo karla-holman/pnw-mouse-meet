@@ -200,10 +200,38 @@ class Views {
 	 * Get current view slug.
 	 *
 	 * @since 1.7.3
+	 *
+	 * @return string
 	 */
 	public function get_current_view() {
 
 		return $this->current_view;
+	}
+
+	/**
+	 * Get base URL.
+	 *
+	 * @since 1.7.5
+	 *
+	 * @return string
+	 */
+	public function get_base_url() {
+
+		return $this->base_url;
+	}
+
+	/**
+	 * Get view configuration by slug.
+	 *
+	 * @since 1.7.5
+	 *
+	 * @param string $slug View slug.
+	 *
+	 * @return array
+	 */
+	public function get_view_by_slug( $slug ) {
+
+		return isset( $this->views[ $slug ] ) ? $this->views[ $slug ] : [];
 	}
 
 	/**
@@ -234,6 +262,11 @@ class Views {
 
 		$forms          = wpforms()->get( 'form' )->get( '', $args );
 		$count['trash'] = is_array( $forms ) ? count( $forms ) : 0;
+
+		// Count all published forms.
+		$args['post_status'] = 'publish';
+		$forms               = wpforms()->get( 'form' )->get( '', $args );
+		$count['all']        = is_array( $forms ) ? count( $forms ) : 0;
 
 		// Store in class property for further use.
 		$this->count = $count;
@@ -330,7 +363,7 @@ class Views {
 
 		return sprintf(
 			'<a href="%1$s"%2$s>%3$s&nbsp;<span class="count">(%4$d)</span></a>',
-			$slug === 'all' ? esc_url( $this->base_url ) : esc_url( add_query_arg( $view['get_var'], $slug, $this->base_url ) ),
+			$slug === 'all' ? esc_url( $this->base_url ) : esc_url( add_query_arg( $view['get_var'], $view['get_var_value'], $this->base_url ) ),
 			$this->current_view === $slug ? ' class="current"' : '',
 			esc_html( $view['title'] ),
 			empty( $this->count[ $slug ] ) ? 0 : absint( $this->count[ $slug ] )
@@ -388,6 +421,27 @@ class Views {
 				),
 				esc_attr__( 'View entries', 'wpforms-lite' ),
 				esc_html__( 'Entries', 'wpforms-lite' )
+			);
+		}
+
+		// Payments.
+		if (
+			wpforms_current_user_can( wpforms_get_capability_manage_options(), $form->ID ) &&
+			wpforms()->get( 'payment' )->get_by( 'form_id', $form->ID )
+		) {
+			$row_actions['payments'] = sprintf(
+				'<a href="%s" title="%s">%s</a>',
+				esc_url(
+					add_query_arg(
+						[
+							'page'    => 'wpforms-payments',
+							'form_id' => $form->ID,
+						],
+						admin_url( 'admin.php' )
+					)
+				),
+				esc_attr__( 'View payments', 'wpforms-lite' ),
+				esc_html__( 'Payments', 'wpforms-lite' )
 			);
 		}
 

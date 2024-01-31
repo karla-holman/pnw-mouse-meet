@@ -237,6 +237,13 @@ class ACF_Rest_Api {
 			}
 		}
 
+		/**
+		 * Reset the store so that REST API values (which may be preloaded
+		 * by WP core and have different values than standard values) aren't
+		 * saved to the store.
+		 */
+		acf_get_store( 'values' )->reset();
+
 		return $fields;
 	}
 
@@ -372,7 +379,6 @@ class ACF_Rest_Api {
 		$location_types = empty( $location_types ) ? acf_get_location_types() : $location_types;
 
 		foreach ( $field_group['location'] as $rule_group ) {
-
 			$match = false;
 			foreach ( $rule_group as $rule ) {
 				$rule = acf_validate_location_rule( $rule );
@@ -476,8 +482,8 @@ class ACF_Rest_Api {
 		switch ( $object_type ) {
 			case 'user':
 				$args = array(
-					'user_id'   => $object_id,
-					'rest'      => true,
+					'user_id' => $object_id,
+					'rest'    => true,
 				);
 				break;
 			case 'term':
@@ -486,7 +492,7 @@ class ACF_Rest_Api {
 			case 'comment':
 				$comment   = get_comment( $object_id );
 				$post_type = get_post_type( $comment->comment_post_ID );
-				$args      = array( 'comment'  => $post_type );
+				$args      = array( 'comment' => $post_type );
 				break;
 			case 'post':
 			default:
@@ -546,5 +552,4 @@ class ACF_Rest_Api {
 		 */
 		return (array) apply_filters( 'acf/rest/get_fields', $fields, $resource, $http_method );
 	}
-
 }

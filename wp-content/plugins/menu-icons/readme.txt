@@ -1,8 +1,8 @@
 === Menu Icons by ThemeIsle ===
 Contributors: codeinwp, themeisle
 Tags: menu, nav-menu, icons, navigation
-Requires at least: 4.3
-Tested up to: 5.9
+Requires at least: 4.7
+Tested up to: 6.4
 Stable tag: trunk
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -224,6 +224,84 @@ add_filter( 'menu_icons_menu_settings', 'my_menu_icons_menu_settings', 10, 2 );
 Read [this blog post](http://kucrut.org/add-custom-image-sizes-right-way/).
 
 == Changelog ==
+
+##### [Version 0.13.8](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.7...v0.13.8) (2023-12-19)
+
+- SDK Updates
+- Fixed global hide label issue
+
+
+
+
+##### [Version 0.13.7](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.6...v0.13.7) (2023-08-17)
+
+- Updated dependencies
+- Fixed broken button layout issues in other languages
+
+
+
+
+##### [Version 0.13.6](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.5...v0.13.6) (2023-07-07)
+
+- Updated composer dependencies to address warning in the widgets section
+
+
+
+
+##### [Version 0.13.5](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.4...v0.13.5) (2023-03-30)
+
+- Updated Dependencies and WordPress core tested up to version 6.2
+
+
+
+
+##### [Version 0.13.4](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.3...v0.13.4) (2023-03-01)
+
+Update dependencies
+
+
+
+
+##### [Version 0.13.3](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.2...v0.13.3) (2023-02-25)
+
+- Fix img width/height value, props @Htbaa 
+- Update dependencies
+
+
+
+
+##### [Version 0.13.2](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.1...v0.13.2) (2022-11-24)
+
+* Fix - update dependencies
+
+
+
+
+##### [Version 0.13.1](https://github.com/codeinwp/wp-menu-icons/compare/v0.13.0...v0.13.1) (2022-11-04)
+
+Tested with the WordPress 6.1 version
+
+
+
+
+#### [Version 0.13.0](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.12...v0.13.0) (2022-08-23)
+
+* Fix Neve upsells showing up inconsistently on edge cases
+* Fix inconsistency with Font Awesome 5 and adds compatibility with 6th version
+* Fix compatibility with JupiterX 
+* Update dependencies
+
+
+
+
+##### [Version 0.12.12](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.11...v0.12.12) (2022-05-27)
+
+- Fix the style handler conflict issue which breaks the arrow icon of the submenus on some themes
+- Fix dismiss dashboard notice issue on some edge cases
+- Fix compatibility with the Max Mega Menu plugin
+
+
+
 
 ##### [Version 0.12.11](https://github.com/codeinwp/wp-menu-icons/compare/v0.12.10...v0.12.11) (2022-03-16)
 

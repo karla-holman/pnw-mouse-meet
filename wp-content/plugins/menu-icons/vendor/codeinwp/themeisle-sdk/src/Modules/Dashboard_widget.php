@@ -81,6 +81,8 @@ class Dashboard_Widget extends Abstract_Module {
 			'themeisle_sdk_dashboard_widget_feeds',
 			[
 				'https://themeisle.com/blog/feed',
+				'https://www.codeinwp.com/blog/feed',
+				'https://wpshout.com/feed',
 			]
 		);
 		add_action( 'wp_dashboard_setup', array( &$this, 'add_widget' ) );
@@ -131,8 +133,9 @@ class Dashboard_Widget extends Abstract_Module {
 			#themeisle h2.hndle {
 				background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABbCAMAAADncTNAAAAAtFBMVEVHcEyAgIB/f3+xsbGgoaGBgYGCgoKKioqAgIC1tbW5ubnFx8iAgIDU1taBgYGCgoKAgIC0tLXW19jW2NiAgIC3uLiBgYHLzMy4uLhycnLW19d/f3/T1NW0tLTX19mVlZWvr6+BgYHl5eWKiottbW5JSUnW2Nm5ubnh4eHT1NWVlZVjY2N4eHh9fX6pqqq+v79PT0/39/fu7u7Nzc7Z2ttYWFgBAQHDw8P////JysoZGRk0NTZqJc/sAAAAIXRSTlMA0FL7/oEnEPL6eibivm9gwJya76/enFq2CXI+2lFAyM8GATmPAAADj0lEQVR4Xu2YaW/iOhSGAwRCWDosnXa6znjJvm8svf//f12TuARyhiR2pfnUR6gSEnr0+uT4xK7yRb755pvhHePli5K7Bfpkuhoq8ozRJdMH+WWha6Z3sqYparCSLRJqspjImVbANJU03cNMMpofAwQZCGsmpQYyFvVM0Q00OQ9koMl5IPcCoro+RA1Dt2Ea9n9eZ0+YHJLkgIlkDywQx00wCTyaReiKH8LbNU9ybJOdkchV6QFxyCFLbVvdfaREqgUWg/tx2UbqIcK2Hex2TdGLwFTjIj3XP3YfCZFsb23KRZn/3263oymSFI0/a5S4PqUBjoBIJBDjeEhCN0wxQSRybIxtJ3K5SGzuE/vAwIQc8ZmMMJFAIM4oikZItfEFtorGgoE43FObwqHU68OtPCnOz8KZ2Jbl5LgkSW0Tc7YyIz/EFWmS4jMbiZU5mJOmKRaJpKGGyLZtDJh3iyaNUu/3+xyKnrtFL71EG+FTiMpENhQtxUQ8kSOXCIr2tnCNhg/gTX0SHYFp0t7TCwQZ7U841yoHrW6rtGroUwTWVnLMssxx+H4bgZcSOFf5MYx0Ae8FghomMDyC2EBNImBywPkNTDNqGLQpIg2TjUNU8tBy9DQMo0DAZF16rAi7vJAtFTIYFAHUc6hIRW6OuOhJgaCSwmDEAYK4oa7ro+qIEyJU/US7KTJKPNSFT9tFgVFBu0SF1y7yjX4masRA9Da7EFGj28R/BkQz6xGIOurkx38T/bKs9Uk8aIiMwm/Jw0VP1yLrJwt13xAxvABBgsK4KWLov35DkRF7ZaqgzuZ7MQ8MOntmVYyAqKTwaICKqvSUFnVccMN5sziEP/5+xGDTahbH5Q3ZB76zr8fI+nJtvUUU3t3ml5GKviK/npCg3CGodnuJ4JVkfRFJYGVDBZrqKnn9RLf+CzDTS5PaN5J38+auzX4ykU4Qoj0rdKfcYs5ijfo9OL/uRUgZyQr7NCWtWwiUSLc4arfJa7lpszTA1OJZAQ8w8dXFrR5YHzCWSnS3pZ18tOi4Ps4vl/c7i/6qomjRecN+UubrPyPGn/VEMU3T0UFHkaPzpgjxmJsnjmrtionlMDZiog0TsY/DPtn8SXtlBvbtxKtwopy7lqW3smQO+yoGE1Uu55GJ3pmI8ygoejZNnqj0vnIRCyTKfLstRdtStGQi09myUsvwvlkuzSUXbV+Xz5ryBebV33fln/A/moud69FZiEYAAAAASUVORK5CYII=');
 				background-repeat: no-repeat;
-				background-position: 92% 50%;
+				background-position: 2% 50%;
 				background-size: 25px;
+				padding-left: 39px;
 			}
 
 			#themeisle .inside {
@@ -310,15 +313,46 @@ class Dashboard_Widget extends Abstract_Module {
 	 */
 	private function setup_feeds() {
 		if ( false === ( $items_normalized = get_transient( 'themeisle_sdk_feed_items' ) ) ) { //phpcs:ignore Squiz.PHP.DisallowMultipleAssignments.FoundInControlStructure
+			// Do not force the feed for the items in the sdk feeds list.
+			// this prevents showing notices if another plugin will force all SimplePie feeds to load, instead it will
+			// use the regular SimplePie validation and abort early if the feed is not valid.
+			$sdk_feeds = $this->feeds;
+			add_action(
+				'wp_feed_options',
+				function ( $feed, $url ) use ( $sdk_feeds ) {
+					if ( defined( 'TI_SDK_PHPUNIT' ) && true === TI_SDK_PHPUNIT ) {
+						return;
+					}
+
+					if ( ! is_string( $url ) && in_array( $url, $sdk_feeds, true ) ) {
+						$feed->force_feed( false );
+						return;
+					}
+					if ( is_array( $url ) ) {
+						foreach ( $url as $feed_url ) {
+							if ( in_array( $feed_url, $sdk_feeds, true ) ) {
+								$feed->force_feed( false );
+								return;
+							}
+						}
+					}
+				},
+				PHP_INT_MAX,
+				2
+			);
 			// Load SimplePie Instance.
-			$feed = fetch_feed( $this->feeds );
+			$feed = fetch_feed( $sdk_feeds );
 			// TODO report error when is an error loading the feed.
 			if ( is_wp_error( $feed ) ) {
 				return;
 			}
 
 			$items = $feed->get_items( 0, 5 );
-			foreach ( (array) $items as $item ) {
+			$items = is_array( $items ) ? $items : [];
+
+			$items_normalized = [];
+
+			foreach ( $items as $item ) {
 				$items_normalized[] = array(
 					'title' => $item->get_title(),
 					'date'  => $item->get_date( 'U' ),

@@ -8,6 +8,7 @@ use AmpProject\AmpWP\Option;
 use Nextend\Framework\Asset\Builder\BuilderJs;
 use Nextend\Framework\Localization\Localization;
 use Nextend\Framework\Request\Request;
+use Nextend\Framework\Sanitize;
 use Nextend\Framework\View\Html;
 use Nextend\SmartSlider3\Application\ApplicationSmartSlider3;
 use Nextend\SmartSlider3\Application\Frontend\ApplicationTypeFrontend;
@@ -195,6 +196,21 @@ class Shortcode {
             }
         });
 
+        /**
+         * @see SSDEV-3871
+         */
+        add_filter('render_block_nextend/smartslider3', function ($block_content, $parsed_block) {
+            if (!empty($parsed_block['attrs']['slider'])) {
+                if (Request::$GET->getVar('customize_changeset_uuid') !== null) {
+                    return self::renderIframe($parsed_block['attrs']['slider']);
+                } else {
+                    return self::render(array('slider' => $parsed_block['attrs']['slider']));
+                }
+            }
+
+            return '';
+        }, 10, 2);
+
     }
 
     public static function forceIframe($reason, $disablePointer = false) {
@@ -232,6 +248,11 @@ class Shortcode {
         return self::render($parameters);
     }
 
+    /**
+     * @param $sliderIDorAlias
+     *
+     * @return string contains escaped data
+     */
     public static function renderIframe($sliderIDorAlias) {
 
         $path = ApplicationTypeFrontend::getAssetsPath() . '/dist/iframe.min.js';
@@ -346,12 +367,12 @@ class Shortcode {
                     $slideTo = intval($parameters['slide']);
                 }
 
-                if ($parameters['get'] !== null && !empty($_GET[$parameters['get']])) {
-                    $slideTo = intval($_GET[$parameters['get']]);
+                if ($parameters['get'] !== null) {
+                    $slideTo = Request::$GET->getInt($parameters['get']);
                 }
 
-                if ($slideTo) {
-                    echo "<script>window['ss" . $parameters['slider'] . "'] = " . ($slideTo - 1) . ";</script>";
+                if ($slideTo && is_numeric($parameters['slider']) && intval($parameters['slider']) > 0) {
+                    echo wp_kses("<script>window['ss" . intval($parameters['slider']) . "'] = " . ($slideTo - 1) . ";</script>", Sanitize::$assetTags);
                 }
 
                 $applicationTypeFrontend = ApplicationSmartSlider3::getInstance()

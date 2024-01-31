@@ -2,12 +2,27 @@
 
 namespace WPForms\Admin\Builder;
 
+use WPForms\Helpers\CacheBase;
+use WPForms\Helpers\File;
+
 /**
  * Form templates cache handler.
  *
  * @since 1.6.8
  */
-class TemplatesCache extends \WPForms\Helpers\CacheBase {
+class TemplatesCache extends CacheBase {
+
+	/**
+	 * Templates list content cache files.
+	 *
+	 * @since 1.8.6
+	 *
+	 * @var array
+	 */
+	const CONTENT_CACHE_FILES = [
+		'admin-page' => 'templates-admin-page.html',
+		'builder'    => 'templates-builder.html',
+	];
 
 	/**
 	 * Determine if the class is allowed to load.
@@ -18,8 +33,9 @@ class TemplatesCache extends \WPForms\Helpers\CacheBase {
 	 */
 	protected function allow_load() {
 
-		// Load only in the Form Builder.
-		$allow = wp_doing_ajax() || wpforms_is_admin_page( 'builder' );
+		$has_permissions  = wpforms_current_user_can( [ 'create_forms', 'edit_forms' ] );
+		$allowed_requests = wpforms_is_admin_ajax() || wpforms_is_admin_page( 'builder' ) || wpforms_is_admin_page( 'templates' );
+		$allow            = wp_doing_cron() || wpforms_doing_wp_cli() || ( $has_permissions && $allowed_requests );
 
 		/**
 		 * Whether to load this class.
@@ -28,7 +44,7 @@ class TemplatesCache extends \WPForms\Helpers\CacheBase {
 		 *
 		 * @param bool $allow True or false.
 		 */
-		return (bool) apply_filters( 'wpforms_admin_builder_templatescache_allow_load', $allow );
+		return (bool) apply_filters( 'wpforms_admin_builder_templatescache_allow_load', $allow ); // phpcs:ignore WPForms.PHP.ValidateHooks.InvalidHookName
 	}
 
 	/**
@@ -95,5 +111,88 @@ class TemplatesCache extends \WPForms\Helpers\CacheBase {
 		}
 
 		return $cache_data;
+	}
+
+	/**
+	 * Update the cache.
+	 *
+	 * @since 1.8.6
+	 *
+	 * @param bool $force Whether to force update the cache.
+	 *
+	 * @return bool
+	 */
+	public function update( $force = false ): bool {
+
+		$result = parent::update( $force );
+
+		if ( ! $result ) {
+			return false;
+		}
+
+		$this->wipe_content_cache();
+
+		return $result;
+	}
+
+	/**
+	 * Get cached templates content.
+	 *
+	 * @since 1.8.6
+	 *
+	 * @return string
+	 */
+	public function get_content_cache(): string {
+		// phpcs:ignore WPForms.Formatting.EmptyLineBeforeReturn.RemoveEmptyLineBeforeReturnStatement, Universal.Operators.DisallowShortTernary.Found
+		return File::get_contents( $this->get_content_cache_file() ) ?: '';
+	}
+
+	/**
+	 * Save templates content cache.
+	 *
+	 * @since 1.8.6
+	 *
+	 * @param string|mixed $content Templates content.
+	 *
+	 * @return bool
+	 */
+	public function save_content_cache( $content ): bool {
+		// phpcs:ignore WPForms.Formatting.EmptyLineBeforeReturn.RemoveEmptyLineBeforeReturnStatement
+		return File::put_contents( $this->get_content_cache_file(), (string) $content );
+	}
+
+	/**
+	 * Wipe cached templates content.
+	 *
+	 * @since 1.8.6
+	 */
+	public function wipe_content_cache() {
+
+		$cache_dir = $this->get_cache_dir();
+
+		// Delete the template content cache files. They will be regenerated on the first visit.
+		foreach ( self::CONTENT_CACHE_FILES as $file ) {
+
+			$cache_file = $cache_dir . $file;
+
+			if ( is_file( $cache_file ) && is_readable( $cache_file ) ) {
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
+				unlink( $cache_file );
+			}
+		}
+	}
+
+	/**
+	 * Get templates content cache file path.
+	 *
+	 * @since 1.8.6
+	 *
+	 * @return string
+	 */
+	private function get_content_cache_file(): string {
+
+		$context = wpforms_is_admin_page( 'templates' ) ? 'admin-page' : 'builder';
+
+		return File::get_cache_dir() . self::CONTENT_CACHE_FILES[ $context ];
 	}
 }

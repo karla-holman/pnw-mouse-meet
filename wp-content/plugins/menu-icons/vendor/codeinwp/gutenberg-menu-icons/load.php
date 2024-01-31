@@ -8,8 +8,7 @@
  * @since       1.0.0
  */
 
-define( 'THEMEISLE_GUTENBERG_MENU_ICONS_VERSION', '1.0.4' );
-define( 'THEMEISLE_GUTENBERG_MENU_ICONS_DEV', false );
+define( 'THEMEISLE_GUTENBERG_MENU_ICONS_VERSION', '1.0.5' );
 
 if ( function_exists( 'add_action' ) ) {
 	add_action(

@@ -364,8 +364,3 @@ $.fn.imagesLoaded = function(callback){
 
   return this;
 };
-
-/***** TINKERBELL *****/
-$('.tinkerbell .quote .close').on('click', function(){
-  console.log("Closing tinkerbell's quote");
-});

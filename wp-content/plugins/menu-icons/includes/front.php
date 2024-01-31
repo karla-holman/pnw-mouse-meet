@@ -88,7 +88,7 @@ final class Menu_Icons_Front_End {
 		 */
 		self::$default_style = apply_filters( 'menu_icons_default_style', self::$default_style );
 
-		add_action( 'wp_enqueue_scripts', array( __CLASS__, '_enqueue_styles' ), 7 );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, '_enqueue_styles' ), 4 );
 		add_filter( 'wp_nav_menu_args', array( __CLASS__, '_add_menu_item_title_filter' ) );
 		add_filter( 'wp_nav_menu', array( __CLASS__, '_remove_menu_item_title_filter' ) );
 	}
@@ -141,9 +141,24 @@ final class Menu_Icons_Front_End {
 	 * @link    http://codex.wordpress.org/Plugin_API/Action_Reference/wp_enqueue_scripts
 	 */
 	public static function _enqueue_styles() {
+		// Deregister icon picker plugin font-awesome style and re-register with the new handler to avoid other plugin/theme style handler conflict.
+		$wp_styles = wp_styles();
+		if ( $wp_styles && isset( $wp_styles->registered['font-awesome'] ) ) {
+			$registered = $wp_styles->registered['font-awesome'];
+			if ( strpos( $registered->src, Menu_Icons::get( 'url' ) ) !== false ) {
+				$wp_styles->remove( 'font-awesome' );
+				$registered->ver = Menu_Icons_Font_Awesome::$version;
+				$wp_styles->add( 'menu-icon-' . $registered->handle, $registered->src, $registered->deps, $registered->ver, $registered->args );
+			}
+		}
+
 		foreach ( self::$icon_types as $type ) {
-			if ( wp_style_is( $type->stylesheet_id, 'registered' ) ) {
-				wp_enqueue_style( $type->stylesheet_id );
+			$stylesheet_id = $type->stylesheet_id;
+			if ( 'font-awesome' === $stylesheet_id ) {
+				$stylesheet_id = 'menu-icon-' . $stylesheet_id;
+			}
+			if ( wp_style_is( $stylesheet_id, 'registered' ) ) {
+				wp_enqueue_style( $stylesheet_id );
 			}
 		}
 
@@ -181,6 +196,8 @@ final class Menu_Icons_Front_End {
 	 */
 	public static function _add_menu_item_title_filter( $args ) {
 		add_filter( 'the_title', array( __CLASS__, '_add_icon' ), 999, 2 );
+		add_filter( 'megamenu_the_title', array( __CLASS__, '_add_icon' ), 999, 2 );
+		add_filter( 'megamenu_nav_menu_css_class', array( __CLASS__, '_add_menu_item_class' ), 10, 3 );
 
 		return $args;
 	}
@@ -199,7 +216,8 @@ final class Menu_Icons_Front_End {
 	 */
 	public static function _remove_menu_item_title_filter( $nav_menu ) {
 		remove_filter( 'the_title', array( __CLASS__, '_add_icon' ), 999, 2 );
-
+		remove_filter( 'megamenu_the_title', array( __CLASS__, '_add_icon' ), 999, 2 );
+		remove_filter( 'megamenu_nav_menu_css_class', array( __CLASS__, '_add_menu_item_class' ), 10, 3 );
 		return $nav_menu;
 	}
 
@@ -222,9 +240,11 @@ final class Menu_Icons_Front_End {
 		if ( empty( $icon ) ) {
 			return $title;
 		}
-
-		$title_class   = ! empty( $meta['hide_label'] ) ? self::$hidden_label_class : '';
-		$title_wrapped = sprintf(
+		$menu_id           = Menu_Icons_Settings::get_current_menu_id();
+		$menu_key          = sprintf( 'menu_%d', $menu_id );
+		$global_hide_label = Menu_Icons_Settings::get( $menu_key, 'hide_label' );
+		$title_class       = ! empty( $global_hide_label ) || ! empty( $meta['hide_label'] ) ? self::$hidden_label_class : '';
+		$title_wrapped     = sprintf(
 			'<span%s>%s</span>',
 			( ! empty( $title_class ) ) ? sprintf( ' class="%s"', esc_attr( $title_class ) ) : '',
 			$title
@@ -383,7 +403,7 @@ final class Menu_Icons_Front_End {
 		$type = $meta['type'];
 		$icon = $meta['icon'];
 
-		$font_awesome5 = font_awesome5_backward_compatible();
+		$font_awesome5 = font_awesome_backward_compatible();
 		if ( ! empty( $type ) && 'fa' === $type ) {
 			$icon    = explode( ' ', $icon );
 			$type    = reset( $icon );
@@ -463,10 +483,10 @@ final class Menu_Icons_Front_End {
 			}
 		}
 		if ( ! empty( $width ) ) {
-			$width = sprintf( ' width="%dpx"', $width );
+			$width = sprintf( ' width="%d"', $width );
 		}
 		if ( ! empty( $height ) ) {
-			$height = sprintf( ' height="%dpx"', $height );
+			$height = sprintf( ' height="%d"', $height );
 		}
 		$image_alt = get_post_meta( $meta['icon'], '_wp_attachment_image_alt', true );
 		$image_alt = $image_alt ? wp_strip_all_tags( $image_alt ) : '';
@@ -479,5 +499,18 @@ final class Menu_Icons_Front_End {
 			$height,
 			$style
 		);
+	}
+
+	/**
+	 * Add menu item class in `Max Mega Menu` item.
+	 *
+	 * @param array  $classes Item classes.
+	 * @param array  $item WP menu item.
+	 * @param object $args Menu object.
+	 * @return array
+	 */
+	public static function _add_menu_item_class( $classes, $item, $args ) { // phpcs:ignore PSR2.Methods.MethodDeclaration.Underscore
+		$classes[] = 'menu-item';
+		return $classes;
 	}
 }

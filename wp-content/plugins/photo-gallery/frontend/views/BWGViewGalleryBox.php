@@ -12,10 +12,10 @@ class BWGViewGalleryBox {
     require_once(BWG()->plugin_dir . '/framework/WDWLibraryEmbed.php');
 
     $bwg = WDWLibrary::get('current_view', 0, 'intval');
-    $current_url =  WDWLibrary::get('current_url', '', 'esc_url');
+    $current_url = WDWLibrary::get('current_url', '', 'sanitize_url');
     $theme_id = WDWLibrary::get('theme_id', 0, 'intval');
-    $current_image_id = WDWLibrary::esc_script('get', 'image_id', 0, 'int');
-    $gallery_id = WDWLibrary::esc_script('get', 'gallery_id', 0, 'int');
+    $current_image_id = WDWLibrary::get('image_id', 0, 'intval', 'GET');
+    $gallery_id = WDWLibrary::get('gallery_id', 0, 'intval', 'GET');
     $tag = WDWLibrary::get('tag', 0, 'intval');
 
     $shortcode_id = WDWLibrary::get('shortcode_id', 0, 'intval');
@@ -25,25 +25,22 @@ class BWGViewGalleryBox {
     if ( $shortcode ) {
       $data = WDWLibrary::parse_tagtext_to_array($shortcode);
     }
+    /* For Preview section - get selected 'gallery_type' from URL */
+    $gallery_type = WDWLibrary::get('bwg_gallery_type', '', 'sanitize_text_field');
+    if ( !empty($gallery_type) ) {
+      $data['gallery_type'] = basename(stripslashes($gallery_type));
+    }
     $params = WDWLibrary::get_shortcode_option_params( $data );
-    $params['sort_by'] = WDWLibrary::esc_script('get', 'sort_by', 'RAND()');
-    $params['order_by'] = WDWLibrary::esc_script('get', 'order_by', 'asc');
+    $params['sort_by'] = WDWLibrary::get('sort_by', 'RAND()', 'sanitize_text_field', 'GET');
+    $params['order_by'] = WDWLibrary::get('order_by', 'asc', 'sanitize_text_field', 'GET');
+    $params['order_by'] = ($params['order_by'] == 'desc') ? 'desc' : 'asc';
     $params['watermark_position'] = explode('-', $params['watermark_position']);
     if ( !BWG()->is_pro ) {
-      $params['popup_enable_filmstrip'] = FALSE;
       $params['open_comment'] = FALSE;
       $params['popup_enable_comment'] = FALSE;
-      $params['popup_enable_facebook'] = FALSE;
-      $params['popup_enable_twitter'] = FALSE;
-      $params['popup_enable_ecommerce'] = FALSE;
-      $params['popup_enable_pinterest'] = FALSE;
-      $params['popup_enable_tumblr'] = FALSE;
       $params['popup_enable_email'] = FALSE;
       $params['popup_enable_captcha'] = FALSE;
-      $params['gdpr_compliance'] = FALSE;
       $params['comment_moderation'] = FALSE;
-      $params['enable_addthis'] = FALSE;
-      $params['addthis_profile_id'] = FALSE;
     }
     $image_right_click =  isset(BWG()->options->image_right_click) ? BWG()->options->image_right_click : 0;
     require_once BWG()->plugin_dir . "/frontend/models/model.php";
@@ -83,6 +80,7 @@ class BWGViewGalleryBox {
       'gallery_id' => $gallery_id,
       'tag' => $tag,
       'theme_id' => $theme_id,
+      'shortcode_id' => $shortcode_id,
     );
     if ($params['watermark_type'] != 'none') {
       $params_array['watermark_link'] = $params['watermark_link'];
@@ -158,115 +156,114 @@ class BWGViewGalleryBox {
     }
     $lightbox_bg_transparent = (isset($theme_row->lightbox_bg_transparent)) ? $theme_row->lightbox_bg_transparent : 100;
     $lightbox_bg_color = WDWLibrary::spider_hex2rgb($theme_row->lightbox_bg_color);
-
-    if (BWG()->is_pro && $params['enable_addthis'] && $params['addthis_profile_id']) {
+    if ( $params['enable_addthis'] && $params['addthis_profile_id'] ) {
       ?>
-      <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=<?php echo $params['addthis_profile_id']; ?>" async="async"></script>
+      <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=<?php echo esc_html($params['addthis_profile_id']); ?>" async="async"></script>
       <?php
     }
     ?>
     <style>
       .bwg_inst_play {
-        background-image: url('<?php echo BWG()->plugin_url . '/images/play.png'; ?>');
+        background-image: url('<?php echo esc_url(BWG()->plugin_url) . '/images/play.png'; ?>');
       }
       .bwg_inst_play:hover {
-          background: url(<?php echo BWG()->plugin_url . '/images/play_hover.png'; ?>) no-repeat;
+          background: url(<?php echo esc_url(BWG()->plugin_url) . '/images/play_hover.png'; ?>) no-repeat;
       }
       .spider_popup_wrap {
-        background-color: rgba(<?php echo $lightbox_bg_color['red']; ?>, <?php echo $lightbox_bg_color['green']; ?>, <?php echo $lightbox_bg_color['blue']; ?>, <?php echo number_format($lightbox_bg_transparent/ 100, 2, ".", ""); ?>);
+        background-color: rgba(<?php echo esc_html($lightbox_bg_color['red']); ?>, <?php echo esc_html($lightbox_bg_color['green']); ?>, <?php echo esc_html($lightbox_bg_color['blue']); ?>, <?php echo number_format($lightbox_bg_transparent/ 100, 2, ".", ""); ?>);
       }
       .bwg_popup_image {
-        max-width: <?php echo $params['popup_width'] - ($filmstrip_direction == 'vertical' ? $image_filmstrip_width : 0); ?>px;
-        max-height: <?php echo $params['popup_height'] - ($filmstrip_direction == 'horizontal' ? $image_filmstrip_height : 0); ?>px;
+        max-width: <?php echo esc_html($params['popup_width'] - ($filmstrip_direction == 'vertical' ? $image_filmstrip_width : 0)); ?>px;
+        max-height: <?php echo esc_html($params['popup_height'] - ($filmstrip_direction == 'horizontal' ? $image_filmstrip_height : 0)); ?>px;
       }
       .bwg_ctrl_btn {
-        color: #<?php echo $theme_row->lightbox_ctrl_btn_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_ctrl_btn_height; ?>px;
-        margin: <?php echo $theme_row->lightbox_ctrl_btn_margin_top; ?>px <?php echo $theme_row->lightbox_ctrl_btn_margin_left; ?>px;
+        color: #<?php echo esc_html($theme_row->lightbox_ctrl_btn_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_ctrl_btn_height); ?>px;
+        margin: <?php echo esc_html($theme_row->lightbox_ctrl_btn_margin_top); ?>px <?php echo esc_html($theme_row->lightbox_ctrl_btn_margin_left); ?>px;
         opacity: <?php echo number_format($theme_row->lightbox_ctrl_btn_transparent / 100, 2, ".", ""); ?>;
       }
       .bwg_toggle_btn {
-        color: #<?php echo $theme_row->lightbox_ctrl_btn_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_toggle_btn_height; ?>px;
+        color: #<?php echo esc_html($theme_row->lightbox_ctrl_btn_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_toggle_btn_height); ?>px;
         opacity: <?php echo number_format($theme_row->lightbox_ctrl_btn_transparent / 100, 2, ".", ""); ?>;
       }
       .bwg_ctrl_btn_container {
 				<?php if( $params['popup_enable_ctrl_btn'] ) { ?>
         	min-height: 40px;
 				<?php } ?>
-        background-color: rgba(<?php echo $rgb_lightbox_ctrl_cont_bg_color['red']; ?>, <?php echo $rgb_lightbox_ctrl_cont_bg_color['green']; ?>, <?php echo $rgb_lightbox_ctrl_cont_bg_color['blue']; ?>, <?php echo number_format($theme_row->lightbox_ctrl_cont_transparent / 100, 2, ".", ""); ?>);
-        /*background: none repeat scroll 0 0 #<?php echo $theme_row->lightbox_ctrl_cont_bg_color; ?>;*/
+        background-color: rgba(<?php echo esc_html($rgb_lightbox_ctrl_cont_bg_color['red']); ?>, <?php echo esc_html($rgb_lightbox_ctrl_cont_bg_color['green']); ?>, <?php echo esc_html($rgb_lightbox_ctrl_cont_bg_color['blue']); ?>, <?php echo number_format($theme_row->lightbox_ctrl_cont_transparent / 100, 2, ".", ""); ?>);
+        /*background: none repeat scroll 0 0 #<?php echo esc_html($theme_row->lightbox_ctrl_cont_bg_color); ?>;*/
         <?php if ($theme_row->lightbox_ctrl_btn_pos == 'top') { ?>
-          border-bottom-left-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
-          border-bottom-right-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
+          border-bottom-left-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
+          border-bottom-right-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
           <?php
         } else {
           ?>
           bottom: 0;
-          border-top-left-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
-          border-top-right-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
+          border-top-left-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
+          border-top-right-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
           <?php
         }?>
-        /*height: <?php /*echo $theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top;*/ ?>px;*/
-        text-align: <?php echo $theme_row->lightbox_ctrl_btn_align; ?>;
+
+        text-align: <?php echo esc_html($theme_row->lightbox_ctrl_btn_align); ?>;
       }
       .bwg_toggle_container {
-        background: none repeat scroll 0 0 #<?php echo $theme_row->lightbox_ctrl_cont_bg_color; ?>;
+        background: none repeat scroll 0 0 #<?php echo esc_html($theme_row->lightbox_ctrl_cont_bg_color); ?>;
         <?php
         if ($theme_row->lightbox_ctrl_btn_pos == 'top') {
           ?>
-          border-bottom-left-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
-          border-bottom-right-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
-          /*top: <?php echo $theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top; ?>px;*/
+          border-bottom-left-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
+          border-bottom-right-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
+          /*top: <?php echo esc_html($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top); ?>px;*/
           <?php
         }
         else {
           ?>
-          border-top-left-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
-          border-top-right-radius: <?php echo $theme_row->lightbox_ctrl_cont_border_radius; ?>px;
-          /*bottom: <?php echo $theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top; ?>px;*/
+          border-top-left-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
+          border-top-right-radius: <?php echo esc_html($theme_row->lightbox_ctrl_cont_border_radius); ?>px;
+          /*bottom: <?php echo esc_html($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top); ?>px;*/
           <?php
         }?>
-        margin-left: -<?php echo $theme_row->lightbox_toggle_btn_width / 2; ?>px;
+        margin-left: -<?php echo esc_html($theme_row->lightbox_toggle_btn_width) / 2; ?>px;
         opacity: <?php echo number_format($theme_row->lightbox_ctrl_cont_transparent / 100, 2, ".", ""); ?>;
-        width: <?php echo $theme_row->lightbox_toggle_btn_width; ?>px;
+        width: <?php echo esc_html($theme_row->lightbox_toggle_btn_width); ?>px;
       }
       .bwg_close_btn {
         opacity: <?php echo number_format($theme_row->lightbox_close_btn_transparent / 100, 2, ".", ""); ?>;
       }
       .spider_popup_close {
-        background-color: #<?php echo $theme_row->lightbox_close_btn_bg_color; ?>;
-        border-radius: <?php echo $theme_row->lightbox_close_btn_border_radius; ?>;
-        border: <?php echo $theme_row->lightbox_close_btn_border_width; ?>px <?php echo $theme_row->lightbox_close_btn_border_style; ?> #<?php echo $theme_row->lightbox_close_btn_border_color; ?>;
-        box-shadow: <?php echo $theme_row->lightbox_close_btn_box_shadow; ?>;
-        color: #<?php echo $theme_row->lightbox_close_btn_color; ?>;
-        height: <?php echo $theme_row->lightbox_close_btn_height; ?>px;
-        font-size: <?php echo $theme_row->lightbox_close_btn_size; ?>px;
-        right: <?php echo $theme_row->lightbox_close_btn_right; ?>px;
-        top: <?php echo $theme_row->lightbox_close_btn_top; ?>px;
-        width: <?php echo $theme_row->lightbox_close_btn_width; ?>px;
+        background-color: #<?php echo esc_html($theme_row->lightbox_close_btn_bg_color); ?>;
+        border-radius: <?php echo esc_html($theme_row->lightbox_close_btn_border_radius); ?>;
+        border: <?php echo esc_html($theme_row->lightbox_close_btn_border_width); ?>px <?php echo esc_html($theme_row->lightbox_close_btn_border_style); ?> #<?php echo esc_html($theme_row->lightbox_close_btn_border_color); ?>;
+        box-shadow: <?php echo esc_html($theme_row->lightbox_close_btn_box_shadow); ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_close_btn_color); ?>;
+        height: <?php echo esc_html($theme_row->lightbox_close_btn_height); ?>px;
+        font-size: <?php echo esc_html($theme_row->lightbox_close_btn_size); ?>px;
+        right: <?php echo esc_html($theme_row->lightbox_close_btn_right); ?>px;
+        top: <?php echo esc_html($theme_row->lightbox_close_btn_top); ?>px;
+        width: <?php echo esc_html($theme_row->lightbox_close_btn_width); ?>px;
       }
       .spider_popup_close_fullscreen {
-        color: #<?php echo $theme_row->lightbox_close_btn_full_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_close_btn_size; ?>px;
+        color: #<?php echo esc_html($theme_row->lightbox_close_btn_full_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_close_btn_size); ?>px;
       }
       #spider_popup_left-ico,
       #spider_popup_right-ico {
-        background-color: #<?php echo $theme_row->lightbox_rl_btn_bg_color; ?>;
-        border-radius: <?php echo $theme_row->lightbox_rl_btn_border_radius; ?>;
-        border: <?php echo $theme_row->lightbox_rl_btn_border_width; ?>px <?php echo $theme_row->lightbox_rl_btn_border_style; ?> #<?php echo $theme_row->lightbox_rl_btn_border_color; ?>;
-        box-shadow: <?php echo $theme_row->lightbox_rl_btn_box_shadow; ?>;
-        color: #<?php echo $theme_row->lightbox_rl_btn_color; ?>;
-        height: <?php echo $theme_row->lightbox_rl_btn_height; ?>px;
-        font-size: <?php echo $theme_row->lightbox_rl_btn_size; ?>px;
-        width: <?php echo $theme_row->lightbox_rl_btn_width; ?>px;
+        background-color: #<?php echo esc_html($theme_row->lightbox_rl_btn_bg_color); ?>;
+        border-radius: <?php echo esc_html($theme_row->lightbox_rl_btn_border_radius); ?>;
+        border: <?php echo esc_html($theme_row->lightbox_rl_btn_border_width); ?>px <?php echo esc_html($theme_row->lightbox_rl_btn_border_style); ?> #<?php echo esc_html($theme_row->lightbox_rl_btn_border_color); ?>;
+        box-shadow: <?php echo esc_html($theme_row->lightbox_rl_btn_box_shadow); ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_rl_btn_color); ?>;
+        height: <?php echo esc_html($theme_row->lightbox_rl_btn_height); ?>px;
+        font-size: <?php echo esc_html($theme_row->lightbox_rl_btn_size); ?>px;
+        width: <?php echo esc_html($theme_row->lightbox_rl_btn_width); ?>px;
         opacity: <?php echo number_format($theme_row->lightbox_rl_btn_transparent / 100, 2, ".", ""); ?>;
       }
       #spider_popup_left-ico {
-        padding-right: <?php echo ($theme_row->lightbox_rl_btn_width - $theme_row->lightbox_rl_btn_size) / 3; ?>px;
+        padding-right: <?php echo esc_html(($theme_row->lightbox_rl_btn_width - $theme_row->lightbox_rl_btn_size)) / 3; ?>px;
       }
       #spider_popup_right-ico {
-        padding-left: <?php echo ($theme_row->lightbox_rl_btn_width - $theme_row->lightbox_rl_btn_size) / 3; ?>px;
+        padding-left: <?php echo esc_html(($theme_row->lightbox_rl_btn_width - $theme_row->lightbox_rl_btn_size)) / 3; ?>px;
       }
       <?php
       if($params['autohide_lightbox_navigation']){?>
@@ -292,186 +289,186 @@ class BWGViewGalleryBox {
       .spider_popup_close_fullscreen:hover,
       #spider_popup_left:hover #spider_popup_left-ico,
       #spider_popup_right:hover #spider_popup_right-ico {
-        color: #<?php echo $theme_row->lightbox_close_rl_btn_hover_color; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_close_rl_btn_hover_color); ?>;
         cursor: pointer;
       }
       .bwg_comment_container,  .bwg_ecommerce_container {
-        background-color: #<?php echo $theme_row->lightbox_comment_bg_color; ?>;
-        color: #<?php echo $theme_row->lightbox_comment_font_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_comment_font_size; ?>px;
-        font-family: <?php echo $theme_row->lightbox_comment_font_style; ?>;
-        <?php echo $theme_row->lightbox_comment_pos; ?>: -<?php echo $theme_row->lightbox_comment_width; ?>px;
-        width: <?php echo $theme_row->lightbox_comment_width; ?>px;
+        background-color: #<?php echo esc_html($theme_row->lightbox_comment_bg_color); ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_comment_font_size); ?>px;
+        font-family: <?php echo esc_html($theme_row->lightbox_comment_font_style); ?>;
+        <?php echo esc_html($theme_row->lightbox_comment_pos); ?>: -<?php echo esc_html($theme_row->lightbox_comment_width); ?>px;
+        width: <?php echo esc_html($theme_row->lightbox_comment_width); ?>px;
       }
         .bwg_ecommerce_body  p, .bwg_ecommerce_body span, .bwg_ecommerce_body div {
-          color:#<?php echo $theme_row->lightbox_comment_font_color; ?>!important;
+          color:#<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>!important;
         }
         .pge_tabs li{
           float:left;
-          border-top: 1px solid #<?php echo $theme_row->lightbox_bg_color; ?>!important;
-          border-left: 1px solid #<?php echo $theme_row->lightbox_bg_color; ?>!important;
-          border-right: 1px solid #<?php echo $theme_row->lightbox_bg_color; ?>!important;
+          border-top: 1px solid #<?php echo esc_html($theme_row->lightbox_bg_color); ?>!important;
+          border-left: 1px solid #<?php echo esc_html($theme_row->lightbox_bg_color); ?>!important;
+          border-right: 1px solid #<?php echo esc_html($theme_row->lightbox_bg_color); ?>!important;
           margin-right: 1px !important;
-          border-radius: <?php echo $theme_row->lightbox_comment_button_border_radius; ?> <?php echo $theme_row->lightbox_comment_button_border_radius; ?> 0 0;
+          border-radius: <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?> <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?> 0 0;
           position:relative;
         }
        .pge_tabs li a{
-          color:#<?php echo $theme_row->lightbox_comment_bg_color; ?>!important;
+          color:#<?php echo esc_html($theme_row->lightbox_comment_bg_color); ?>!important;
         }
 
       .pge_tabs li.pge_active a, .pge_tabs li a:hover {
-          border-radius: <?php echo $theme_row->lightbox_comment_button_border_radius; ?>;
+          border-radius: <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?>;
 
         }
       .pge_tabs li.pge_active a>span, .pge_tabs li a>span:hover {
-        color:#<?php echo $theme_row->lightbox_comment_button_bg_color; ?> !important;
-        border-bottom: 1px solid #<?php echo $theme_row->lightbox_comment_button_bg_color; ?>;
+        color:#<?php echo esc_html($theme_row->lightbox_comment_button_bg_color); ?> !important;
+        border-bottom: 1px solid #<?php echo esc_html($theme_row->lightbox_comment_button_bg_color); ?>;
         padding-bottom: 2px;
       }
        .pge_tabs_container{
-          border:1px solid #<?php echo $theme_row->lightbox_comment_font_color; ?>;
-          border-radius: 0 0 <?php echo $theme_row->lightbox_comment_button_border_radius; ?> <?php echo $theme_row->lightbox_comment_button_border_radius; ?>;
+          border:1px solid #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>;
+          border-radius: 0 0 <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?> <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?>;
        }
 
       .pge_pricelist {
         padding:0 !important;
-        color:#<?php echo $theme_row->lightbox_comment_font_color; ?>!important;
+        color:#<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>!important;
       }
 
       .pge_add_to_cart a{
-        border: 1px solid #<?php echo $theme_row->lightbox_comment_font_color; ?>!important;
-        color:#<?php echo $theme_row->lightbox_comment_font_color; ?>!important;
-        border-radius: <?php echo $theme_row->lightbox_comment_button_border_radius; ?>;
+        border: 1px solid #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>!important;
+        color:#<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>!important;
+        border-radius: <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?>;
       }
       .bwg_comments , .bwg_ecommerce_panel{
-        font-size: <?php echo $theme_row->lightbox_comment_font_size; ?>px;
-        font-family: <?php echo $theme_row->lightbox_comment_font_style; ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_comment_font_size); ?>px;
+        font-family: <?php echo esc_html($theme_row->lightbox_comment_font_style); ?>;
       }
       .bwg_comments input[type="submit"], .bwg_ecommerce_panel input[type="button"] {
-        background: none repeat scroll 0 0 #<?php echo $theme_row->lightbox_comment_button_bg_color; ?>;
-        border: <?php echo $theme_row->lightbox_comment_button_border_width; ?>px <?php echo $theme_row->lightbox_comment_button_border_style; ?> #<?php echo $theme_row->lightbox_comment_button_border_color; ?>;
-        border-radius: <?php echo $theme_row->lightbox_comment_button_border_radius; ?>;
-        color: #<?php echo $theme_row->lightbox_comment_bg_color; ?>;
-        padding: <?php echo $theme_row->lightbox_comment_button_padding; ?>;
+        background: none repeat scroll 0 0 #<?php echo esc_html($theme_row->lightbox_comment_button_bg_color); ?>;
+        border: <?php echo esc_html($theme_row->lightbox_comment_button_border_width); ?>px <?php echo esc_html($theme_row->lightbox_comment_button_border_style); ?> #<?php echo esc_html($theme_row->lightbox_comment_button_border_color); ?>;
+        border-radius: <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_bg_color); ?>;
+        padding: <?php echo esc_html($theme_row->lightbox_comment_button_padding); ?>;
       }
       .bwg_comments .bwg-submit-disabled:hover {
-          padding: <?php echo $theme_row->lightbox_comment_button_padding; ?> !important;
-          border-radius: <?php echo $theme_row->lightbox_comment_button_border_radius; ?> !important;
+          padding: <?php echo esc_html($theme_row->lightbox_comment_button_padding); ?> !important;
+          border-radius: <?php echo esc_html($theme_row->lightbox_comment_button_border_radius); ?> !important;
       }
       .bwg_comments input[type="text"],
       .bwg_comments textarea,
       .bwg_ecommerce_panel input[type="text"],
       .bwg_ecommerce_panel input[type="number"],
       .bwg_ecommerce_panel textarea , .bwg_ecommerce_panel select {
-        background: none repeat scroll 0 0 #<?php echo $theme_row->lightbox_comment_input_bg_color; ?>;
-        border: <?php echo $theme_row->lightbox_comment_input_border_width; ?>px <?php echo $theme_row->lightbox_comment_input_border_style; ?> #<?php echo $theme_row->lightbox_comment_input_border_color; ?>;
-        border-radius: <?php echo $theme_row->lightbox_comment_input_border_radius; ?>;
-        color: #<?php echo $theme_row->lightbox_comment_font_color; ?>;
+        background: none repeat scroll 0 0 #<?php echo esc_html($theme_row->lightbox_comment_input_bg_color); ?>;
+        border: <?php echo esc_html($theme_row->lightbox_comment_input_border_width); ?>px <?php echo esc_html($theme_row->lightbox_comment_input_border_style); ?> #<?php echo esc_html($theme_row->lightbox_comment_input_border_color); ?>;
+        border-radius: <?php echo esc_html($theme_row->lightbox_comment_input_border_radius); ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>;
         font-size: 12px;
-        padding: <?php echo $theme_row->lightbox_comment_input_padding; ?>;
+        padding: <?php echo esc_html($theme_row->lightbox_comment_input_padding); ?>;
         width: 100%;
       }
       .bwg_comment_header_p {
-        border-top: <?php echo $theme_row->lightbox_comment_separator_width; ?>px <?php echo $theme_row->lightbox_comment_separator_style; ?> #<?php echo $theme_row->lightbox_comment_separator_color; ?>;
+        border-top: <?php echo esc_html($theme_row->lightbox_comment_separator_width); ?>px <?php echo esc_html($theme_row->lightbox_comment_separator_style); ?> #<?php echo esc_html($theme_row->lightbox_comment_separator_color); ?>;
       }
       .bwg_comment_header {
-        color: #<?php echo $theme_row->lightbox_comment_font_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_comment_author_font_size; ?>px;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_comment_author_font_size); ?>px;
       }
       .bwg_comment_date {
-        color: #<?php echo $theme_row->lightbox_comment_font_color; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>;
         float: right;
-        font-size: <?php echo $theme_row->lightbox_comment_date_font_size; ?>px;
+        font-size: <?php echo esc_html($theme_row->lightbox_comment_date_font_size); ?>px;
       }
       .bwg_comment_body {
-        color: #<?php echo $theme_row->lightbox_comment_font_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_comment_body_font_size; ?>px;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_comment_body_font_size); ?>px;
       }
       .bwg_comments_close , .bwg_ecommerce_close{
         text-align: <?php echo (($theme_row->lightbox_comment_pos == 'left') ? 'right' : 'left'); ?>!important;
       }
       #bwg_rate_form .bwg_rate:hover {
-        color: #<?php echo $theme_row->lightbox_rate_color; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_rate_color); ?>;
       }
       .bwg_facebook,
       .bwg_twitter,
       .bwg_pinterest,
       .bwg_tumblr {
-        color: #<?php echo $theme_row->lightbox_comment_share_button_color; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_share_button_color); ?>;
       }
       .bwg_image_container {
-        <?php echo $theme_row->lightbox_filmstrip_pos; ?>: <?php echo ($filmstrip_direction == 'horizontal' ? $image_filmstrip_height : $image_filmstrip_width); ?>px;
+        <?php echo esc_html($theme_row->lightbox_filmstrip_pos); ?>: <?php echo esc_html(($filmstrip_direction == 'horizontal' ? $image_filmstrip_height : $image_filmstrip_width)); ?>px;
       }
       .bwg_filmstrip_container {
         display: <?php echo ($filmstrip_direction == 'horizontal'? 'table' : 'block'); ?>;
-        height: <?php echo ($filmstrip_direction == 'horizontal'? $image_filmstrip_height : $params['popup_height']); ?>px;
-        width: <?php echo ($filmstrip_direction == 'horizontal' ? $params['popup_width'] : $image_filmstrip_width); ?>px;
-        <?php echo $theme_row->lightbox_filmstrip_pos; ?>: 0;
+        height: <?php echo esc_html(($filmstrip_direction == 'horizontal'? $image_filmstrip_height : $params['popup_height'])); ?>px;
+        width: <?php echo esc_html(($filmstrip_direction == 'horizontal' ? $params['popup_width'] : $image_filmstrip_width)); ?>px;
+        <?php echo esc_html($theme_row->lightbox_filmstrip_pos); ?>: 0;
       }
       .bwg_filmstrip {
-        <?php echo $left_or_top; ?>: <?php echo $theme_row->lightbox_filmstrip_rl_btn_size; ?>px;
-        <?php echo $width_or_height; ?>: <?php echo ($filmstrip_direction == 'horizontal' ? $params['popup_width'] - 40 : $params['popup_height'] - 40); ?>px;
+        <?php echo esc_html($left_or_top); ?>: <?php echo esc_html($theme_row->lightbox_filmstrip_rl_btn_size); ?>px;
+        <?php echo esc_html($width_or_height); ?>: <?php echo esc_html(($filmstrip_direction == 'horizontal' ? $params['popup_width'] - 40 : $params['popup_height'] - 40)); ?>px;
       }
       .bwg_filmstrip_thumbnails {
-        height: <?php echo ($filmstrip_direction == 'horizontal' ? $image_filmstrip_height : ($image_filmstrip_height + $filmstrip_thumb_right_left_space) * count($image_rows)); ?>px;
-        <?php echo $left_or_top; ?>: 0px;
-        width: <?php echo ($filmstrip_direction == 'horizontal' ? ($image_filmstrip_width + $filmstrip_thumb_right_left_space) * count($image_rows) : $image_filmstrip_width); ?>px;
+        height: <?php echo esc_html(($filmstrip_direction == 'horizontal' ? $image_filmstrip_height : ($image_filmstrip_height + $filmstrip_thumb_right_left_space) * count($image_rows))); ?>px;
+        <?php echo esc_html($left_or_top); ?>: 0px;
+        width: <?php echo esc_html(($filmstrip_direction == 'horizontal' ? ($image_filmstrip_width + $filmstrip_thumb_right_left_space) * count($image_rows) : $image_filmstrip_width)); ?>px;
       }
       .bwg_filmstrip_thumbnail {
-        height: <?php echo $image_filmstrip_height; ?>px;
-        width: <?php echo $image_filmstrip_width; ?>px;
-        padding: <?php echo $theme_row->lightbox_filmstrip_thumb_margin; ?>;
+        height: <?php echo esc_html($image_filmstrip_height); ?>px;
+        width: <?php echo esc_html($image_filmstrip_width); ?>px;
+        padding: <?php echo esc_html($theme_row->lightbox_filmstrip_thumb_margin); ?>;
       }
       .bwg_filmstrip_thumbnail .bwg_filmstrip_thumbnail_img_wrap {
-        width:<?php echo $image_filmstrip_width - $filmstrip_thumb_right_left_space ?>px;
-        height:<?php echo $image_filmstrip_height - $filmstrip_thumb_top_bottom_space;?>px;
-        border: <?php echo $theme_row->lightbox_filmstrip_thumb_border_width; ?>px <?php echo $theme_row->lightbox_filmstrip_thumb_border_style; ?> #<?php echo $theme_row->lightbox_filmstrip_thumb_border_color; ?>;
-        border-radius: <?php echo $theme_row->lightbox_filmstrip_thumb_border_radius; ?>;
+        width:<?php echo esc_html($image_filmstrip_width - $filmstrip_thumb_right_left_space) ?>px;
+        height:<?php echo esc_html($image_filmstrip_height - $filmstrip_thumb_top_bottom_space);?>px;
+        border: <?php echo esc_html($theme_row->lightbox_filmstrip_thumb_border_width); ?>px <?php echo esc_html($theme_row->lightbox_filmstrip_thumb_border_style); ?> #<?php echo esc_html($theme_row->lightbox_filmstrip_thumb_border_color); ?>;
+        border-radius: <?php echo esc_html($theme_row->lightbox_filmstrip_thumb_border_radius); ?>;
       }
       .bwg_thumb_active .bwg_filmstrip_thumbnail_img_wrap {
-        border: <?php echo $theme_row->lightbox_filmstrip_thumb_active_border_width; ?>px solid #<?php echo $theme_row->lightbox_filmstrip_thumb_active_border_color; ?>;
+        border: <?php echo esc_html($theme_row->lightbox_filmstrip_thumb_active_border_width); ?>px solid #<?php echo esc_html($theme_row->lightbox_filmstrip_thumb_active_border_color); ?>;
       }
       .bwg_thumb_deactive {
         opacity: <?php echo number_format($theme_row->lightbox_filmstrip_thumb_deactive_transparent / 100, 2, ".", ""); ?>;
       }
       .bwg_filmstrip_left {
-        background-color: #<?php echo $theme_row->lightbox_filmstrip_rl_bg_color; ?>;
+        background-color: #<?php echo esc_html($theme_row->lightbox_filmstrip_rl_bg_color); ?>;
         display: <?php echo ($filmstrip_direction == 'horizontal' ? 'table-cell' : 'block') ?>;
         z-index: 99999;
-        <?php echo $width_or_height; ?>: <?php echo $theme_row->lightbox_filmstrip_rl_btn_size; ?>px;
-        <?php echo $left_or_top; ?>: 0;
+        <?php echo esc_html($width_or_height); ?>: <?php echo esc_html($theme_row->lightbox_filmstrip_rl_btn_size); ?>px;
+        <?php echo esc_html($left_or_top); ?>: 0;
         <?php echo ($filmstrip_direction == 'horizontal' ? 'position: relative;' : 'position: absolute;') ?>
         <?php echo ($filmstrip_direction == 'horizontal' ? '' : 'width: 100%;') ?>
       }
       .bwg_filmstrip_right {
-        background-color: #<?php echo $theme_row->lightbox_filmstrip_rl_bg_color; ?>;
+        background-color: #<?php echo esc_html($theme_row->lightbox_filmstrip_rl_bg_color); ?>;
         <?php echo($filmstrip_direction == 'horizontal' ? 'right' : 'bottom') ?>: 0;
         z-index: 99999;
-        <?php echo $width_or_height; ?>: <?php echo $theme_row->lightbox_filmstrip_rl_btn_size; ?>px;
+        <?php echo esc_html($width_or_height); ?>: <?php echo esc_html($theme_row->lightbox_filmstrip_rl_btn_size); ?>px;
         display: <?php echo ($filmstrip_direction == 'horizontal' ? 'table-cell' : 'block') ?>;
         <?php echo ($filmstrip_direction == 'horizontal' ? 'position: relative;' : 'position: absolute;') ?>
         <?php echo ($filmstrip_direction == 'horizontal' ? '' : 'width: 100%;') ?>
       }
       .bwg_filmstrip_left i,
       .bwg_filmstrip_right i {
-        color: #<?php echo $theme_row->lightbox_filmstrip_rl_btn_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_filmstrip_rl_btn_size; ?>px;
+        color: #<?php echo esc_html($theme_row->lightbox_filmstrip_rl_btn_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_filmstrip_rl_btn_size); ?>px;
       }
       .bwg_watermark_spun {
-        text-align: <?php echo $params['watermark_position'][1]; ?>;
-        vertical-align: <?php echo $params['watermark_position'][0]; ?>;
+        text-align: <?php echo esc_html($params['watermark_position'][1]); ?>;
+        vertical-align: <?php echo esc_html($params['watermark_position'][0]); ?>;
         /*z-index: 10140;*/
       }
       .bwg_watermark_image {
-        max-height: <?php echo $params['watermark_height']; ?>px;
-        max-width: <?php echo $params['watermark_width']; ?>px;
+        max-height: <?php echo esc_html($params['watermark_height']); ?>px;
+        max-width: <?php echo esc_html($params['watermark_width']); ?>px;
         opacity: <?php echo number_format($params['watermark_opacity'] / 100, 2, ".", ""); ?>;
       }
       .bwg_watermark_text,
       .bwg_watermark_text:hover {
-        font-size: <?php echo $params['watermark_font_size']; ?>px;
-        font-family: <?php echo $params['watermark_font']; ?>;
-        color: #<?php echo $params['watermark_color']; ?> !important;
+        font-size: <?php echo esc_html($params['watermark_font_size']); ?>px;
+        font-family: <?php echo esc_html($params['watermark_font']); ?>;
+        color: #<?php echo esc_html($params['watermark_color']); ?> !important;
         opacity: <?php echo number_format($params['watermark_opacity'] / 100, 2, ".", ""); ?>;
       }
       .bwg_image_info_container1 {
@@ -481,87 +478,97 @@ class BWGViewGalleryBox {
         display: <?php echo $params['popup_hit_counter'] ? 'table-cell' : 'none'; ?>;;
       }
       .bwg_image_info_spun {
-        text-align: <?php echo $theme_row->lightbox_info_align; ?>;
-        vertical-align: <?php echo $theme_row->lightbox_info_pos; ?>;
+        text-align: <?php echo esc_html($theme_row->lightbox_info_align); ?>;
+        vertical-align: <?php echo esc_html($theme_row->lightbox_info_pos); ?>;
       }
       .bwg_image_hit_spun {
-        text-align: <?php echo $theme_row->lightbox_hit_align; ?>;
-        vertical-align: <?php echo $theme_row->lightbox_hit_pos; ?>;
+        text-align: <?php echo esc_html($theme_row->lightbox_hit_align); ?>;
+        vertical-align: <?php echo esc_html($theme_row->lightbox_hit_pos); ?>;
       }
       .bwg_image_hit {
-        background: rgba(<?php echo $rgb_bwg_image_hit_bg_color['red']; ?>, <?php echo $rgb_bwg_image_hit_bg_color['green']; ?>, <?php echo $rgb_bwg_image_hit_bg_color['blue']; ?>, <?php echo number_format($theme_row->lightbox_hit_bg_transparent / 100, 2, ".", ""); ?>);
-        border: <?php echo $theme_row->lightbox_hit_border_width; ?>px <?php echo $theme_row->lightbox_hit_border_style; ?> #<?php echo $theme_row->lightbox_hit_border_color; ?>;
-        border-radius: <?php echo $theme_row->lightbox_info_border_radius; ?>;
-        <?php echo ($theme_row->lightbox_ctrl_btn_pos == 'bottom' && $theme_row->lightbox_hit_pos == 'bottom') ? 'bottom: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : '' ?>
-        margin: <?php echo $theme_row->lightbox_hit_margin; ?>;
-        padding: <?php echo $theme_row->lightbox_hit_padding; ?>;
-        <?php echo ($theme_row->lightbox_ctrl_btn_pos == 'top' && $theme_row->lightbox_hit_pos == 'top') ? 'top: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : '' ?>
+        background: rgba(<?php echo esc_html($rgb_bwg_image_hit_bg_color['red']); ?>, <?php echo esc_html($rgb_bwg_image_hit_bg_color['green']); ?>, <?php echo esc_html($rgb_bwg_image_hit_bg_color['blue']); ?>, <?php echo number_format($theme_row->lightbox_hit_bg_transparent / 100, 2, ".", ""); ?>);
+        border: <?php echo esc_html($theme_row->lightbox_hit_border_width); ?>px <?php echo esc_html($theme_row->lightbox_hit_border_style); ?> #<?php echo esc_html($theme_row->lightbox_hit_border_color); ?>;
+        border-radius: <?php echo esc_html($theme_row->lightbox_info_border_radius); ?>;
+        <?php echo ($theme_row->lightbox_ctrl_btn_pos == 'bottom' && $theme_row->lightbox_hit_pos == 'bottom') ? 'bottom: ' . esc_html(($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top)) . 'px;' : '' ?>
+        margin: <?php echo esc_html($theme_row->lightbox_hit_margin); ?>;
+        padding: <?php echo esc_html($theme_row->lightbox_hit_padding); ?>;
+        <?php echo ($theme_row->lightbox_ctrl_btn_pos == 'top' && $theme_row->lightbox_hit_pos == 'top') ? 'top: ' . esc_html(($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top)) . 'px;' : '' ?>
       }
       .bwg_image_hits,
       .bwg_image_hits * {
-        color: #<?php echo $theme_row->lightbox_hit_color; ?> !important;
-        font-family: <?php echo $theme_row->lightbox_hit_font_style; ?>;
-        font-size: <?php echo $theme_row->lightbox_hit_font_size; ?>px;
-        font-weight: <?php echo $theme_row->lightbox_hit_font_weight; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_hit_color); ?> !important;
+        font-family: <?php echo esc_html($theme_row->lightbox_hit_font_style); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_hit_font_size); ?>px;
+        font-weight: <?php echo esc_html($theme_row->lightbox_hit_font_weight); ?>;
       }
       .bwg_image_info {
-        background: rgba(<?php echo $rgb_bwg_image_info_bg_color['red']; ?>, <?php echo $rgb_bwg_image_info_bg_color['green']; ?>, <?php echo $rgb_bwg_image_info_bg_color['blue']; ?>, <?php echo number_format($theme_row->lightbox_info_bg_transparent / 100, 2, ".", ""); ?>);
-        border: <?php echo $theme_row->lightbox_info_border_width; ?>px <?php echo $theme_row->lightbox_info_border_style; ?> #<?php echo $theme_row->lightbox_info_border_color; ?>;
-        border-radius: <?php echo $theme_row->lightbox_info_border_radius; ?>;
-        <?php echo ((!$params['popup_enable_filmstrip'] || $theme_row->lightbox_filmstrip_pos != 'bottom') && $theme_row->lightbox_ctrl_btn_pos == 'bottom' && $theme_row->lightbox_info_pos == 'bottom') ? 'bottom: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : '' ?>
+        background: rgba(<?php echo esc_html($rgb_bwg_image_info_bg_color['red']); ?>, <?php echo esc_html($rgb_bwg_image_info_bg_color['green']); ?>, <?php echo esc_html($rgb_bwg_image_info_bg_color['blue']); ?>, <?php echo number_format($theme_row->lightbox_info_bg_transparent / 100, 2, ".", ""); ?>);
+        border: <?php echo esc_html($theme_row->lightbox_info_border_width); ?>px <?php echo esc_html($theme_row->lightbox_info_border_style); ?> #<?php echo esc_html($theme_row->lightbox_info_border_color); ?>;
+        border-radius: <?php echo esc_html($theme_row->lightbox_info_border_radius); ?>;
+        <?php echo ((!$params['popup_enable_filmstrip'] || $theme_row->lightbox_filmstrip_pos != 'bottom') && $theme_row->lightbox_ctrl_btn_pos == 'bottom' && $theme_row->lightbox_info_pos == 'bottom') ? 'bottom: ' . esc_html(($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;') : '' ?>
         <?php if ($params['popup_info_full_width']) { ?>
         width: 100%;
         <?php } else { ?>
         width: 33%;
-        margin: <?php echo $theme_row->lightbox_info_margin; ?>;
+        margin: <?php echo esc_html($theme_row->lightbox_info_margin); ?>;
         <?php } ?>
-        padding: <?php echo $theme_row->lightbox_info_padding; ?>;
-        <?php echo ((!$params['popup_enable_filmstrip'] || $theme_row->lightbox_filmstrip_pos != 'top') && $theme_row->lightbox_ctrl_btn_pos == 'top' && $theme_row->lightbox_info_pos == 'top') ? 'top: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : '' ?>
+        padding: <?php echo esc_html($theme_row->lightbox_info_padding); ?>;
+        <?php echo esc_html(((!$params['popup_enable_filmstrip'] || $theme_row->lightbox_filmstrip_pos != 'top') && $theme_row->lightbox_ctrl_btn_pos == 'top' && $theme_row->lightbox_info_pos == 'top') ? 'top: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : ''); ?>
         word-break : break-word;
       }
       .bwg_image_title,
       .bwg_image_title * {
-        color: #<?php echo $theme_row->lightbox_title_color; ?> !important;
-        font-family: <?php echo $theme_row->lightbox_title_font_style; ?>;
-        font-size: <?php echo $theme_row->lightbox_title_font_size; ?>px;
-        font-weight: <?php echo $theme_row->lightbox_title_font_weight; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_title_color); ?> !important;
+        font-family: <?php echo esc_html($theme_row->lightbox_title_font_style); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_title_font_size); ?>px;
+        font-weight: <?php echo esc_html($theme_row->lightbox_title_font_weight); ?>;
         word-wrap: break-word;
       }
       .bwg_image_description,
       .bwg_image_description * {
-        color: #<?php echo $theme_row->lightbox_description_color; ?> !important;
-        font-family: <?php echo $theme_row->lightbox_description_font_style; ?>;
-        font-size: <?php echo $theme_row->lightbox_description_font_size; ?>px;
-        font-weight: <?php echo $theme_row->lightbox_description_font_weight; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_description_color); ?> !important;
+        font-family: <?php echo esc_html($theme_row->lightbox_description_font_style); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_description_font_size); ?>px;
+        font-weight: <?php echo esc_html($theme_row->lightbox_description_font_weight); ?>;
         word-break: break-word;
       }
       .bwg_image_rate_spun {
-        text-align: <?php echo $theme_row->lightbox_rate_align; ?>;
-        vertical-align: <?php echo $theme_row->lightbox_rate_pos; ?>;
+        text-align: <?php echo esc_html($theme_row->lightbox_rate_align); ?>;
+        vertical-align: <?php echo esc_html($theme_row->lightbox_rate_pos); ?>;
       }
       .bwg_image_rate {
-        <?php echo ($theme_row->lightbox_ctrl_btn_pos == 'bottom' && $theme_row->lightbox_rate_pos == 'bottom') ? 'bottom: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : '' ?>
-        padding: <?php echo $theme_row->lightbox_rate_padding; ?>;
-        <?php echo ($theme_row->lightbox_ctrl_btn_pos == 'top' && $theme_row->lightbox_rate_pos == 'top') ? 'top: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : '' ?>
+        <?php echo esc_html(($theme_row->lightbox_ctrl_btn_pos == 'bottom' && $theme_row->lightbox_rate_pos == 'bottom') ? 'bottom: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : ''); ?>
+        padding: <?php echo esc_html($theme_row->lightbox_rate_padding); ?>;
+        <?php echo esc_html(($theme_row->lightbox_ctrl_btn_pos == 'top' && $theme_row->lightbox_rate_pos == 'top') ? 'top: ' . ($theme_row->lightbox_ctrl_btn_height + 2 * $theme_row->lightbox_ctrl_btn_margin_top) . 'px;' : ''); ?>
       }
       #bwg_rate_form .bwg_hint,
-      #bwg_rate_form .bwg-icon-<?php echo $theme_row->lightbox_rate_icon; ?>,
-      #bwg_rate_form .bwg-icon-<?php echo $theme_row->lightbox_rate_icon; ?>-half-o,
-      #bwg_rate_form .bwg-icon-<?php echo $theme_row->lightbox_rate_icon; ?>-o,
+      #bwg_rate_form .bwg-icon-<?php echo esc_attr($theme_row->lightbox_rate_icon); ?>,
+      #bwg_rate_form .bwg-icon-<?php echo esc_attr($theme_row->lightbox_rate_icon); ?>-half-o,
+      #bwg_rate_form .bwg-icon-<?php echo esc_attr($theme_row->lightbox_rate_icon); ?>-o,
       #bwg_rate_form .bwg-icon-minus-square-o {
-        color: #<?php echo $theme_row->lightbox_rate_color; ?>;
-        font-size: <?php echo $theme_row->lightbox_rate_size; ?>px;
+        color: #<?php echo esc_html($theme_row->lightbox_rate_color); ?>;
+        font-size: <?php echo esc_html($theme_row->lightbox_rate_size); ?>px;
       }
       .bwg_rate_hover {
-        color: #<?php echo $theme_row->lightbox_rate_hover_color; ?> !important;
+        color: #<?php echo esc_html($theme_row->lightbox_rate_hover_color); ?> !important;
       }
       .bwg_rated {
-        color: #<?php echo $theme_row->lightbox_rate_color; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_rate_color); ?>;
         display: none;
-        font-size: <?php echo $theme_row->lightbox_rate_size - 2; ?>px;
+        font-size: <?php echo esc_html($theme_row->lightbox_rate_size - 2); ?>px;
       }
       #bwg_comment_form label {
-        color: #<?php echo $theme_row->lightbox_comment_font_color; ?>;
+        color: #<?php echo esc_html($theme_row->lightbox_comment_font_color); ?>;
+      }
+      @media (max-width: 768px) {
+        .bwg_image_info {
+          width: 260px;
+        }
+      }
+      @media (max-width: 480px) {
+        .bwg_image_info {
+          width: 100%;
+        }
       }
     </style>
     <?php
@@ -599,13 +606,11 @@ class BWGViewGalleryBox {
 
       $image_resolution = explode(' x ', $image_row->resolution);
       if (is_array($image_resolution) && count($image_resolution) == 2) {
-        $instagram_post_width = $image_resolution[0];
-        $instagram_post_height = explode(' ', $image_resolution[1]);
-        $instagram_post_height = $instagram_post_height[0];
+        // Separate image width/height uses for embeds.
+        $data[$key]["image_width"] = (int) $image_resolution[0];
+        $data[$key]["image_height"] = (int) $image_resolution[1];
       }
 
-      $data[$key]["image_width"] = $instagram_post_width;
-      $data[$key]["image_height"] = $instagram_post_height;
       $data[$key]["pure_image_url"] = $image_row->pure_image_url;
       $data[$key]["pure_thumb_url"] = $image_row->pure_thumb_url;
       $data[$key]["image_url"] = $image_row->image_url;
@@ -626,7 +631,7 @@ class BWGViewGalleryBox {
     }
 
     if ( !$image_id_exist ) {
-      echo WDWLibrary::message(__('The image has been deleted.', BWG()->prefix), 'wd_error');
+      echo WDWLibrary::message(__('The image has been deleted.', 'photo-gallery'), 'wd_error');
       die();
     }
     ?>
@@ -670,7 +675,7 @@ class BWGViewGalleryBox {
                       $resolution_w = intval($resolution_arr[0]);
                       $resolution_h = intval($resolution_arr[2]);
                       if($resolution_w != 0 && $resolution_h != 0){
-                        $scale = $scale = max($image_filmstrip_width / $resolution_w, $image_filmstrip_height / $resolution_h);
+                        $scale = max($image_filmstrip_width / $resolution_w, $image_filmstrip_height / $resolution_h);
                         $image_thumb_width = $resolution_w * $scale;
                         $image_thumb_height = $resolution_h * $scale;
                       }
@@ -692,20 +697,23 @@ class BWGViewGalleryBox {
                 }
 				        $_image_filmstrip_width  = $image_filmstrip_width - $filmstrip_thumb_right_left_space;
                 $_image_filmstrip_height = $image_filmstrip_height - $filmstrip_thumb_top_bottom_space;
-                $scale = max($image_filmstrip_width / $image_thumb_width, $image_filmstrip_height / $image_thumb_height);
+                $scale = 1;
+                if ( !is_null($image_thumb_width) && !is_null($image_thumb_height) ) {
+                  $scale = max($image_filmstrip_width / $image_thumb_width, $image_filmstrip_height / $image_thumb_height);
+                }
                 $image_thumb_width *= $scale;
                 $image_thumb_height *= $scale;
 				        $thumb_left = ($_image_filmstrip_width - $image_thumb_width) / 2;
                 $thumb_top = ($_image_filmstrip_height - $image_thumb_height) / 2;
                 ?>
-                <div id="bwg_filmstrip_thumbnail_<?php echo sanitize_html_class($key); ?>" class="bwg_filmstrip_thumbnail <?php echo (($image_row->id == $current_image_id) ? 'bwg_thumb_active' : 'bwg_thumb_deactive'); ?>">
+                <div id="bwg_filmstrip_thumbnail_<?php echo esc_attr($key); ?>" class="bwg_filmstrip_thumbnail <?php echo (($image_row->id == $current_image_id) ? 'bwg_thumb_active' : 'bwg_thumb_deactive'); ?>">
                   <div class="bwg_filmstrip_thumbnail_img_wrap">
                     <img <?php if( $is_embed || $resolution_thumb ) { ?>
-                      style="width:<?php echo $image_thumb_width; ?>px; height:<?php echo $image_thumb_height; ?>px; margin-left: <?php echo $thumb_left; ?>px; margin-top: <?php echo $thumb_top; ?>px;" <?php } ?>
+                      style="width:<?php echo esc_html($image_thumb_width); ?>px; height:<?php echo esc_html($image_thumb_height); ?>px; margin-left: <?php echo esc_html($thumb_left); ?>px; margin-top: <?php echo esc_html($thumb_top); ?>px;" <?php } ?>
                       class="bwg_filmstrip_thumbnail_img bwg-hidden"
                       data-url="<?php echo esc_url($bwg_thumb_url); ?>"
                       src=""
-                      onclick='bwg_change_image(parseInt(jQuery("#bwg_current_image_key").val()), "<?php echo $key; ?>")' ontouchend='bwg_change_image(parseInt(jQuery("#bwg_current_image_key").val()), "<?php echo $key; ?>")'
+                      onclick='bwg_change_image(parseInt(jQuery("#bwg_current_image_key").val()), "<?php echo esc_html($key); ?>")' ontouchend='bwg_change_image(parseInt(jQuery("#bwg_current_image_key").val()), "<?php echo esc_html($key); ?>")'
                       image_id="<?php echo esc_attr($image_row->id); ?>"
                       image_key="<?php echo esc_attr($key); ?>" alt="<?php echo esc_attr($image_row->alt); ?>" />
                   </div>
@@ -747,15 +755,15 @@ class BWGViewGalleryBox {
       <?php
       }
       ?>
-      <div id="bwg_image_container" class="bwg_image_container">
-        <?php if (BWG()->is_pro && $params['enable_addthis'] && $params['addthis_profile_id']) { ?>
+      <div id="bwg_image_container" class="bwg_image_container" data-action="<?php echo esc_url($popup_url); ?>">
+        <?php if ( $params['enable_addthis'] && $params['addthis_profile_id'] ) { ?>
           <div class="bwg_addThis addthis_inline_share_toolbox"></div>
           <?php
         }
         echo $this->loading();
         $share_url = '';
         ?>
-      <div class="bwg_btn_container <?php echo !$params['popup_enable_ctrl_btn'] ? 'bwg_no_ctrl_btn' : '' ?>">
+        <div class="bwg_btn_container <?php echo !$params['popup_enable_ctrl_btn'] ? 'bwg_no_ctrl_btn' : '' ?>">
         <div class="bwg_ctrl_btn_container">
 					<?php
           if ($params['show_image_counts']) {
@@ -766,61 +774,68 @@ class BWGViewGalleryBox {
             </span>
             <?php
           }
-          if( $params['popup_enable_ctrl_btn'] ) {
-					$share_url = add_query_arg(array('curr_url' => urlencode($current_url), 'image_id' => $current_image_id), WDWLibrary::get_share_page()) . '#bwg' . $gallery_id . '/' . $current_image_id;
-					?>
-            <i title="<?php echo __('Play', BWG()->prefix); ?>" class="bwg-icon-play bwg_ctrl_btn bwg_play_pause"></i>
+          if ( $params['popup_enable_ctrl_btn'] ) {
+            $share_url = add_query_arg(array(
+                                       'gallery_id' => $gallery_id,
+                                       'image_id' => $current_image_id,
+                                       'curr_url' => $current_url,
+                                     ), WDWLibrary::get_share_page());
+            ?>
+            <i title="<?php echo __('Play', 'photo-gallery'); ?>" class="bwg-icon-play bwg_ctrl_btn bwg_play_pause"></i>
             <?php if ($params['popup_enable_fullscreen']) {
               if (!$params['popup_fullscreen']) {
             ?>
-            <i title="<?php echo __('Maximize', BWG()->prefix); ?>" class="bwg-icon-expand bwg_ctrl_btn bwg_resize-full"></i>
+            <i title="<?php echo __('Maximize', 'photo-gallery'); ?>" class="bwg-icon-expand bwg_ctrl_btn bwg_resize-full"></i>
             <?php
             }
             ?>
-            <i title="<?php echo __('Fullscreen', BWG()->prefix); ?>" class="bwg-icon-arrows-out bwg_ctrl_btn bwg_fullscreen"></i>
+            <i title="<?php echo __('Fullscreen', 'photo-gallery'); ?>" class="bwg-icon-arrows-out bwg_ctrl_btn bwg_fullscreen"></i>
             <?php } if ($params['popup_enable_info']) { ?>
-            <i title="<?php echo __('Show info', BWG()->prefix); ?>" class="bwg-icon-info-circle bwg_ctrl_btn bwg_info"></i>
+            <i title="<?php echo __('Show info', 'photo-gallery'); ?>" class="bwg-icon-info-circle bwg_ctrl_btn bwg_info"></i>
             <?php } if ($params['popup_enable_comment']) { ?>
-            <i title="<?php echo __('Show comments', BWG()->prefix); ?>" class="bwg-icon-comment-square bwg_ctrl_btn bwg_comment"></i>
+            <i title="<?php echo __('Show comments', 'photo-gallery'); ?>" class="bwg-icon-comment-square bwg_ctrl_btn bwg_comment"></i>
             <?php } if ($params['popup_enable_rate']) { ?>
-            <i title="<?php echo __('Show rating', BWG()->prefix); ?>" class="bwg-icon-<?php echo $theme_row->lightbox_rate_icon; ?> bwg_ctrl_btn bwg_rate"></i>
+            <i title="<?php echo __('Show rating', 'photo-gallery'); ?>" class="bwg-icon-<?php echo esc_attr($theme_row->lightbox_rate_icon); ?> bwg_ctrl_btn bwg_rate"></i>
             <?php } if ($params['popup_enable_zoom']) { ?>
-            <i title="<?php echo __('Zoom in-out', BWG()->prefix); ?>" class="bwg-icon-search bwg_ctrl_btn bwg_zoom"></i>
+            <i title="<?php echo __('Zoom in-out', 'photo-gallery'); ?>" class="bwg-icon-search bwg_ctrl_btn bwg_zoom"></i>
             <?php }
             $is_embed = preg_match('/EMBED/', $current_filetype) == 1 ? TRUE : FALSE;
             $share_image_url = str_replace(array('%252F', '%25252F'), '%2F', urlencode( $is_embed ? $current_thumb_url : BWG()->upload_url . rawurlencode($current_image_url)));
+            /* Added:
+              noopener - to prevent the opening page to gain any kind of access to the original page.
+              noreferrer - to prevent passing the referrer information to the target website by removing the referral info from the HTTP header.*/
             if ($params['popup_enable_facebook']) {
               ?>
-              <a id="bwg_facebook_a" href="https://www.facebook.com/sharer.php?u=<?php echo urlencode($share_url); ?>" target="_blank" title="<?php echo __('Share on Facebook', BWG()->prefix); ?>">
-                <i title="<?php echo __('Share on Facebook', BWG()->prefix); ?>" class="bwg-icon-facebook-square bwg_ctrl_btn bwg_facebook"></i>
+              <a rel="noopener noreferrer" id="bwg_facebook_a" href="https://www.facebook.com/sharer.php?u=<?php echo urlencode($share_url); ?>" target="_blank" title="<?php echo __('Share on Facebook', 'photo-gallery'); ?>">
+                <i title="<?php echo __('Share on Facebook', 'photo-gallery'); ?>" class="bwg-icon-facebook-square bwg_ctrl_btn bwg_facebook"></i>
               </a>
               <?php
             }
             if ($params['popup_enable_twitter']) {
               ?>
-              <a id="bwg_twitter_a" href="https://twitter.com/intent/tweet?url=<?php echo urlencode($share_url); ?>" target="_blank" title="<?php echo __('Share on Twitter', BWG()->prefix); ?>">
-                <i title="<?php echo __('Share on Twitter', BWG()->prefix); ?>" class="bwg-icon-twitter-square bwg_ctrl_btn bwg_twitter"></i>
+              <a rel="noopener noreferrer" id="bwg_twitter_a" href="https://twitter.com/intent/tweet?url=<?php echo urlencode($share_url); ?>" target="_blank" title="<?php echo __('Share on Twitter', 'photo-gallery'); ?>">
+                <i title="<?php echo __('Share on Twitter', 'photo-gallery'); ?>" class="bwg-icon-twitter-square bwg_ctrl_btn bwg_twitter"></i>
               </a>
               <?php
             }
             if ($params['popup_enable_pinterest']) {
               ?>
-              <a id="bwg_pinterest_a" href="http://pinterest.com/pin/create/button/?s=100&url=<?php echo urlencode($share_url); ?>&media=<?php echo $share_image_url; ?>&description=<?php echo $current_image_alt . '%0A' . $current_image_description; ?>" target="_blank" title="<?php echo __('Share on Pinterest', BWG()->prefix); ?>">
-                <i title="<?php echo __('Share on Pinterest', BWG()->prefix); ?>" class="bwg-icon-pinterest-square bwg_ctrl_btn bwg_pinterest"></i>
+              <a rel="noopener noreferrer" id="bwg_pinterest_a" href="http://pinterest.com/pin/create/button/?s=100&url=<?php echo urlencode(urlencode($share_url)); ?>&media=<?php echo $share_image_url; ?>&description=<?php echo $current_image_alt . '%0A' . $current_image_description; ?>" target="_blank" title="<?php echo __('Share on Pinterest', 'photo-gallery'); ?>">
+                <i title="<?php echo __('Share on Pinterest', 'photo-gallery'); ?>" class="bwg-icon-pinterest-square bwg_ctrl_btn bwg_pinterest"></i>
               </a>
               <?php
             }
             if ($params['popup_enable_tumblr']) {
               ?>
-              <a id="bwg_tumblr_a" href="https://www.tumblr.com/share/photo?source=<?php echo $share_image_url; ?>&caption=<?php echo urlencode($current_image_alt); ?>&clickthru=<?php echo urlencode($share_url); ?>" target="_blank" title="<?php echo __('Share on Tumblr', BWG()->prefix); ?>">
-                <i title="<?php echo __('Share on Tumblr', BWG()->prefix); ?>" class="bwg-icon-tumblr-square bwg_ctrl_btn bwg_tumblr"></i>
+              <a rel="noopener noreferrer" id="bwg_tumblr_a" href="https://www.tumblr.com/share/photo?source=<?php echo $share_image_url; ?>&caption=<?php echo urlencode($current_image_alt); ?>&clickthru=<?php echo urlencode($share_url); ?>" target="_blank" title="<?php echo __('Share on Tumblr', 'photo-gallery'); ?>">
+                <i title="<?php echo __('Share on Tumblr', 'photo-gallery'); ?>" class="bwg-icon-tumblr-square bwg_ctrl_btn bwg_tumblr"></i>
               </a>
               <?php
             }
             if ($params['popup_enable_fullsize_image']) {
               ?>
               <a id="bwg_fullsize_image" href="<?php echo !$is_embed ? BWG()->upload_url . urldecode($current_image_url) : urldecode($current_image_url); ?>" data-elementor-open-lightbox="no"  target="_blank">
-                <i title="<?php echo __('Open image in original size.', BWG()->prefix); ?>" class="bwg-icon-sign-out bwg_ctrl_btn"></i>
+                <i title="<?php echo __('Open image in original size.', 'photo-gallery'); ?>" class="bwg-icon-sign-out bwg_ctrl_btn"></i>
               </a>
               <?php
             }
@@ -835,14 +850,14 @@ class BWGViewGalleryBox {
               }
                 ?>
                 <a id="bwg_download" <?php if ($is_embed) { ?> class="bwg-hidden" <?php } ?>  href="<?php echo $download_href; ?>" target="_blank" download="<?php echo end($current_image_arr); ?>">
-                  <i title="<?php echo __('Download original image', BWG()->prefix); ?>" class="bwg-icon-download bwg_ctrl_btn"></i>
+                  <i title="<?php echo __('Download original image', 'photo-gallery'); ?>" class="bwg-icon-download bwg_ctrl_btn"></i>
                 </a>
                 <?php
 
             }
             if ( function_exists('BWGEC') && $params['popup_enable_ecommerce'] == 1 ) {
              ?>
-            <i title="<?php echo __('Ecommerce', BWG()->prefix); ?>" style="<?php echo $pricelist_id == 0 ? "display:none;": "";?>" class="bwg-icon-shopping-cart bwg_ctrl_btn bwg_ecommerce"></i>
+            <i title="<?php echo __('Ecommerce', 'photo-gallery'); ?>" style="<?php echo $pricelist_id == 0 ? "display:none;": "";?>" class="bwg-icon-shopping-cart bwg_ctrl_btn bwg_ecommerce"></i>
              <?php
             }
             ?>
@@ -853,7 +868,7 @@ class BWGViewGalleryBox {
         <?php
         }
         ?>
-      </div>
+        </div>
         <div class="bwg_image_info_container1">
           <div class="bwg_image_info_container2">
             <span class="bwg_image_info_spun">
@@ -868,11 +883,13 @@ class BWGViewGalleryBox {
           <div class="bwg_image_hit_container2">
             <span class="bwg_image_hit_spun">
               <div class="bwg_image_hit">
-                <div class="bwg_image_hits"><?php echo __('Hits: ', BWG()->prefix); ?><span><?php echo $current_image_hit_count; ?></span></div>
+                <div class="bwg_image_hits"><?php echo __('Hits: ', 'photo-gallery'); ?><span><?php echo intval($current_image_hit_count); ?></span></div>
               </div>
             </span>
           </div>
         </div>
+        <input id="rate_ajax_task" name="ajax_task" type="hidden" value="" />
+        <input id="rate_image_id" name="image_id" type="hidden" value="<?php echo esc_attr($image_id); ?>" />
         <?php
         if ( $params['popup_enable_rate'] ) {
           $data_rated = array(
@@ -888,13 +905,11 @@ class BWGViewGalleryBox {
               <span class="bwg_image_rate_spun">
                 <span class="bwg_image_rate">
                   <span class="bwg_image_rate_disabled"></span>
-                  <form id="bwg_rate_form" method="post" action="<?php echo $popup_url; ?>">
+                  <div id="bwg_rate_form">
                     <span id="bwg_star" class="bwg_star" data-score="<?php echo $current_avg_rating; ?>"></span>
-                    <span id="bwg_rated" data-params='<?php echo $data_rated; ?>' class="bwg_rated"><?php echo __('Rated.', BWG()->prefix); ?></span>
+                    <span id="bwg_rated" data-params='<?php echo $data_rated; ?>' class="bwg_rated"><?php echo __('Rated.', 'photo-gallery'); ?></span>
                     <span id="bwg_hint" class="bwg_hint"></span>
-                    <input id="rate_ajax_task" name="ajax_task" type="hidden" value="" />
-                    <input id="rate_image_id" name="image_id" type="hidden" value="<?php echo $image_id; ?>" />
-                  </form>
+                  </div>
                 </span>
               </span>
             </div>
@@ -997,8 +1012,8 @@ class BWGViewGalleryBox {
             </div>
           </div>
         </div>
-        <a id="spider_popup_left" <?php echo ($params['enable_loop'] == 0 && $current_key == 0) ? 'style="display: none;"' : ''; ?>><span id="spider_popup_left-ico"><span><i class="bwg_prev_btn <?php echo sanitize_html_class($theme_row->lightbox_rl_btn_style); ?>-left"></i></span></span></a>
-        <a id="spider_popup_right" <?php echo ($params['enable_loop'] == 0 && $current_key == count($image_rows) - 1) ? 'style="display: none;"' : ''; ?>><span id="spider_popup_right-ico"><span><i class="bwg_next_btn <?php echo sanitize_html_class($theme_row->lightbox_rl_btn_style); ?>-right"></i></span></span></a>
+        <a id="spider_popup_left" <?php echo ($params['enable_loop'] == 0 && $current_key == 0) ? 'style="display: none;"' : ''; ?>><span id="spider_popup_left-ico"><span><i class="bwg_prev_btn <?php echo esc_attr($theme_row->lightbox_rl_btn_style); ?>-left"></i></span></span></a>
+        <a id="spider_popup_right" <?php echo ($params['enable_loop'] == 0 && $current_key == count($image_rows) - 1) ? 'style="display: none;"' : ''; ?>><span id="spider_popup_right-ico"><span><i class="bwg_next_btn <?php echo esc_attr($theme_row->lightbox_rl_btn_style); ?>-right"></i></span></span></a>
       </div>
     </div>
     <?php if ( $params['popup_enable_comment'] ) {
@@ -1013,24 +1028,24 @@ class BWGViewGalleryBox {
           </span>
         </div>
         <div class="bwg_comments bwg_popup_sidebar">
-            <div title="<?php echo __('Hide Comments', BWG()->prefix); ?>" class="bwg_comments_close bwg_popup_sidebar_close">
-              <i class="bwg-icon-arrow-<?php echo sanitize_html_class($theme_row->lightbox_comment_pos); ?> bwg_comments_close_btn bwg_popup_sidebar_close_btn"></i>
+            <div title="<?php echo __('Hide Comments', 'photo-gallery'); ?>" class="bwg_comments_close bwg_popup_sidebar_close">
+              <i class="bwg-icon-arrow-<?php echo esc_attr($theme_row->lightbox_comment_pos); ?> bwg_comments_close_btn bwg_popup_sidebar_close_btn"></i>
             </div>
             <form id="bwg_comment_form" method="post" action="<?php echo esc_url($popup_url); ?>">
-								<p><label for="bwg_name"><?php echo __('Name', BWG()->prefix); ?> </label></p>
+								<p><label for="bwg_name"><?php echo __('Name', 'photo-gallery'); ?> </label></p>
 								<p><input class="bwg-validate" type="text" name="bwg_name" id="bwg_name" <?php echo ((get_current_user_id() != 0) ? 'readonly="readonly"' : ''); ?> value="<?php echo ((get_current_user_id() != 0) ? esc_attr(get_userdata(get_current_user_id())->display_name) : esc_attr($bwg_name)); ?>" />
 								</p>
 								<p><span class="bwg_comment_error bwg_comment_name_error"></span></p>
 							  <?php if ($params['popup_enable_email']) { ?>
-									<p><label for="bwg_email"><?php echo __('Email', BWG()->prefix); ?> </label></p>
+									<p><label for="bwg_email"><?php echo __('Email', 'photo-gallery'); ?> </label></p>
 									<p><input class="bwg-validate" type="text" name="bwg_email" id="bwg_email" value="<?php echo ((get_current_user_id() != 0) ? esc_attr(get_userdata(get_current_user_id())->user_email) : esc_attr($bwg_email)); ?>" /></p>
 									<p><span class="bwg_comment_error bwg_comment_email_error"></span></p>
 								<?php } ?>
-								<p><label for="bwg_comment"><?php echo __('Comment', BWG()->prefix); ?> </label></p>
+								<p><label for="bwg_comment"><?php echo __('Comment', 'photo-gallery'); ?> </label></p>
 								<p><textarea class="bwg-validate bwg_comment_textarea" name="bwg_comment" id="bwg_comment"></textarea></p>
 								<p><span class="bwg_comment_error bwg_comment_textarea_error"></span></p>
 								<?php if ( $params['popup_enable_captcha'] && !BWG()->options->gdpr_compliance) { ?>
-									<p><label for="bwg_captcha_input"><?php echo __('Verification Code', BWG()->prefix); ?></label></p>
+									<p><label for="bwg_captcha_input"><?php echo __('Verification Code', 'photo-gallery'); ?></label></p>
 									<p>
 										<input id="bwg_captcha_input" name="bwg_captcha_input" class="bwg_captcha_input" type="text" autocomplete="off">
 										<img id="bwg_captcha_img" class="bwg_captcha_img" type="captcha" digit="6" src="<?php echo add_query_arg(array('action' => 'bwg_captcha', 'digit' => 6, 'i' => ''), admin_url('admin-ajax.php')); ?>" onclick="bwg_captcha_refresh('bwg_captcha')" ontouchend="bwg_captcha_refresh('bwg_captcha')" />
@@ -1053,8 +1068,8 @@ class BWGViewGalleryBox {
 										type="checkbox"
 										value="1" <?php echo (WDWLibrary::get('bwg_comment_privacy_policy') ? 'checked' : ''); ?> />
 									<?php
-									$privacy_policy_text = __('I consent collecting this data and processing it according to %s of this website.', BWG()->prefix);
-									$privacy_policy_link = ' <a href="' . WDWLibrary::get_privacy_policy_url() . '" target="_blank">' . __('Privacy Policy', BWG()->prefix) . '</a>';
+									$privacy_policy_text = __('I consent collecting this data and processing it according to %s of this website.', 'photo-gallery');
+									$privacy_policy_link = ' <a href="' . WDWLibrary::get_privacy_policy_url() . '" target="_blank">' . __('Privacy Policy', 'photo-gallery') . '</a>';
 									echo sprintf($privacy_policy_text, $privacy_policy_link);
 									?>
 									</label>
@@ -1063,9 +1078,9 @@ class BWGViewGalleryBox {
 								<?php } ?>
 								<p>
 								<input <?php echo ($privacy_policy_url) ? 'disabled="disabled"' : ''; ?> onclick="bwg_add_comment(); return false;" ontouchend="bwg_add_comment(); return false;" class="bwg_submit <?php echo ($privacy_policy_url) ? 'bwg-submit-disabled' : ''; ?>" type="submit"
-									 name="bwg_submit" id="bwg_submit" value="<?php echo __('Submit', BWG()->prefix); ?>" />
+									 name="bwg_submit" id="bwg_submit" value="<?php echo __('Submit', 'photo-gallery'); ?>" />
 								</p>
-								<p class="bwg_comment_waiting_message"><?php _e('Your comment is awaiting moderation', BWG()->prefix); ?></p>
+								<p class="bwg_comment_waiting_message"><?php _e('Your comment is awaiting moderation', 'photo-gallery'); ?></p>
 								<input id="ajax_task" name="ajax_task" type="hidden" value="" />
 								<input id="image_id" name="image_id" type="hidden" value="<?php echo esc_attr($image_id); ?>" />
 								<input id="comment_id" name="comment_id" type="hidden" value="" />
@@ -1100,16 +1115,16 @@ class BWGViewGalleryBox {
 					</div>
 					<div class="bwg_ecommerce_panel bwg_popup_sidebar_panel bwg_popup_sidebar">
 						<div id="bwg_ecommerce">
-							<p title="<?php echo __('Hide Ecommerce', BWG()->prefix); ?>" class="bwg_ecommerce_close bwg_popup_sidebar_close" >
+							<p title="<?php echo __('Hide Ecommerce', 'photo-gallery'); ?>" class="bwg_ecommerce_close bwg_popup_sidebar_close" >
 								<i class="bwg-icon-arrow-<?php echo $theme_row->lightbox_comment_pos; ?> bwg_ecommerce_close_btn bwg_popup_sidebar_close_btn"></i>
 							</p>
 							<form id="bwg_ecommerce_form" method="post" action="<?php echo esc_url($popup_url); ?>">
 								<div class="pge_add_to_cart">
 									<div>
-										<span class="pge_add_to_cart_title"><?php echo (__('Add to cart', BWG()->prefix)); ?></span>
+										<span class="pge_add_to_cart_title"><?php echo (__('Add to cart', 'photo-gallery')); ?></span>
 									</div>
 									<div>
-										<a href="<?php echo esc_url(get_permalink($options->checkout_page));?>"><?php echo "<span class='products_in_cart'>".esc_html($products_in_cart) ."</span> ". __('items', BWG()->prefix); ?></a>
+										<a href="<?php echo esc_url(get_permalink($options->checkout_page));?>"><?php echo "<span class='products_in_cart'>".esc_html($products_in_cart) ."</span> ". __('items', 'photo-gallery'); ?></a>
 									</div>
 								</div>
 								<div class="bwg_ecommerce_body">
@@ -1117,14 +1132,14 @@ class BWGViewGalleryBox {
 										<li id="manual_li" <?php if(!in_array("manual",$pricelist_sections)) { echo "style='display:none;'"; } ?> class="pge_active">
 											<a href= "#manual">
 												<span class="manualh4" >
-													<?php echo __('Prints and products', BWG()->prefix); ?>
+													<?php echo __('Prints and products', 'photo-gallery'); ?>
 												</span>
 											</a>
 										</li>
 										<li id="downloads_li" <?php if(!in_array("downloads",$pricelist_sections)) echo "style='display:none;'"; ?> >
 											<a href= "#downloads">
 											<span class="downloadsh4" >
-												<?php echo __('Downloads', BWG()->prefix); ?>
+												<?php echo __('Downloads', 'photo-gallery'); ?>
 											</span>
 											</a>
 										</li>
@@ -1134,11 +1149,11 @@ class BWGViewGalleryBox {
 									<div class="manual pge_pricelist" id="manual" <?php if( count($pricelist_sections) == 2  || (count($pricelist_sections) == 1 && end($pricelist_sections) == "manual")) echo 'style="display: block;"'; else echo 'style="display: none;"'; ?>  >
 										<div>
 											<div class="product_manual_price_div">
-												<p><?php echo $pricelist->manual_title ? __('Name', BWG()->prefix).': '.$pricelist->manual_title : "";?></p>
+												<p><?php echo $pricelist->manual_title ? __('Name', 'photo-gallery').': '.$pricelist->manual_title : "";?></p>
                                                <?php if ($pricelist->price) {
                                                  ?>
 												<p>
-													<span><?php echo __('Price', BWG()->prefix).': '.esc_html($options->currency_sign);?></span>
+													<span><?php echo __('Price', 'photo-gallery').': '.esc_html($options->currency_sign);?></span>
 													<span class="_product_manual_price"><?php echo number_format((float)$pricelist->price,2)?></span>
 												</p>
                                                   <?php
@@ -1149,7 +1164,7 @@ class BWGViewGalleryBox {
                                           ?>
 											<div class="product_manual_desc_div">
 												<p>
-													<span><?php echo __('Description', BWG()->prefix);?>:</span>
+													<span><?php echo __('Description', 'photo-gallery');?>:</span>
 													<span class="product_manual_desc"><?php echo esc_html($pricelist->manual_description);?></span>
 												</p>
 											</div>
@@ -1158,13 +1173,13 @@ class BWGViewGalleryBox {
                                               ?>
 											<div class="image_count_div">
 												<p>
-													<?php echo __('Count', BWG()->prefix).': ';?>
+													<?php echo __('Count', 'photo-gallery').': ';?>
 													<input type="number" min="1" class="image_count" value="1" onchange="changeMenualTotal(this);">
 												</p>
 											</div>
 											<?php if ( empty($parameters) == false ) { ?>
 											<div class="image_parameters">
-												<p><?php //echo __('Parameters', BWG()->prefix); ?></p>
+												<p><?php //echo __('Parameters', 'photo-gallery'); ?></p>
 												<?php
 													$i = 0;
 													foreach($parameters as $parameter_id => $parameter){
@@ -1238,7 +1253,7 @@ class BWGViewGalleryBox {
 											</div>
 											<?php } ?>
 											<p>
-												<span><b><?php echo __('Total', BWG()->prefix).': '.esc_html($options->currency_sign);?></b></span>
+												<span><b><?php echo __('Total', 'photo-gallery').': '.esc_html($options->currency_sign);?></b></span>
 												<b><span class="product_manual_price" data-price="<?php echo esc_attr($pricelist->price); ?>" data-actual-price="<?php echo esc_attr($pricelist->price); ?>"><?php echo number_format((float)$pricelist->price,2)?></span></b>
 											</p>
 										</div>
@@ -1248,10 +1263,10 @@ class BWGViewGalleryBox {
 										<table>
 											<thead>
 												<tr>
-													<th><?php echo __('Name', BWG()->prefix); ?></th>
-													<th><?php echo __('Dimensions', BWG()->prefix); ?></th>
-													<th><?php echo __('Price', BWG()->prefix); ?></th>
-												  <th><?php echo __('Choose', BWG()->prefix); ?></th>
+													<th><?php echo __('Name', 'photo-gallery'); ?></th>
+													<th><?php echo __('Dimensions', 'photo-gallery'); ?></th>
+													<th><?php echo __('Price', 'photo-gallery'); ?></th>
+												  <th><?php echo __('Choose', 'photo-gallery'); ?></th>
 												</tr>
 											</thead>
 											<tbody>
@@ -1282,15 +1297,15 @@ class BWGViewGalleryBox {
 											</tbody>
 										</table>
 										<p>
-											<span><b><?php echo __('Total', BWG()->prefix).': '.esc_html($options->currency_sign);?></b></span>
+											<span><b><?php echo __('Total', 'photo-gallery').': '.esc_html($options->currency_sign);?></b></span>
 											<b><span class="product_downloads_price">0</span></b>
 										</p>
 									</div>
 									</div>
 								</div>
 								<div style="margin-top:10px;">
-									<input type="button" class="bwg_submit" value="<?php echo __('Add to cart', BWG()->prefix); ?>" onclick="onBtnClickAddToCart();">
-									<input type="button" class="bwg_submit" value="<?php echo __('View cart', BWG()->prefix); ?>" onclick="onBtnViewCart()">
+									<input type="button" class="bwg_submit" value="<?php echo __('Add to cart', 'photo-gallery'); ?>" onclick="onBtnClickAddToCart();">
+									<input type="button" class="bwg_submit" value="<?php echo __('View cart', 'photo-gallery'); ?>" onclick="onBtnViewCart()">
 									&nbsp;<span class="add_to_cart_msg"></span>
 								</div>
 								<input id="ajax_task" name="ajax_task" type="hidden" value="" />
@@ -1337,7 +1352,7 @@ class BWGViewGalleryBox {
       'bwg_image_effect'                      => $params['popup_effect'],
       'enable_image_filmstrip'                => $params['popup_enable_filmstrip'],
       'gallery_id'                            => $gallery_id,
-      'site_url'                              => BWG()->upload_url,
+      'site_url'                              => esc_url(BWG()->upload_url),
       'lightbox_comment_width'                => $theme_row->lightbox_comment_width,
       'watermark_width'                       => $params['watermark_width'],
       'image_width'                           => $params['popup_width'],
@@ -1349,7 +1364,11 @@ class BWGViewGalleryBox {
       'image_filmstrip_width'                 => $image_filmstrip_width,
       'image_filmstrip_height'                => $image_filmstrip_height,
       'lightbox_info_margin'                  => $theme_row->lightbox_info_margin,
-      'bwg_share_url'                         => add_query_arg(array('curr_url' => urlencode($current_url), 'image_id' => ''), WDWLibrary::get_share_page()),
+      'bwg_share_url'                         => add_query_arg(array(
+                                                                 'gallery_id' => $gallery_id,
+                                                                 'image_id' => '',
+                                                                 'curr_url' => $current_url,
+                                                               ), WDWLibrary::get_share_page()),
       'bwg_share_image_url'                   => urlencode(BWG()->upload_url),
       'slideshow_interval'                    => $params['popup_interval'],
       'open_with_fullscreen'                  => $params['popup_fullscreen'],
@@ -1360,7 +1379,6 @@ class BWGViewGalleryBox {
       'is_pro'                                => BWG()->is_pro,
       'enable_addthis'                        => $params['enable_addthis'],
       'addthis_profile_id'                    => $params['addthis_profile_id'],
-      'share_url'                             => $share_url,
       'current_pos'                           => $current_pos,
       'current_image_key'                     => $current_image_key,
       'slideshow_effect_duration'             => $params['popup_effect_duration'],
@@ -1395,13 +1413,13 @@ class BWGViewGalleryBox {
   public function html_comments_block( $row = array() ) {
     ob_start();
 	?>
-	<div id="bwg_comment_block_<?php echo sanitize_html_class($row->id); ?>" class="bwg_single_comment">
+	<div id="bwg_comment_block_<?php echo esc_attr($row->id); ?>" class="bwg_single_comment">
 		<p class="bwg_comment_header_p">
 		  <span class="bwg_comment_header"><?php echo esc_html($row->name); ?></span>
 			<?php if ( current_user_can('manage_options') ) { ?>
 				<i onclick="bwg_remove_comment(<?php echo $row->id; ?>); return false;"
 					ontouchend="bwg_remove_comment(<?php echo $row->id; ?>); return false;"
-					title="<?php _e('Delete Comment', BWG()->prefix); ?>" class="bwg-icon-times bwg_comment_delete_btn"></i>
+					title="<?php _e('Delete Comment', 'photo-gallery'); ?>" class="bwg-icon-times bwg_comment_delete_btn"></i>
 			<?php } ?>
 		  <span class="bwg_comment_date"><?php echo esc_html($row->date); ?></span>
 		</p>

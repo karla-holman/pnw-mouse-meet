@@ -66,7 +66,7 @@
     <!-- The Content -->
     <a name="description"></a>
     <?php if( get_the_content() ): ?>
-      <div class="color-background gray" style="background-color: rgba();">
+      <div class="color-background gray" style="background-color: #EEEEEE;">
         <div class="container page-section">
           <div class="row">
             <div class="card mouse-meet">

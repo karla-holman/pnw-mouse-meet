@@ -567,7 +567,12 @@ div.wpforms-container-full .wpforms-form .wpforms-page-button:active {
 
 .event-card, .resource-card {
   height: 100%;
+
+  @media(min-width: map-get($grid-breakpoints, md)) {
+    margin-bottom: 30px;
+  }
 }
+
 
 // Popover
 .popover-header {
@@ -758,7 +763,7 @@ div.tinkerbell {
   }
 }
 
-@include media-breakpoint-down(sm) {
+@include media-breakpoint-down(xs) {
   [class*="col-"]:not(:first-child){
       margin-top: 30px;
   }

@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Number text field.
  *
@@ -34,9 +38,10 @@ class WPForms_Field_Number extends WPForms_Field {
 		 */
 
 		// Options open markup.
-		$args = array(
+		$args = [
 			'markup' => 'open',
-		);
+		];
+
 		$this->field_option( 'basic-options', $field, $args );
 
 		// Label.
@@ -49,9 +54,10 @@ class WPForms_Field_Number extends WPForms_Field {
 		$this->field_option( 'required', $field );
 
 		// Options close markup.
-		$args = array(
+		$args = [
 			'markup' => 'close',
-		);
+		];
+
 		$this->field_option( 'basic-options', $field, $args );
 
 		/*
@@ -98,13 +104,14 @@ class WPForms_Field_Number extends WPForms_Field {
 	public function field_preview( $field ) {
 
 		// Define data.
-		$placeholder = ! empty( $field['placeholder'] ) ? $field['placeholder'] : '';
+		$placeholder   = ! empty( $field['placeholder'] ) ? $field['placeholder'] : '';
+		$default_value = ! empty( $field['default_value'] ) ? $field['default_value'] : '';
 
 		// Label.
 		$this->field_preview_option( 'label', $field );
 
 		// Primary input.
-		echo '<input type="text" placeholder="' . esc_attr( $placeholder ) . '" class="primary-input" readonly>';
+		echo '<input type="text" placeholder="' . esc_attr( $placeholder ) . '" value="' . esc_attr( $default_value ) . '" class="primary-input" readonly>';
 
 		// Description.
 		$this->field_preview_option( 'description', $field );
@@ -153,12 +160,19 @@ class WPForms_Field_Number extends WPForms_Field {
 			empty( $value ) &&
 			! is_numeric( $value )
 		) {
-			wpforms()->process->errors[ $form_id ][ $field_id ] = wpforms_get_required_label();
+			wpforms()->get( 'process' )->errors[ $form_id ][ $field_id ] = wpforms_get_required_label();
 		}
 
 		// Check if value is numeric.
 		if ( ! empty( $value ) && ! is_numeric( $value ) ) {
-			wpforms()->process->errors[ $form_id ][ $field_id ] = apply_filters( 'wpforms_valid_number_label', esc_html__( 'Please enter a valid number.', 'wpforms-lite' ) );
+			/**
+			 * Filter the error message for the number field.
+			 *
+			 * @since 1.0.0
+			 *
+			 * @param string $message Error message.
+			 */
+			wpforms()->get( 'process' )->errors[ $form_id ][ $field_id ] = apply_filters( 'wpforms_valid_number_label', esc_html__( 'Please enter a valid number.', 'wpforms-lite' ) ); // phpcs:ignore WPForms.PHP.ValidateHooks.InvalidHookName
 		}
 	}
 
@@ -177,12 +191,12 @@ class WPForms_Field_Number extends WPForms_Field {
 		$name = ! empty( $form_data['fields'][ $field_id ]['label'] ) ? $form_data['fields'][ $field_id ]['label'] : '';
 
 		// Set final field details.
-		wpforms()->process->fields[ $field_id ] = array(
+		wpforms()->get( 'process' )->fields[ $field_id ] = [
 			'name'  => sanitize_text_field( $name ),
 			'value' => $this->sanitize_value( $field_submit ),
 			'id'    => absint( $field_id ),
 			'type'  => $this->type,
-		);
+		];
 	}
 
 	/**

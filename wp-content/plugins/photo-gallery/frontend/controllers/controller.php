@@ -90,13 +90,15 @@ class BWGControllerSite {
       $params['showthumbs_name'] = $params['show_album_name'];
       if ($params['album_view_type'] == 'album') { // Album in album.
         $from = (isset($params['from']) ? esc_html($params['from']) : 0);
-        $album_row = $this->model->get_album_row_data($params['album_gallery_id'], $from === "widget");
+        $album_row = $this->model->get_album_row_data($params['album_gallery_id'], $from === "widget", $bwg);
         $params['album_row'] = $album_row;
         if (isset($album_row->published) && $album_row->published == 0) {
           return;
         }
         if (!$params['album_row']) {
-          echo WDWLibrary::message(__('There is no album selected or the gallery was deleted.', BWG()->prefix), 'wd_error');
+          if ('xml_sitemap' != $from_shortcode) {
+            echo WDWLibrary::message(__('There is no album selected or the gallery was deleted.', 'photo-gallery'), 'wd_error');
+          }
           return;
         }
         if ('xml_sitemap' == $from_shortcode) {
@@ -108,15 +110,9 @@ class BWGControllerSite {
         $params['show_sort_images'] = FALSE;
         $params['show_tag_box'] = FALSE;
         $params['gallery_id'] = 0;
-        if ($params['gallery_view_type'] == 'slideshow') {
-          $params['gallery_type'] = 'slideshow';
-        } elseif ($params['gallery_view_type'] == 'image_browser') {
-          $params['gallery_type'] = 'image_browser';
+
+        if ($params['gallery_view_type'] == 'image_browser') {
           $params['pagination_default_style'] = 1;
-        } elseif ($params['gallery_view_type'] == 'blog_style') {
-          $params['gallery_type'] = 'blog_style';
-        } elseif ($params['gallery_view_type'] == 'carousel') {
-          $params['gallery_type'] = 'carousel';
         }
         if ( $params['gallery_type'] == 'album_compact_preview' && isset($params['compuct_album_image_thumb_width']) ) { // Compact album view.
           $params['image_enable_page'] = $params['compuct_album_enable_page'];
@@ -202,6 +198,8 @@ class BWGControllerSite {
           $params['slideshow_music_url'] = BWG()->options->slideshow_audio_url;
           $params['slideshow_effect_duration'] = BWG()->options->slideshow_effect_duration;
           $params['slideshow_gallery_download'] = BWG()->options->slideshow_gallery_download;
+          $params['slideshow_thumbnails_count'] = BWG()->options->slideshow_thumbnails_count;
+          $params['slideshow_filmstrip_type'] = BWG()->options->slideshow_filmstrip_type  ;
           $params['image_column_number'] = 0;
           $params['images_per_page'] = 0;
         }
@@ -284,7 +282,9 @@ class BWGControllerSite {
         $gallery_row = $this->model->get_gallery_row_data($params['gallery_id']);
 
         if (empty($gallery_row) && $params['type'] == '' && $params["tag"] == 0) {
-          echo WDWLibrary::message(__('There is no gallery selected or the gallery was deleted.', BWG()->prefix), 'wd_error');
+          if ('xml_sitemap' != $from_shortcode) {
+            echo WDWLibrary::message(__('There is no gallery selected or the gallery was deleted.', 'photo-gallery'), 'wd_error');
+          }
           return;
         } else {
           $params['gallery_row'] = $gallery_row;
@@ -312,13 +312,18 @@ class BWGControllerSite {
       $params['album_gallery_id'] = 0;
       $params['container_id'] = 'bwg_' . $params['gallery_type'] . '_' . $bwg;
       $params['cur_alb_gal_id'] = 0;
+      if (  WDWLibrary::get("album_gallery_id_".$bwg, '') != 0 && WDWLibrary::get("type_".$bwg, '') == 'gallery' ) {
+        $params['gallery_id'] = WDWLibrary::get("album_gallery_id_".$bwg);
+      }
       $gallery_row = $this->model->get_gallery_row_data($params['gallery_id']);
 
       if (!empty($gallery_row) && isset($gallery_row->published) && $gallery_row->published == 0) {
         return;
       }
       if (empty($gallery_row) && $params['type'] == '' && $params["tag"] == 0) {
-        echo WDWLibrary::message(__('There is no gallery selected or the gallery was deleted.', BWG()->prefix), 'wd_error');
+        if ('xml_sitemap' != $from_shortcode) {
+          echo WDWLibrary::message(__('There is no gallery selected or the gallery was deleted.', 'photo-gallery'), 'wd_error');
+        }
         return;
       } else {
         $params['gallery_row'] = $gallery_row;
@@ -333,6 +338,9 @@ class BWGControllerSite {
         $params['load_more_image_count'] = 1;
       }
       if ($params['gallery_type'] == 'blog_style') {
+        if ( !BWG()->is_pro ) {
+          $params['popup_enable_comment'] = FALSE;
+        }
         $params['image_enable_page'] = $params['blog_style_enable_page'];
         $params['images_per_page'] = $params['blog_style_images_per_page'];
         $params['load_more_image_count'] = (isset($params['blog_style_load_more_image_count']) && ($params['image_enable_page'] == 2)) ? $params['blog_style_load_more_image_count'] : $params['images_per_page'];
@@ -357,8 +365,13 @@ class BWGControllerSite {
     }
 
     if ( !isset( $params['current_url'] ) ) {
-      $params['current_url'] = trim((is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+      $params['current_url'] = isset($_SERVER['REQUEST_URI']) ? sanitize_url($_SERVER['REQUEST_URI']) : '';
     }
+    $need_scroll = 0;
+    if( BWG()->options->front_ajax == "1" && (WDWLibrary::get('bwg_search_' . $bwg) != '' || WDWLibrary::get('filter_tag_' . $bwg) != "" || WDWLibrary::get("album_gallery_id_".$bwg) != "" || WDWLibrary::get("page_number_".$bwg)) != "" ) {
+      $need_scroll = 1;
+    }
+    $params['need_scroll'] = $need_scroll;
 
     $params_array = array(
       'action' => 'GalleryBox',

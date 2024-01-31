@@ -103,7 +103,7 @@ class ViewSettingsGeneral extends AbstractViewSettings {
         $table        = new ContainerTable($form->getContainer(), 'general-wordpress', n2_('WordPress settings'));
         $rowWordPress = $table->createRow('general-wordpress-1');
 
-        new OnOff($rowWordPress, 'editor-icon', n2_('Show editor icon'), 1);
+        new OnOff($rowWordPress, 'editor-icon', n2_('Show button in TinyMCE editor'), 1);
 
         new OnOff($rowWordPress, 'wp-adminbar', n2_('Show in admin bar'), 1);
 
@@ -178,7 +178,7 @@ class ViewSettingsGeneral extends AbstractViewSettings {
             'tipDescription' => n2_('The new URL you want to use. E.g. https://newsite.com')
         ));
 
-        echo $form->render();
+        $form->render();
 
         echo '<input name="namespace" value="default" type="hidden">';
     }

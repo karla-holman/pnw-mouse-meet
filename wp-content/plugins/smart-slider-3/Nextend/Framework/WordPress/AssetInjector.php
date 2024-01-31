@@ -24,19 +24,31 @@ class AssetInjector {
 
     private $headTokens = array();
 
-    protected function init() {
+    private $useAlternativeAction = false;
 
-        $this->outputBuffer = OutputBuffer::getInstance();
-        if (defined('SMART_SLIDER_OB_START') && SMART_SLIDER_OB_START >= 0) {
-            $this->outputBuffer->setExtraObStart(SMART_SLIDER_OB_START);
+    protected function init() {
+        if (is_admin()) {
+            $this->useAlternativeAction = true;
         }
 
-        $this->addInjectCSSComment();
 
-        add_filter('wordpress_prepare_output', array(
-            $this,
-            'prepareOutput'
-        ));
+        if (defined('WP_CLI') && WP_CLI) {
+            //Do not start output buffering while WP_CLI active
+
+        } else {
+
+            $this->outputBuffer = OutputBuffer::getInstance();
+            if (defined('SMART_SLIDER_OB_START') && SMART_SLIDER_OB_START >= 0) {
+                $this->outputBuffer->setExtraObStart(SMART_SLIDER_OB_START);
+            }
+
+            $this->addInjectCSSComment();
+
+            add_filter('wordpress_prepare_output', array(
+                $this,
+                'prepareOutput'
+            ));
+        }
     }
 
     public function prepareOutput($buffer) {
@@ -145,25 +157,49 @@ class AssetInjector {
     }
 
     public function addInjectCSSComment() {
-
-        add_action('wp_print_scripts', array(
-            $this,
-            'injectCSSComment'
-        ));
+        if (!$this->useAlternativeAction) {
+            add_action('wp_print_scripts', array(
+                $this,
+                'injectCSSComment'
+            ));
+        } else {
+            /**
+             * @see SSDEV-3909
+             * The Site editor fires the wp_print_scripts action inside a the wp.editSite.initializeEditor script.
+             * The Widgets editor fires the wp_print_scripts action inside a the wp.editWidgets.initialize script.
+             * The Customizer fires the wp_print_scripts action inside a the wp.customizeWidgets.initialize script.
+             */
+            add_action('admin_head', array(
+                $this,
+                'injectCSSComment'
+            ));
+        }
     }
 
     public function removeInjectCSSComment() {
-
-        remove_action('wp_print_scripts', array(
-            $this,
-            'injectCSSComment'
-        ));
+        if (!$this->useAlternativeAction) {
+            remove_action('wp_print_scripts', array(
+                $this,
+                'injectCSSComment'
+            ));
+        } else {
+            /**
+             * @see SSDEV-3909
+             * The Site editor fires the wp_print_scripts action inside a the wp.editSite.initializeEditor script.
+             * The Widgets editor fires the wp_print_scripts action inside a the wp.editWidgets.initialize script.
+             * The Customizer fires the wp_print_scripts action inside a the wp.customizeWidgets.initialize script.
+             */
+            remove_action('admin_head', array(
+                $this,
+                'injectCSSComment'
+            ));
+        }
     }
 
     public function injectCSSComment() {
         static $once;
         if (!$once) {
-            echo self::$cssComment;
+            echo wp_kses(self::$cssComment, array());
             $once = true;
         }
     }

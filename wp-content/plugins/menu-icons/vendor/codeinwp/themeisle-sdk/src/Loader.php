@@ -55,7 +55,10 @@ final class Loader {
 		'review',
 		'recommendation',
 		'notification',
-
+		'promotions',
+		'welcome',
+		'compatibilities',
+		'about_us',
 	];
 
 	/**

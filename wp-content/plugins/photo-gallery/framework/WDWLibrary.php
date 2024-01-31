@@ -1,7 +1,6 @@
 <?php
 
 class WDWLibrary {
-
   public static $shortcode_ids = array();
 
   public static $thumb_dimansions;
@@ -9,66 +8,90 @@ class WDWLibrary {
   /**
    * Get request value.
    *
-   * @param string $key
-   * @param string $default_value
-   * @param string $callback
+   * @param $key
+   * @param $default_value
+   * @param $callback
+   * @param $type
    *
-   * @return string|array
+   * @return array|bool|mixed|string|null
    */
   public static function get($key, $default_value = '', $callback = 'sanitize_text_field', $type = 'DEFAULT') {
     switch ($type) {
       case 'REQUEST' :
         if (isset($_REQUEST[$key])) {
-          $value = $_REQUEST[$key];
+          if ( is_bool($_REQUEST[$key]) ) {
+            return rest_sanitize_boolean($_REQUEST[$key]);
+          }
+          elseif (is_array($_REQUEST[$key])) {
+            $value = array();
+            foreach ($_REQUEST[$key] as $valKey => $val) {
+              $value[$valKey] = self::validate_data($val, $callback);
+            }
+          }
+          else {
+            $value = self::validate_data($_REQUEST[$key], $callback);
+          }
         }
         break;
       case 'DEFAULT' :
       case 'POST' :
-        if (isset($_POST[$key])) {
-          $value = $_POST[$key];
+        if ( isset($_POST[$key]) ) {
+          if ( is_bool($_POST[$key]) ) {
+            return rest_sanitize_boolean($_POST[$key]);
+          }
+          elseif ( is_array($_POST[$key]) ) {
+            $value = array();
+            foreach ( $_POST[$key] as $valKey => $val ) {
+              $value[$valKey] = self::validate_data($val, $callback);
+            }
+          }
+          else {
+            $value = self::validate_data($_POST[$key], $callback);
+          }
         }
         if ( 'POST' === $type ) break;
       case 'GET' :
         if (isset($_GET[$key])) {
-          $value = $_GET[$key];
+          if ( is_bool($_GET[$key]) ) {
+            return rest_sanitize_boolean($_GET[$key]);
+          }
+          elseif ( is_array($_GET[$key]) ) {
+            $value = array();
+            foreach ( $_GET[$key] as $valKey => $val ) {
+              $value[$valKey] = self::validate_data($val, $callback);
+            }
+          }
+          else {
+            $value = self::validate_data($_GET[$key], $callback);
+          }
         }
         break;
     }
+
     if ( !isset($value) ) {
-      if( $default_value === NULL ) {
+      if ( $default_value === NULL ) {
         return NULL;
       } else {
         $value = $default_value;
       }
     }
 
-    if ( is_bool($value) ) {
-      return $value;
-    }
-
-    if (is_array($value)) {
-      // $callback should be third parameter of the validate_data function, so there is need to add unused second parameter to validate_data function.
-      array_walk_recursive($value, array('self', 'validate_data'), $callback);
-    }
-    else {
-      self::validate_data($value, 0, $callback);
-    }
-
     return $value;
   }
 
   /**
-   * Validate data.
-   *
    * @param $value
-   * @param $key
    * @param $callback
+   *
+   * @return mixed|string
    */
-  private static function validate_data(&$value, $key, $callback) {
+  private static function validate_data($value, $callback) {
     $value = stripslashes($value);
     if ( $callback && function_exists($callback) ) {
       $value = $callback($value);
     }
+
+    return $value;
   }
 
   /**
@@ -84,172 +107,177 @@ class WDWLibrary {
     if ($message_id) {
       switch($message_id) {
         case 1: {
-          $message = __('Item successfully saved.', BWG()->prefix);
+          $message = __('Item successfully saved.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 2: {
-          $message = __('Failed.', BWG()->prefix);
+          $message = __('Failed.', 'photo-gallery');
           $type = 'error';
           break;
 
         }
         case 3: {
-          $message = __('Item successfully deleted.', BWG()->prefix);
+          $message = __('Item successfully deleted.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 4: {
-          $message = __("You can't delete default theme.", BWG()->prefix);
+          $message = __("You can't delete default theme.", 'photo-gallery');
           $type = 'error';
           break;
 
         }
         case 5: {
-          $message = __('Items successfully deleted.', BWG()->prefix);
+          $message = __('Items successfully deleted.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 6: {
-          $message = __('You must set watermark type from Options page.', BWG()->prefix);
+          $message = __('You must set watermark type from Options page.', 'photo-gallery');
           $type = 'wd_error';
           break;
 
         }
         case 7: {
-          $message = __('The item is successfully set as default.', BWG()->prefix);
+          $message = __('The item is successfully set as default.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 8: {
-          $message = __('Options successfully saved.', BWG()->prefix);
+          $message = __('Options successfully saved.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 9: {
-          $message = __('Item successfully published.', BWG()->prefix);
+          $message = __('Item successfully published.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 10: {
-          $message = __('Item successfully unpublished.', BWG()->prefix);
+          $message = __('Item successfully unpublished.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 11: {
-          $message = __('Item successfully duplicated.', BWG()->prefix);
+          $message = __('Item successfully duplicated.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 12: {
           // ToDO: delete
-          $message = __('Items successfully unpublished.', BWG()->prefix);
+          $message = __('Items successfully unpublished.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 13: {
-          $message = __('Ordering successfully saved.', BWG()->prefix);
+          $message = __('Ordering successfully saved.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 14: {
-          $message = __('A term with the name provided already exists.', BWG()->prefix);
+          $message = __('A term with the name provided already exists.', 'photo-gallery');
           $type = 'error';
           break;
 
         }
         case 15: {
-          $message = __('Name field is required.', BWG()->prefix);
+          $message = __('Name field is required.', 'photo-gallery');
           $type = 'error';
           break;
 
         }
         case 16: {
-          $message = __('The slug must be unique.', BWG()->prefix);
+          $message = __('The slug must be unique.', 'photo-gallery');
           $type = 'error';
           break;
 
         }
         case 17: {
-          $message = __('Changes must be saved.', BWG()->prefix);
+          $message = __('Changes must be saved.', 'photo-gallery');
           $type = 'error';
           break;
 
         }
          case 18: {
-          $message = __('Theme successfully copied.', BWG()->prefix);
+          $message = __('Theme successfully copied.', 'photo-gallery');
           $type = 'updated';
           break;
 
         }
         case 19: {
-          $message = __('Failed.', BWG()->prefix);
+          $message = __('Failed.', 'photo-gallery');
           $type = 'error';
           break;
         }
         case 20: {
-          $message = __('Items were reset successfully.', BWG()->prefix);
+          $message = __('Items were reset successfully.', 'photo-gallery');
           $type = 'updated';
           break;
         }
         case 21: {
-          $message = __('Watermark successfully set.', BWG()->prefix);
+          $message = __('Watermark successfully set.', 'photo-gallery');
           $type = 'updated';
           break;
         }
         case 22: {
-          $message = __('Items successfully rotated.', BWG()->prefix);
+          $message = __('Items successfully rotated.', 'photo-gallery');
           $type = 'updated';
           break;
         }
         case 23: {
-          $message = __('Items successfully recreated.', BWG()->prefix);
+          $message = __('Items successfully recreated.', 'photo-gallery');
           $type = 'updated';
           break;
         }
         case 24: {
-          $message = __('Items successfully resized.', BWG()->prefix);
+          $message = __('Items successfully resized.', 'photo-gallery');
           $type = 'updated';
           break;
         }
         case 25: {
-          $message = __('Items successfully edited.', BWG()->prefix);
+          $message = __('Items successfully edited.', 'photo-gallery');
           $type = 'updated';
           break;
         }
 		    case 26: {
-          $message = __('Watermark could not be set. The image URL is incorrect.', BWG()->prefix);
+          $message = __('Watermark could not be set. The image URL is incorrect.', 'photo-gallery');
           $type = 'error';
           break;
         }
         case 27: {
-          $message = __('http:// wrapper is disabled in the server configuration by allow_url_fopen=0.', BWG()->prefix);
+          $message = __('http:// wrapper is disabled in the server configuration by allow_url_fopen=0.', 'photo-gallery');
           $type = 'error';
           break;
         }
         case 28: {
-          $message = __('All items are successfully duplicated.', BWG()->prefix);
+          $message = __('All items are successfully duplicated.', 'photo-gallery');
           $type = 'updated';
           break;
         }
         case 29: {
-          $message = __('Connected successfully.', BWG()->prefix);
+          $message = __('Connected successfully.', 'photo-gallery');
           $type = 'updated';
           break;
         }
         case 30: {
-          $message = __('Connect successfully deleted.', BWG()->prefix);
+          $message = __('Connect successfully deleted.', 'photo-gallery');
           $type = 'updated';
+          break;
+        }
+        case 31: {
+          $message = __('The webp support should be enabled for GD and/or ImageMagick.', 'photo-gallery');
+          $type = 'error';
           break;
         }
         default: {
@@ -260,7 +288,8 @@ class WDWLibrary {
     }
     if ($message) {
       ob_start();
-      ?><div class="<?php echo esc_html($type); ?> inline">
+      ?>
+      <div class="<?php echo esc_html($type); ?> inline">
       <p>
         <strong><?php echo esc_html($message); ?></strong>
       </p>
@@ -297,9 +326,9 @@ class WDWLibrary {
     $order = (($orderby == $id) && ($order == 'asc')) ? 'desc' : 'asc';
     ob_start();
     ?>
-    <th id="order-<?php echo sanitize_html_class($id); ?>" class="<?php echo esc_html(implode(' ', $class)); ?>">
+    <th id="order-<?php echo esc_attr($id); ?>" class="<?php echo esc_html(implode(' ', $class)); ?>">
       <a href="<?php echo esc_url(add_query_arg( array('orderby' => $id, 'order' => $order), $page_url )); ?>"
-         title="<?php _e('Click to sort by this item', BWG()->prefix); ?>">
+         title="<?php _e('Click to sort by this item', 'photo-gallery'); ?>">
         <span><?php echo esc_html($text); ?></span><span class="sorting-indicator"></span>
       </a>
     </th>
@@ -314,13 +343,13 @@ class WDWLibrary {
    */
   public static function admin_images_ordering_choices() {
     return array(
-      'order_asc' => __('Default sorting', BWG()->prefix),
-      'filename_asc' => __('File name (Asc)', BWG()->prefix),
-      'filename_desc' => __('File name (Desc)', BWG()->prefix),
-      'alt_asc' => __('Alt/Title (Asc)', BWG()->prefix),
-      'alt_desc' => __('Alt/Title (Desc)', BWG()->prefix),
-      'description_asc' => __('Description (Asc)', BWG()->prefix),
-      'description_desc' => __('Description (Desc)', BWG()->prefix),
+      'order_asc' => __('Default sorting', 'photo-gallery'),
+      'filename_asc' => __('File name (Asc)', 'photo-gallery'),
+      'filename_desc' => __('File name (Desc)', 'photo-gallery'),
+      'alt_asc' => __('Alt/Title (Asc)', 'photo-gallery'),
+      'alt_desc' => __('Alt/Title (Desc)', 'photo-gallery'),
+      'description_asc' => __('Description (Asc)', 'photo-gallery'),
+      'description_desc' => __('Description (Desc)', 'photo-gallery'),
     );
   }
 
@@ -378,8 +407,8 @@ class WDWLibrary {
         <input type="text" id="search_value" name="search_value" class="spider_search_value" onkeypress="return check_search_key(event, this);" value="<?php echo esc_attr($search_value); ?>" style="width: 150px;margin-right:<?php echo $margin_right; ?>px; padding-top:10px; <?php echo (get_bloginfo('version') > '3.7') ? ' height: 33px;' : ''; ?>" />
       </div>
       <div class="alignleft actions">
-        <input type="button" value="" title="<?php _e('Search',BWG()->prefix); ?>" onclick="spider_search()" class="wd-search-btn action">
-        <input type="button" value="" title="<?php _e('Reset',BWG()->prefix); ?>" onclick="spider_reset()" class="wd-reset-btn action">
+        <input type="button" value="" title="<?php _e('Search', 'photo-gallery'); ?>" onclick="spider_search()" class="wd-search-btn action">
+        <input type="button" value="" title="<?php _e('Reset', 'photo-gallery'); ?>" onclick="spider_reset()" class="wd-reset-btn action">
       </div>
     </div>
     <?php
@@ -455,7 +484,7 @@ class WDWLibrary {
       <span class="displaying-num">
         <?php
         if ($count_items != 0) {
-          printf(_n('%s item', '%s items', $count_items, BWG()->prefix), $count_items);
+          printf(_n('%s item', '%s items', $count_items, 'photo-gallery'), $count_items);
         }
         ?>
       </span>
@@ -484,7 +513,7 @@ class WDWLibrary {
         <span class="paging-input">
           <span class="total-pages">
           <input class="current_page" id="current_page" name="current_page" value="<?php echo esc_attr($page_number); ?>" onkeypress="return check_enter_key(event, this)" title="Go to the page" type="text" size="1" />
-        </span> <?php echo __('of', BWG()->prefix); ?>
+        </span> <?php echo __('of', 'photo-gallery'); ?>
         <span class="total-pages">
             <?php echo esc_html($items_county); ?>
           </span>
@@ -530,8 +559,8 @@ class WDWLibrary {
         <input type="text" id="search_value" name="search_value" class="spider_search_value" onkeypress="return check_search_key(event, this);" value="<?php echo esc_attr($search_value); ?>" style="width: 150px;margin-right:5px;<?php echo (get_bloginfo('version') > '3.7') ? ' height: 33px;' : ''; ?>" />
       </div>
       <div class="alignleft actions">
-        <input type="button" value="" title="<?php echo __('Search',BWG()->prefix); ?>" onclick="spider_search()" class="wd-search-btn action">
-        <input type="button" value="" title="<?php echo __('Reset',BWG()->prefix); ?>" onclick="spider_reset()" class="wd-reset-btn action">
+        <input type="button" value="" title="<?php echo __('Search', 'photo-gallery'); ?>" onclick="spider_search()" class="wd-search-btn action">
+        <input type="button" value="" title="<?php echo __('Reset', 'photo-gallery'); ?>" onclick="spider_reset()" class="wd-reset-btn action">
       </div>
     </div>
     <?php
@@ -581,7 +610,7 @@ class WDWLibrary {
           default:
             document.getElementById('page_number').value = 1;
         }
-        spider_ajax_save('<?php echo $form_id; ?>');
+        spider_ajax_save('<?php echo esc_html($form_id); ?>');
       }
       function check_enter_key(e, that) {
         if ( e.key == 'Enter' ) { /*Enter keycode*/
@@ -591,7 +620,7 @@ class WDWLibrary {
           else {
            document.getElementById('page_number').value = jQuery(that).val();
           }
-          spider_ajax_save('<?php echo $form_id; ?>');
+          spider_ajax_save('<?php echo esc_html($form_id); ?>');
           return false;
         }
        return true;		 
@@ -602,7 +631,7 @@ class WDWLibrary {
       <span class="displaying-num">
         <?php
         if ($count_items != 0) {
-          printf(_n('%s item', '%s items', $count_items, BWG()->prefix), $count_items);
+          printf(_n('%s item', '%s items', $count_items, 'photo-gallery'), $count_items);
         }
         ?>
       </span>
@@ -631,7 +660,7 @@ class WDWLibrary {
         <span class="paging-input">
           <span class="total-pages">
           <input class="current_page" id="current_page" name="current_page" value="<?php echo esc_attr($page_number); ?>" onkeypress="return check_enter_key(event, this)" title="Go to the page" type="text" size="1" />
-        </span> <?php echo __('of', BWG()->prefix); ?>
+        </span> <?php echo __('of', 'photo-gallery'); ?>
         <span class="total-pages">
             <?php echo esc_html($items_county); ?>
           </span>
@@ -719,8 +748,8 @@ class WDWLibrary {
 
   public static function get_share_page() {
     $share_page = get_posts(array('post_type' => 'bwg_share'));
-    if ($share_page) {
-      return get_permalink(current($share_page));
+    if ( $share_page ) {
+      $share_page = current($share_page);
     }
     else {
       $bwg_post_args = array(
@@ -729,24 +758,9 @@ class WDWLibrary {
         'post_type' => 'bwg_share'
       );
       $share_page = wp_insert_post($bwg_post_args);
-      return get_permalink($share_page);
     }
-  }
 
-  public static function esc_script($method = '', $index = '', $default = '', $type = 'string') {
-    if ($method == 'post') {
-      $escaped_value = ((isset($_POST[$index]) && preg_match("/^[A-Za-z0-9_]+$/", $_POST[$index])) ? esc_js($_POST[$index]) : $default);
-    }
-    elseif ($method == 'get') {
-      $escaped_value = ((isset($_GET[$index]) && preg_match("/^[A-Za-z0-9_]+$/", $_GET[$index])) ? esc_js($_GET[$index]) : $default);
-    }
-    else {
-      $escaped_value = (preg_match("/^[a-zA-Z0-9]", $index) ? esc_js($index) : $default);
-    }
-    if ($type == 'int') {
-      $escaped_value = (int) $escaped_value;
-    }
-    return $escaped_value;
+    return get_permalink($share_page);
   }
 
   public static function get_google_fonts() {
@@ -1241,7 +1255,6 @@ class WDWLibrary {
     global $wpdb;
     $bwg_search = trim(self::get('bwg_search_' . $bwg));
     $prepareArgs = array();
-
     if ( BWG()->options->front_ajax == "1" ) {
       $sort_by = trim( WDWLibrary::get('sort_by_' . $bwg, $sort_by ) );
       $filter_teg = trim( WDWLibrary::get('filter_tag_' . $bwg) );
@@ -1285,8 +1298,8 @@ class WDWLibrary {
 
     $items_in_page = $images_per_page;
     $limit = 0;
-    $page_number = self::get('page_number_' . $bwg, 0, 'intval');
 
+    $page_number = self::get('page_number_' . $bwg, 0, 'intval');
     if ( !empty($page_number) ) {
       if ( $page_number > 1 ) {
         $items_in_page = $load_more_image_count;
@@ -1298,12 +1311,11 @@ class WDWLibrary {
       $bwg_random_seed = rand();
       $GLOBALS['bwg_random_seed_' . $bwg] = $bwg_random_seed;
     }
-
-    if($gallery_id) {
+    if ( $gallery_id ) {
       $where .= ' AND image.gallery_id = %d ';
       $prepareArgs[] = $gallery_id;
     }
-    if($tag) {
+    if ( $tag ) {
       $where .= ' AND tag.tag_id = %d ';
       $prepareArgs[] = $tag;
     }
@@ -1317,20 +1329,19 @@ class WDWLibrary {
     $join = $tag ? ' LEFT JOIN ' . $wpdb->prefix . 'bwg_image_tag as tag ON image.id=tag.image_id' : '';
 
     $filter_tags_name = self::get($tag_input_name, '', 'esc_sql', 'REQUEST');
-
     if ( $filter_tags_name ) {
+      $join .= ' LEFT JOIN (SELECT GROUP_CONCAT(tag_id order by tag_id SEPARATOR ",") AS tags_combined, image_id FROM  ' . $wpdb->prefix . 'bwg_image_tag' . ($gallery_id ?  $wpdb->prepare(' WHERE gallery_id=%d', $gallery_id) : '') . ' GROUP BY image_id) AS tags ON image.id=tags.image_id';
       if ( !BWG()->options->tags_filter_and_or ) {
         // To find images which have at least one from tags filtered by.
         $compare_sign = "|";
+        $where .= ' AND CONCAT(",", tags.tags_combined, ",") REGEXP ",(' . implode( $compare_sign, $filter_tags_name ) . ')," ';
       }
       else {
         // To find images which have all tags filtered by.
-        // For this case there is need to sort tags by ascending to compare with comma.
-        sort($filter_tags_name);
-        $compare_sign = ",";
+        foreach ( $filter_tags_name as $filter_tag_name ) {
+          $where .= ' AND tags.tags_combined REGEXP "' . $filter_tag_name . '" ';
+        }
       }
-      $join .= ' LEFT JOIN (SELECT GROUP_CONCAT(tag_id order by tag_id SEPARATOR ",") AS tags_combined, image_id FROM  ' . $wpdb->prefix . 'bwg_image_tag' . ($gallery_id ?  $wpdb->prepare(' WHERE gallery_id=%d', $gallery_id) : '') . ' GROUP BY image_id) AS tags ON image.id=tags.image_id';
-      $where .= ' AND CONCAT(",", tags.tags_combined, ",") REGEXP ",(' . implode( $compare_sign, $filter_tags_name ) . ')," ';
     }
 
     $join .= ' LEFT JOIN '. $wpdb->prefix .'bwg_gallery as gallery ON gallery.id = image.gallery_id';
@@ -1392,15 +1403,16 @@ class WDWLibrary {
    *
    * @return int
    */
-  public static function bwg_image_set_watermark( $gallery_id, $image_id = 0, $limit = '' ) {
+  public static function bwg_image_set_watermark( $gallery_id, $image_id = 0, $limit = '', $excludeIds = array() ) {
     global $wpdb;
     $message_id = 21;
     $options = new WD_BWG_Options();
     if ( $options->built_in_watermark_type != 'none' ) {
       $prepareArgs = array();
       $modified_date_prepare_args = array();
+      $where = '`filetype` NOT LIKE "EMBED_OEMBED%"';
       if ( $gallery_id ) {
-          $where = ' `gallery_id`=%d';
+        $where .= ' AND `gallery_id` = %d';
           $prepareArgs[] = $gallery_id;
           $modified_date_prepare_args[] = $gallery_id;
           if ( $image_id ) {
@@ -1408,8 +1420,9 @@ class WDWLibrary {
             $prepareArgs[] = $image_id;
             $modified_date_prepare_args[] = $image_id;
           }
-      } else {
-          $where = 1;
+        if ( !empty($excludeIds) ) {
+          $where .= ' AND `id` NOT IN (' . self::escape_array($excludeIds) . ')';
+        }
       }
       //$where = (($gallery_id) ? ' `gallery_id`=' . $gallery_id . ($image_id ? ' AND `id`=' . $image_id : '') : 1);
       $search = WDWLibrary::get( 's', '' );
@@ -1430,9 +1443,12 @@ class WDWLibrary {
         $prepareArgs[] = $limit;
       }
       if ( empty($prepareArgs) ) {
-          $images = $wpdb->get_results('SELECT * FROM `' . $wpdb->prefix . 'bwg_image` WHERE ' . $where . $limitstart);
-      } else {
-          $images = $wpdb->get_results($wpdb->prepare('SELECT * FROM `' . $wpdb->prefix . 'bwg_image` WHERE ' . $where . $limitstart, $prepareArgs));
+        $query = 'SELECT * FROM `' . $wpdb->prefix . 'bwg_image` WHERE ' . $where . $limitstart;
+        $images = $wpdb->get_results( $query );
+      }
+      else {
+        $query = $wpdb->prepare('SELECT * FROM `' . $wpdb->prefix . 'bwg_image` WHERE ' . $where . $limitstart, $prepareArgs);
+        $images = $wpdb->get_results( $query );
       }
       if ( !empty( $images ) ) {
         switch ( $options->built_in_watermark_type ) {
@@ -1470,14 +1486,12 @@ class WDWLibrary {
   public static function set_text_watermark($original_filename, $dest_filename, $watermark_text, $watermark_font, $watermark_font_size, $watermark_color, $watermark_transparency, $watermark_position) {
     $original_filename = htmlspecialchars_decode($original_filename, ENT_COMPAT | ENT_QUOTES);
     $dest_filename = htmlspecialchars_decode($dest_filename, ENT_COMPAT | ENT_QUOTES);
-
     $watermark_transparency = 127 - ($watermark_transparency * 1.27);
     list($width, $height, $type) = getimagesize($original_filename);
     if( $width == 0 || $height == 0 ) {
       return FALSE;
     }
     $watermark_image = imagecreatetruecolor($width, $height);
-
     $watermark_color = self::bwg_hex2rgb($watermark_color);
     $watermark_color = imagecolorallocatealpha($watermark_image, $watermark_color[0], $watermark_color[1], $watermark_color[2], $watermark_transparency);
     $watermark_font = BWG()->plugin_dir . '/fonts/' . $watermark_font;
@@ -1503,23 +1517,20 @@ class WDWLibrary {
         $left = ($width - $watermark_sizes['width']) / 2;
         break;
     }
-    @ini_set('memory_limit', '-1');
-    if ($type == 2) {
+    if ( $type == 2 ) {
       $image = imagecreatefromjpeg($original_filename);
       imagettftext($image, $watermark_font_size, 0, $left, $top, $watermark_color, $watermark_font, $watermark_text);
       imagejpeg ($image, $dest_filename, BWG()->options->jpeg_quality);
-      imagedestroy($image);
     }
-    elseif ($type == 3) {
+    elseif ( $type == 3 ) {
       $image = imagecreatefrompng($original_filename);
       imagettftext($image, $watermark_font_size, 0, $left, $top, $watermark_color, $watermark_font, $watermark_text);
       imageColorAllocateAlpha($image, 0, 0, 0, 127);
       imagealphablending($image, FALSE);
       imagesavealpha($image, TRUE);
       imagepng($image, $dest_filename, BWG()->options->png_quality);
-      imagedestroy($image);
     }
-    elseif ($type == 1) {
+    elseif ( $type == 1 ) {
       $image = imagecreatefromgif($original_filename);
       imageColorAllocateAlpha($watermark_image, 0, 0, 0, 127);
       imagecopy($watermark_image, $image, 0, 0, 0, 0, $width, $height);
@@ -1527,10 +1538,17 @@ class WDWLibrary {
       imagealphablending($watermark_image, FALSE);
       imagesavealpha($watermark_image, TRUE);
       imagegif($watermark_image, $dest_filename);
-      imagedestroy($image);
     }
+    elseif ( $type == 18 ) {
+      $image = imagecreatefromwebp($original_filename);
+      imageColorAllocateAlpha($image, 0, 0, 0, 127);
+      imagettftext($image, $watermark_font_size, 0, $left, $top, $watermark_color, $watermark_font, $watermark_text);
+      imagealphablending($image, FALSE);
+      imagesavealpha($image, TRUE);
+      imagewebp($image, $dest_filename, BWG()->options->png_quality);
+    }
+    imagedestroy($image);
     imagedestroy($watermark_image);
-    @ini_restore('memory_limit');
     return TRUE;
   }
 
@@ -1539,8 +1557,6 @@ class WDWLibrary {
       $original_filename = htmlspecialchars_decode($original_filename, ENT_COMPAT | ENT_QUOTES);
       $dest_filename = htmlspecialchars_decode($dest_filename, ENT_COMPAT | ENT_QUOTES);
       $watermark_url = htmlspecialchars_decode($watermark_url, ENT_COMPAT | ENT_QUOTES);
-
-      @ini_set('memory_limit', '-1');
       $image_path = pathinfo($original_filename, PATHINFO_EXTENSION);
       /* Return false if image type is svg */
       if( empty($original_filename) ||  empty($watermark_url) || (!empty($original_filename) && $image_path === 'svg') ) {
@@ -1572,14 +1588,17 @@ class WDWLibrary {
           $left = ($width - $watermark_width) / 2;
           break;
       }
-      if ($type_watermark == 2) {
+      if ( $type_watermark == 2 ) {
         $watermark_image = imagecreatefromjpeg($watermark_url);
       }
-      elseif ($type_watermark == 3) {
+      elseif ( $type_watermark == 3 ) {
         $watermark_image = imagecreatefrompng($watermark_url);
       }
-      elseif ($type_watermark == 1) {
+      elseif ( $type_watermark == 1 ) {
         $watermark_image = imagecreatefromgif($watermark_url);
+      }
+      elseif ( $type_watermark == 18 ) {
+        $watermark_image = imagecreatefromwebp($watermark_url);
       }
       else {
         return false;
@@ -1591,54 +1610,58 @@ class WDWLibrary {
       imagealphablending($watermark_image_resized, FALSE);
       imagesavealpha($watermark_image_resized, TRUE);
       imagecopyresampled ($watermark_image_resized, $watermark_image, 0, 0, 0, 0, $watermark_width, $watermark_height, $width_watermark, $height_watermark);
-
-      if ($type == 2) {
+      if ( $type == 2) {
         $image = imagecreatefromjpeg($original_filename);
         imagecopy($image, $watermark_image_resized, $left, $top, 0, 0, $watermark_width, $watermark_height);
         if ($dest_filename <> '') {
-        imagejpeg ($image, $dest_filename, BWG()->options->jpeg_quality);
+          imagejpeg ($image, $dest_filename, BWG()->options->jpeg_quality);
         } else {
-        header('Content-Type: image/jpeg');
-        imagejpeg($image, null, BWG()->options->jpeg_quality);
+          header('Content-Type: image/jpeg');
+          imagejpeg($image, null, BWG()->options->jpeg_quality);
         };
-        imagedestroy($image);
       }
-      elseif ($type == 3) {
+      elseif ( $type == 3 ) {
         $image = imagecreatefrompng($original_filename);
         imagepalettetotruecolor($image);
         imagecopy($image, $watermark_image_resized, $left, $top, 0, 0, $watermark_width, $watermark_height);
         imagealphablending($image, FALSE);
         imagesavealpha($image, TRUE);
         imagepng($image, $dest_filename, BWG()->options->png_quality);
-        imagedestroy($image);
       }
-      elseif ($type == 1) {
+      elseif ( $type == 1 ) {
         $image = imagecreatefromgif($original_filename);
         $tempimage = imagecreatetruecolor($width, $height);
         imagecopy($tempimage, $image, 0, 0, 0, 0, $width, $height);
         imagecopy($tempimage, $watermark_image_resized, $left, $top, 0, 0, $watermark_width, $watermark_height);
         imagegif($tempimage, $dest_filename);
-        imagedestroy($image);
         imagedestroy($tempimage);
       }
+      elseif ( $type == 18 ) {
+        $image = imagecreatefromwebp($original_filename);
+        imagecopy($image, $watermark_image_resized, $left, $top, 0, 0, $watermark_width, $watermark_height);
+        imagealphablending($image, FALSE);
+        imagesavealpha($image, TRUE);
+        imagewebp($image, $dest_filename, BWG()->options->png_quality);
+      }
+      imagedestroy($image);
       imagedestroy($watermark_image);
-      @ini_restore('memory_limit');
     }
   }
 
-  public static function bwg_image_recover_all($gallery_id, $limit = '') {
+  public static function bwg_image_recover_all( $gallery_id, $limit = '', $excludeIds = array() ) {
     $thumb_width = BWG()->options->upload_thumb_width;
     $width = BWG()->options->upload_img_width;
     global $wpdb;
     $prepareArgs = array();
     $modified_date_prepare_args = array();
-    $where = ($gallery_id) ? ' `gallery_id` = ' . $gallery_id : 1;
+    $where = '`filetype` NOT LIKE "EMBED_OEMBED%"';
     if ( $gallery_id ) {
-      $where = ' `gallery_id` = %d';
+      $where .= ' AND `gallery_id` = %d';
       $prepareArgs[] = $gallery_id;
       $modified_date_prepare_args[] = $gallery_id;
-    } else {
-      $where = 1;
+      if ( !empty($excludeIds) ) {
+        $where .= ' AND `id` NOT IN (' . self::escape_array($excludeIds) . ')';
+      }
     }
     $search = WDWLibrary::get('s', '');
     if ( $search ) {
@@ -1657,7 +1680,8 @@ class WDWLibrary {
       $limitstart = ' LIMIT 50 OFFSET %d';
       $prepareArgs[] = $limit;
     }
-    $images = $wpdb->get_results($wpdb->prepare('SELECT * FROM `' . $wpdb->prefix . 'bwg_image` WHERE ' . $where . $limitstart, $prepareArgs));
+    $query = $wpdb->prepare('SELECT * FROM `' . $wpdb->prefix . 'bwg_image` WHERE ' . $where . $limitstart, $prepareArgs);
+    $images = $wpdb->get_results( $query );
     if ( !empty( $images ) ) {
       foreach ( $images as $image ) {
         if ( preg_match( '/EMBED/', $image->filetype ) == 1 ) {
@@ -1734,8 +1758,8 @@ class WDWLibrary {
     if ($page == 'gallery_page') {
       ?>
       <script language="javascript">
-        var image_src = window.parent.document.getElementById("image_thumb_<?php echo $image->id; ?>").src;
-        document.getElementById("image_thumb_<?php echo $image->id; ?>").src = image_src;
+        var image_src = window.parent.document.getElementById("image_thumb_<?php echo esc_html($image->id); ?>").src;
+        document.getElementById("image_thumb_<?php echo esc_html($image->id); ?>").src = image_src;
       </script>
       <?php
     }
@@ -1765,12 +1789,27 @@ class WDWLibrary {
 
   public static function update_thumb_dimansions( $resolution_thumb, $where ) {
     global $wpdb;
-    $update = $wpdb->query($wpdb->prepare('UPDATE `' . $wpdb->prefix . 'bwg_image` SET `resolution_thumb` = "%s"  WHERE ' . $where, $resolution_thumb));
+    $wpdb->query($wpdb->prepare('UPDATE `' . $wpdb->prefix . 'bwg_image` SET `resolution_thumb` = "%s"  WHERE ' . $where, $resolution_thumb));
   }
 
-  public static function resize_image($source, $destination, $max_width, $max_height) {
-    $image = wp_get_image_editor( $source );
-    if ( ! is_wp_error( $image ) ) {
+  /**
+   * Update the specified image resolution.
+   *
+   * @param $width
+   * @param $height
+   * @param $id
+   *
+   * @return void
+   */
+  public static function update_image_resolution( $width, $height, $id ) {
+    $resolution = intval($width) . ' x ' . intval($height) . ' px';
+    global $wpdb;
+    $wpdb->query($wpdb->prepare('UPDATE `' . $wpdb->prefix . 'bwg_image` SET `resolution` = "%s"  WHERE `id` = %d', $resolution, $id));
+  }
+
+  public static function resize_image( $source, $destination, $max_width, $max_height, $image_id = 0 ) {
+    $image = wp_get_image_editor($source);
+    if ( !is_wp_error($image) ) {
       $image_size = $image->get_size();
       $img_width = $image_size[ 'width' ];
       $img_height = $image_size[ 'height' ];
@@ -1780,7 +1819,12 @@ class WDWLibrary {
           if(self::detect_thumb($destination)) {
             self::$thumb_dimansions = intval($img_width)."x".intval($img_height);
           }
-          return copy( $source, $destination );
+          // Update the resized image resolution.
+          if ( $image_id ) {
+            self::update_image_resolution($img_width, $img_height, $image_id);
+          }
+
+          return copy($source, $destination);
         }
         return true;
       }
@@ -1790,9 +1834,18 @@ class WDWLibrary {
         if(self::detect_thumb($destination)) {
           self::$thumb_dimansions = intval($new_width)."x".intval($new_height);
         }
-        $image->set_quality( BWG()->options->image_quality );
-        $image->resize( $new_width, $new_height, false );
-        $saved = $image->save( $destination );
+        $image->set_quality(BWG()->options->image_quality);
+        $image->resize($new_width, $new_height);
+        /* Function available since WP 5.3.0 version */
+        if ( method_exists($image, 'maybe_exif_rotate') ) {
+          $image->maybe_exif_rotate();
+        }
+        $saved = $image->save($destination);
+        // Update the resized image resolution.
+        if ( $image_id ) {
+          self::update_image_resolution($new_width, $new_height, $image_id);
+        }
+
         return !is_wp_error($saved);
       }
     }
@@ -1800,7 +1853,7 @@ class WDWLibrary {
       if ( $source !== $destination ) {
         return copy( $source, $destination );
       }
-      return true;
+      return false;
     }
   }
 
@@ -1997,6 +2050,7 @@ class WDWLibrary {
       'images_per_page' => 0,
       'thumb_width' => BWG()->options->thumb_width,
       'thumb_height' => BWG()->options->thumb_height,
+      'gdpr_compliance' => (bool) BWG()->options->gdpr_compliance,
       'watermark_type' => (($from) ? BWG()->options->watermark_type : ($use_option_defaults ? BWG()->options->watermark_type : (isset($params['watermark_type']) ? $params['watermark_type'] : 'none'))),
       'watermark_text' => (($from) ? urlencode(BWG()->options->watermark_text) : ($use_option_defaults ? urlencode(BWG()->options->watermark_text) : (isset($params['watermark_text']) ? urlencode($params['watermark_text']) : ''))),
       'watermark_font_size' => (($from) ? BWG()->options->watermark_font_size : ($use_option_defaults ? BWG()->options->watermark_font_size : (isset($params['watermark_font_size']) ? $params['watermark_font_size'] : 12))),
@@ -2026,7 +2080,6 @@ class WDWLibrary {
     $defaults['popup_enable_comment'] = (bool) self::get_option_value('popup_enable_comment', 'popup_enable_comment', 'popup_enable_comment', $from || $use_option_defaults, $params);
     $defaults['popup_enable_email'] = (bool) self::get_option_value('popup_enable_email', 'popup_enable_email', 'popup_enable_email', $from || $use_option_defaults, $params);
     $defaults['popup_enable_captcha'] = (bool) self::get_option_value('popup_enable_captcha', 'popup_enable_captcha', 'popup_enable_captcha', $from || $use_option_defaults, $params);
-    $defaults['gdpr_compliance'] = (bool) self::get_option_value('gdpr_compliance', 'gdpr_compliance', 'gdpr_compliance', $from || $use_option_defaults, $params);
     $defaults['comment_moderation'] = (bool) self::get_option_value('comment_moderation', 'comment_moderation', 'comment_moderation', $from || $use_option_defaults, $params);
     $defaults['popup_enable_info'] = (bool) self::get_option_value('popup_enable_info', 'popup_enable_info', 'popup_enable_info', $from || $use_option_defaults, $params);
     $defaults['popup_info_always_show'] = (bool) self::get_option_value('popup_info_always_show', 'popup_info_always_show', 'popup_info_always_show', $from || $use_option_defaults, $params);
@@ -2075,7 +2128,7 @@ class WDWLibrary {
         $defaults['masonry_hor_ver'] = self::get_option_value('masonry_hor_ver', 'masonry_hor_ver', 'masonry', $use_option_defaults, $params);
         $defaults['show_masonry_thumb_description'] = self::get_option_value('show_masonry_thumb_description', 'show_masonry_thumb_description', 'show_masonry_thumb_description', $use_option_defaults, $params);
         $defaults['thumb_width'] = self::get_option_value('masonry_thumb_size', 'thumb_width', 'masonry_thumb_size', $use_option_defaults, $params);
-        $defaults['thumb_height'] = self::get_option_value('thumb_height', 'thumb_height', 'thumb_height', $use_option_defaults, $params);
+        $defaults['thumb_height'] = self::get_option_value('thumb_height', 'thumb_height', 'masonry_thumb_size', $use_option_defaults, $params);
         $defaults['image_column_number'] = abs(intval(self::get_option_value('masonry_image_column_number', 'image_column_number', 'masonry_image_column_number', $use_option_defaults, $params)));
         $defaults['image_enable_page'] = self::get_option_value('masonry_image_enable_page', 'image_enable_page', 'masonry_image_enable_page', $use_option_defaults, $params);
         $defaults['images_per_page'] = abs(intval(self::get_option_value('masonry_images_per_page', 'images_per_page', 'masonry_images_per_page', $use_option_defaults, $params)));
@@ -2289,7 +2342,9 @@ class WDWLibrary {
 	  }
 	  break;
     }
-    return array_merge($params, $defaults);
+    $data = array_merge($params, $defaults);
+
+    return $data;
   }
 
   /**
@@ -2359,7 +2414,7 @@ class WDWLibrary {
     $title = ($title != '') ? strtolower($title) : 'items';
     ob_start();
     ?><tr class="no-items">
-    <td class="colspanchange" <?php echo $colspan_count ? 'colspan="' . esc_attr($colspan_count) . '"' : ''?>><?php echo sprintf(__('No %s found.', BWG()->prefix), $title); ?></td>
+    <td class="colspanchange" <?php echo esc_attr($colspan_count) ? 'colspan="' . esc_attr($colspan_count) . '"' : ''?>><?php echo sprintf(__('No %s found.', 'photo-gallery'), $title); ?></td>
     </tr><?php
     return ob_get_clean();
   }
@@ -2402,9 +2457,8 @@ class WDWLibrary {
     add_action('create_bwg_tag', array('WDWLibrary', 'update_bwg_tag'), 10, 2);
     // Delete bwg_tag.
     add_action('delete_bwg_tag', array('WDWLibrary', 'delete_bwg_tag'), 10, 3);
-
     if ('bwg_tag' == self::get('taxonomy')) {
-      //add_action( 'admin_notices', array( 'WDWLibrary', 'topbar' ) );
+      // add_action( 'admin_notices', array( 'WDWLibrary', 'topbar' ) );
     }
   }
 
@@ -2415,8 +2469,9 @@ class WDWLibrary {
       'show_in_nav_menus' => FALSE,
       'show_tagcloud' => TRUE,
       'hierarchical' => FALSE,
-      'label' => __('Gallery Tags', BWG()->prefix),
+      'label' => __('Gallery Tags', 'photo-gallery'),
       'query_var' => TRUE,
+      'show_in_rest' => TRUE,
       'rewrite' => TRUE));
   }
 
@@ -2616,9 +2671,9 @@ class WDWLibrary {
         $img_width = $get_thumb_size["width"];
         $img_height = $get_thumb_size["height"];
         $scale = min( $max_width / $img_width, $max_height / $img_height );
-        $new_width = $img_width * $scale;
+        $new_width  = $img_width * $scale;
         $new_height = $img_height * $scale;
-        $resolution_thumb = $new_width . "x" . $new_height;
+        $resolution_thumb = WDWLibrary::format_number($new_width, 2) . 'x' . WDWLibrary::format_number($new_height, 2);
       }
     }
     return $resolution_thumb;
@@ -2643,84 +2698,84 @@ class WDWLibrary {
     else {
       $image_actions = array(
         'image_resize' => array(
-          'title' => __('Resize', BWG()->prefix),
-          'bulk_action' => __('resized', BWG()->prefix),
+          'title' => __('Resize', 'photo-gallery'),
+          'bulk_action' => __('resized', 'photo-gallery'),
           'disabled' => (BWG()->wp_editor_exists ? '' : 'disabled="disabled"'),
         ),
         'image_recreate_thumbnail' => array(
-          'title' => __('Recreate thumbnail', BWG()->prefix),
-          'bulk_action' => __('recreated', BWG()->prefix),
+          'title' => __('Recreate thumbnail', 'photo-gallery'),
+          'bulk_action' => __('recreated', 'photo-gallery'),
           'disabled' => (BWG()->wp_editor_exists ? '' : 'disabled="disabled"'),
         ),
         'image_rotate_left' => array(
-          'title' => __('Rotate left', BWG()->prefix),
-          'bulk_action' => __('rotated left', BWG()->prefix),
+          'title' => __('Rotate left', 'photo-gallery'),
+          'bulk_action' => __('rotated left', 'photo-gallery'),
           'disabled' => (BWG()->wp_editor_exists ? '' : 'disabled="disabled"'),
         ),
         'image_rotate_right' => array(
-          'title' => __('Rotate right', BWG()->prefix),
-          'bulk_action' => __('rotated right', BWG()->prefix),
+          'title' => __('Rotate right', 'photo-gallery'),
+          'bulk_action' => __('rotated right', 'photo-gallery'),
           'disabled' => (BWG()->wp_editor_exists ? '' : 'disabled="disabled"'),
         ),
         'image_set_watermark' => array(
-          'title' => __('Set watermark', BWG()->prefix),
-          'bulk_action' => __('edited', BWG()->prefix),
+          'title' => __('Set watermark', 'photo-gallery'),
+          'bulk_action' => __('edited', 'photo-gallery'),
           'disabled' => (BWG()->wp_editor_exists ? '' : 'disabled="disabled"'),
         ),
         'image_reset' => array(
-          'title' => __('Reset', BWG()->prefix),
-          'bulk_action' => __('reset', BWG()->prefix),
+          'title' => __('Reset', 'photo-gallery'),
+          'bulk_action' => __('reset', 'photo-gallery'),
           'disabled' => '',
         ),
       );
     }
     $image_actions += array(
       'image_edit_alt' => array(
-        'title' => __('Edit Alt/Title', BWG()->prefix),
-        'bulk_action' => __('edited', BWG()->prefix),
+        'title' => __('Edit Alt/Title', 'photo-gallery'),
+        'bulk_action' => __('edited', 'photo-gallery'),
         'disabled' => '',
       ),
       'image_edit_description' => array(
-        'title' => __('Edit description', BWG()->prefix),
-        'bulk_action' => __('edited', BWG()->prefix),
+        'title' => __('Edit description', 'photo-gallery'),
+        'bulk_action' => __('edited', 'photo-gallery'),
         'disabled' => '',
       ),
       'image_edit_redirect' => array(
-        'title' => __('Edit redirect URL', BWG()->prefix),
-        'bulk_action' => __('edited', BWG()->prefix),
+        'title' => __('Edit redirect URL', 'photo-gallery'),
+        'bulk_action' => __('edited', 'photo-gallery'),
         'disabled' => '',
       ),
       'image_add_tag' => array(
-        'title' => __('Add/Remove tag', BWG()->prefix),
-        'bulk_action' => __('edited', BWG()->prefix),
+        'title' => __('Add/Remove tag', 'photo-gallery'),
+        'bulk_action' => __('edited', 'photo-gallery'),
         'disabled' => '',
       ),
       'image_publish' => array(
-        'title' => __('Publish', BWG()->prefix),
-        'bulk_action' => __('published', BWG()->prefix),
+        'title' => __('Publish', 'photo-gallery'),
+        'bulk_action' => __('published', 'photo-gallery'),
         'disabled' => '',
       ),
       'image_unpublish' => array(
-        'title' => __('Unpublish', BWG()->prefix),
-        'bulk_action' => __('unpublished', BWG()->prefix),
+        'title' => __('Unpublish', 'photo-gallery'),
+        'bulk_action' => __('unpublished', 'photo-gallery'),
         'disabled' => '',
       ),
       'image_delete' => array(
-        'title' => __('Delete', BWG()->prefix),
-        'bulk_action' => __('deleted', BWG()->prefix),
+        'title' => __('Delete', 'photo-gallery'),
+        'bulk_action' => __('deleted', 'photo-gallery'),
         'disabled' => '',
       ),
     );
 
     if ( function_exists('BWGEC') ) {
       $image_actions['set_image_pricelist'] = array(
-        'title' => __('Add pricelist', BWG()->prefix),
-        'bulk_action' => __('edited', BWG()->prefix),
+        'title' => __('Add pricelist', 'photo-gallery'),
+        'bulk_action' => __('edited', 'photo-gallery'),
         'disabled' => '',
       );
       $image_actions['remove_pricelist_all'] = array(
-        'title' => __('Remove pricelist', BWG()->prefix),
-        'bulk_action' => __('edited', BWG()->prefix),
+        'title' => __('Remove pricelist', 'photo-gallery'),
+        'bulk_action' => __('edited', 'photo-gallery'),
         'disabled' => '',
       );
     }
@@ -2736,6 +2791,7 @@ class WDWLibrary {
         case 'gif':
         case 'png':
         case 'svg':
+        case 'webp':
           return TRUE;
           break;
       }
@@ -2825,10 +2881,10 @@ class WDWLibrary {
           <div class="bwg-topbar bwg-topbar-content">
             <div class="bwg-topbar-content-container">
               <div class="bwg-topbar-content-title">
-                <?php _e('Photo Gallery Premium', BWG()->prefix); ?>
+                <?php _e('Photo Gallery Premium', 'photo-gallery'); ?>
               </div>
               <div class="bwg-topbar-content-body">
-                <?php _e('Get more stunning views with fully customizable themes, powerful lightbox and much more.', BWG()->prefix); ?>
+                <?php _e('Get more stunning views with fully customizable themes, powerful lightbox and much more.', 'photo-gallery'); ?>
               </div>
             </div>
             <div class="bwg-topbar-content-button-container">
@@ -2846,7 +2902,7 @@ class WDWLibrary {
                 ?>
                 <a href="<?php echo esc_url($user_guide_link); ?>" target="_blank" class="bwg-topbar_user_guid">
                   <div class="bwg-topbar-links-item">
-                    <?php _e('User guide', BWG()->prefix); ?>
+                    <?php _e('User guide', 'photo-gallery'); ?>
                   </div>
                 </a>
                 <?php
@@ -2861,7 +2917,7 @@ class WDWLibrary {
                 <a href="<?php echo esc_url($support_forum_link); ?>" target="_blank" class="bwg-topbar_support_forum">
                   <div class="bwg-topbar-links-item">
                     <img src="<?php echo  esc_url(BWG()->plugin_url . '/css/images/help.svg'); ?>" class="help_icon" />
-                    <?php _e('Ask a question', BWG()->prefix); ?>
+                    <?php _e('Ask a question', 'photo-gallery'); ?>
                   </div>
                 </a>
               </div>
@@ -2875,15 +2931,15 @@ class WDWLibrary {
       $menus = array(
         'manage' => array(
           'href' => add_query_arg( array('page' => 'manage' . BWG()->menu_postfix ), admin_url('admin.php')),
-          'name' => __('Forms', BWG()->prefix)
+          'name' => __('Forms', 'photo-gallery')
         ),
         'addons' => array(
           'href' => add_query_arg( array('page' => 'addons' . BWG()->menu_postfix ), admin_url('admin.php')),
-          'name' => __('Add-ons', BWG()->prefix)
+          'name' => __('Add-ons', 'photo-gallery')
         ),
         'pricing' => array(
           'href' => add_query_arg( array('page' => 'pricing' . BWG()->menu_postfix ), admin_url('admin.php')),
-          'name' => __('Premium Version', BWG()->prefix) .' <span class="bwg-upgrade">' . __('Upgrade', BWG()->prefix) . '</span>'
+          'name' => __('Premium Version', 'photo-gallery') .' <span class="bwg-upgrade">' . __('Upgrade', 'photo-gallery') . '</span>'
         ),
       );
       ?>
@@ -2990,28 +3046,6 @@ class WDWLibrary {
   }
 
   /**
-   * Generate top bar user guide section.
-   *
-   * @return string top bar user guide section html.
-   */
-  public static function topbar_upgrade_ask_question() {
-    $support_forum_link = 'https://wordpress.org/support/plugin/photo-gallery/#new-post';
-    $premium_link = BWG()->plugin_link . BWG()->utm_source;
-    wp_enqueue_style(BWG()->prefix . '-roboto');
-    wp_enqueue_style(BWG()->prefix . '-pricing');
-    ob_start();
-    ?>
-      <div class="wd-list-view-header-free-right">
-        <p class="upgrade-header"><?php _e('Unleash the full benefits & ', BWG()->prefix); ?></p>
-        <p class="upgrade-text"><?php _e('features of the Premium Plugin', BWG()->prefix); ?></p>
-        <a class="upgrade-button" href="<?php echo $premium_link; ?>" target="_blank"><?php _e( 'Upgrade Now', BWG()->prefix ); ?></a>
-      </div>
-      <a class="wd-list-view-ask-question" href="<?php echo esc_url($support_forum_link); ?>" target="_blank"><?php _e('Ask a question', BWG()->prefix); ?></a>
-    <?php
-    echo ob_get_clean();
-  }
-
-  /**
    * Generate ask question static fixed button.
    *
    * @return string ask question html.
@@ -3020,12 +3054,11 @@ class WDWLibrary {
     $support_forum_link = 'https://wordpress.org/support/plugin/photo-gallery/#new-post';
     ob_start();
     ?>
-    <a class="wd-list-view-ask-question" href="<?php echo esc_url($support_forum_link); ?>" target="_blank"><?php _e('Ask a question', BWG()->prefix); ?></a>
+    <a class="wd-list-view-ask-question" href="<?php echo esc_url($support_forum_link); ?>" target="_blank"><?php _e('Ask a question', 'photo-gallery'); ?></a>
     <?php
     echo ob_get_clean();
   }
 
-  // TODO. This function should be replaced with WP functionality in another version. At the moment it is not.
   /**
    *  Get privacy_policy_url
    *
@@ -3067,7 +3100,7 @@ class WDWLibrary {
     $rows = $wpdb->get_results($query);
 
     $galleries = array();
-    $galleries[0] = __('All images', BWG()->prefix);
+    $galleries[0] = __('All images', 'photo-gallery');
     foreach ( $rows as $row ) {
       $galleries[$row->id] = $row->name;
     }
@@ -3086,7 +3119,7 @@ class WDWLibrary {
     $rows = $wpdb->get_results($query);
 
     $gallery_groups = array();
-    $gallery_groups[0] = __('All galleries', BWG()->prefix);
+    $gallery_groups[0] = __('All galleries', 'photo-gallery');
     foreach ( $rows as $row ) {
       $gallery_groups[$row->id] = $row->name;
     }
@@ -3131,7 +3164,7 @@ class WDWLibrary {
     $rows = $wpdb->get_results($query);
 
     $tags = array();
-    $tags[0] = __('All tags', BWG()->prefix);
+    $tags[0] = __('All tags', 'photo-gallery');
     foreach ( $rows as $row ) {
       $tags[$row->term_id] = $row->name;
     }
@@ -3153,7 +3186,7 @@ class WDWLibrary {
   }
 
   public static function error_message_ids() {
-	  return array( 26, 27 );
+	  return array( 26, 27, 31 );
   }
 
   /**
@@ -3248,7 +3281,7 @@ class WDWLibrary {
    * @return string
    */
   public static function strip_tags($value) {
-    $allowed_tags = "<b>,<p>,<a>,<strong>,<span>,<br>,<ul>,<ol>,<li>,<i>,<h1>,<h2>,<h3>,<h4>,<h5>,<h6>,<img>,<blockquote>,<pre>,<section>,";
+    $allowed_tags = "<b>,<p>,<a>,<strong>,<span>,<br>,<ul>,<ol>,<li>,<i>,<h1>,<h2>,<h3>,<h4>,<h5>,<h6>,<img>,<blockquote>,<pre>,<section>,<div>,";
 
     return strip_tags($value, $allowed_tags);
   }
@@ -3366,6 +3399,219 @@ class WDWLibrary {
         return $data[$user_id]['albums']['order_by'];
     }
     return 'order_asc';
+  }
+  /**
+   * Escape array.
+   *
+   * @param array $args
+   *
+   * @return string
+   */
+  public static function escape_array( $args = array() ) {
+    global $wpdb;
+    $escaped = array();
+    foreach ( $args as $k => $v ) {
+      if ( is_numeric($v) ) {
+        $escaped[] = $wpdb->prepare('%d', $v);
+      }
+      else {
+        $escaped[] = $wpdb->prepare('%s', $v);
+      }
+    }
+
+    return implode(',', $escaped);
+  }
+
+  /**
+   * Format number.
+   *
+   * @param        $number
+   * @param int    $decimals
+   * @param string $decPoint
+   * @param string $thousandsSep
+   *
+   * @return string
+   */
+  public static function format_number( $number, $decimals = 0, $decPoint = '.' , $thousandsSep = '' ) {
+    $negation = ($number < 0) ? (-1) : 1;
+    $coefficient = 10 ** $decimals;
+    $number = $negation * floor((string)(abs($number) * $coefficient)) / $coefficient;
+
+    return number_format($number, $decimals, $decPoint, $thousandsSep);
+  }
+
+  /**
+   * Get images count.
+   *
+   * @return int
+   */
+  public static function get_images_total_count() {
+    global $wpdb;
+    $count = $wpdb->get_var("SELECT COUNT(id) FROM `" . $wpdb->prefix . "bwg_file_paths`");
+
+    return intval($count);
+  }
+
+  /**
+   * Get images count.
+   *
+   * @return int
+   */
+  public static function get_gallery_images_count() {
+    global $wpdb;
+    $row = $wpdb->get_col('SELECT id AS qty FROM `' . $wpdb->prefix . 'bwg_image`');
+
+    return intval(count($row));
+  }
+
+  /**
+   * Convert all images sizes to bytes.
+   *
+   * @return integer total amount by bytes
+   */
+  public static function get_images_total_size() {
+    global $wpdb;
+    $sizes = $wpdb->get_col('Select `size` FROM `' . $wpdb->prefix . 'bwg_image` WHERE  `size`<>""');
+    if ( !empty($sizes) ) {
+      $sizes = array_sum(array_map('WDWLibrary::convertToBytes', $sizes));
+    }
+    else {
+      $sizes = 0;
+    }
+
+    return $sizes;
+  }
+
+  /**
+   * Convert B, KM, MB, GB, TB, PB to bytes.
+   *
+   * @param string $from
+   *
+   * @return array|float|int|string|string[]|null
+   */
+  public static function convertToBytes( $from ) {
+    $units = array( 'B', 'KB', 'MB', 'GB', 'TB', 'PB' );
+    $number = substr($from, 0, -2);
+    $suffix = strtoupper(substr($from, -2));
+    if ( is_numeric(substr($suffix, 0, 1)) ) {
+      return preg_replace('/[^\d]/', '', $from);
+    }
+    $flipped = array_flip($units);
+
+    if ( !isset($flipped[$suffix]) ) {
+      return NULL;
+    }
+
+    return floatval($number) * (1024 ** $flipped[$suffix]);
+  }
+
+  /**
+   * Convert bytes to B, KM, MB, GB, TB, PB.
+   *
+   * @param $bytes
+   * @param $precision
+   *
+   * @return string
+   */
+  public static function formatBytes( $bytes, $precision = 2 ) {
+    $units = array( 'B', 'KB', 'MB', 'GB', 'TB', 'PB' );
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+    $bytes /= pow(1024, $pow);
+
+    return round($bytes, $precision) . ' ' . $units[$pow];
+  }
+
+  /**
+   * Convert all images sizes to bytes.
+   *
+   * @param $bytes
+   * @param $precision
+   *
+   * @return integer
+  */
+  public static function get_gallery_images_total_bytes() {
+    global $wpdb;
+    $sizes = $wpdb->get_col('Select `size` FROM `' . $wpdb->prefix . 'bwg_image` WHERE  `size`<>""');
+    if ( !empty($sizes) ) {
+        $sizes = array_sum(array_map('WDWLibrary::convertToBytes', $sizes));
+    } else {
+        $sizes = 0;
+    }
+    return $sizes;
+
+  }
+
+  /**
+   * Get Booster statsu data.
+   *
+   * @return array
+   */
+  public static function get_booster_data() {
+    $data = array(
+      'subscription_id' => get_transient('tenweb_subscription_id'),
+      'booster_plugin_status' => 0,
+      'booster_is_connected' => FALSE,
+      'tenweb_is_paid' => FALSE,
+    );
+    $booster_plugin_status = get_option('bwg_speed');
+    if ( !empty($booster_plugin_status) && isset($booster_plugin_status['booster_plugin_status']) ) {
+      $data['booster_plugin_status'] = $booster_plugin_status['booster_plugin_status'];
+    }
+    if ( (defined('TENWEB_CONNECTED_SPEED') && class_exists('\Tenweb_Authorization\Login') && \Tenweb_Authorization\Login::get_instance()->check_logged_in() && \Tenweb_Authorization\Login::get_instance()->get_connection_type() == TENWEB_CONNECTED_SPEED) || (defined('TENWEB_SO_HOSTED_ON_10WEB') && TENWEB_SO_HOSTED_ON_10WEB) ) {
+      // booster is connectd part.
+      $data['booster_is_connected'] = TRUE;
+      // 10Web is paid.
+      $data['tenweb_is_paid'] = (method_exists('\TenWebOptimizer\OptimizerUtils', 'is_paid_user') && TenWebOptimizer\OptimizerUtils::is_paid_user()) ? TRUE : FALSE;
+    }
+
+    return $data;
+  }
+
+  public static function media_name_clean( $string = '' )  {
+    $code_entities_match = array(' ','%','&','+','^');
+    $code_entities_replace = array('_','','','','');
+    $string = str_replace($code_entities_match, $code_entities_replace, $string);
+    return $string;
+  }
+
+  /**
+   * Generate gallery to pro button.
+  */
+  public static function gallery_to_pro_button() {
+    $premium_link = WDWLibrary::pro_button_link();
+    if ( $premium_link ) {
+      ob_start();
+      ?>
+      <a class="bwg_gallery_to_pro_button" href="<?php echo esc_url($premium_link); ?>" target="_blank">
+        <?php _e('Upgrade to Pro', 'photo-gallery'); ?>
+      </a>
+      <?php
+      echo ob_get_clean();
+    }
+  }
+
+  public static function pro_button_link($slug = 'From Gallery') {
+    if ( ( defined('TENWEB_CONNECTED_SPEED') &&
+        class_exists('\Tenweb_Authorization\Login') &&
+        \Tenweb_Authorization\Login::get_instance()->check_logged_in() &&
+        \Tenweb_Authorization\Login::get_instance()->get_connection_type() == TENWEB_CONNECTED_SPEED ) ||
+      ( defined('TENWEB_SO_HOSTED_ON_10WEB') && TENWEB_SO_HOSTED_ON_10WEB ) ) {
+      $url = 'https://my.10web.io/upgrade-plan?send_event=1&tenweb_action=' . $slug;
+    }
+    elseif ( class_exists('\TenWebOptimizer\OptimizerUtils') ) {
+      $magic_data = get_option("bwg_magic_data");
+      $url = 'https://my.10web.io/sign-up?subscr_id=321&plugin_id=101&navigate_to=upgrade-plan&tenweb_action=' . $slug;
+      if ( !empty($magic_data['magic_data']) ) {
+        $url .= '&magic_data=' . $magic_data['magic_data'];
+      }
+    }
+    else {
+      $url = 'https://my.10web.io/sign-up?subscr_id=321&plugin_id=101&navigate_to=upgrade-plan&tenweb_action=' . $slug;
+    }
+
+    return $url;
   }
 }
 

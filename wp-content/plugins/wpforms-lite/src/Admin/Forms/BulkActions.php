@@ -110,10 +110,7 @@ class BulkActions {
 		}
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		// Checking the sortable column link.
-		$is_orderby_link = ! empty( $_REQUEST['orderby'] ) && ! empty( $_REQUEST['order'] );
-
-		if ( empty( $this->ids ) || empty( $this->action ) || $is_orderby_link ) {
+		if ( empty( $this->ids ) || empty( $this->action ) ) {
 			return;
 		}
 
@@ -279,7 +276,35 @@ class BulkActions {
 	 */
 	public function get_dropdown_items() {
 
-		if ( ! wpforms_current_user_can( 'delete_forms' ) ) {
+		$items = [];
+
+		if ( wpforms_current_user_can( 'delete_forms' ) ) {
+			if ( $this->view === 'trash' ) {
+				$items = [
+					'restore' => esc_html__( 'Restore', 'wpforms-lite' ),
+					'delete'  => esc_html__( 'Delete Permanently', 'wpforms-lite' ),
+				];
+			} else {
+				$items = [
+					'trash' => esc_html__( 'Move to Trash', 'wpforms-lite' ),
+				];
+			}
+		}
+
+		// phpcs:disable WPForms.Comments.ParamTagHooks.InvalidParamTagsQuantity
+
+		/**
+		 * Filters the Bulk Actions dropdown items.
+		 *
+		 * @since 1.7.5
+		 *
+		 * @param array $items Dropdown items.
+		 */
+		$items = apply_filters( 'wpforms_admin_forms_bulk_actions_get_dropdown_items', $items );
+
+		// phpcs:enable WPForms.Comments.ParamTagHooks.InvalidParamTagsQuantity
+
+		if ( empty( $items ) ) {
 			// We should have dummy item, otherwise, WP will hide the Bulk Actions Dropdown,
 			// which is not good from a design point of view.
 			return [
@@ -287,16 +312,7 @@ class BulkActions {
 			];
 		}
 
-		if ( $this->view !== 'trash' ) {
-			return [
-				'trash' => esc_html__( 'Trash', 'wpforms-lite' ),
-			];
-		}
-
-		return [
-			'restore' => esc_html__( 'Restore', 'wpforms-lite' ),
-			'delete'  => esc_html__( 'Delete Permanently', 'wpforms-lite' ),
-		];
+		return $items;
 	}
 
 	/**
@@ -338,28 +354,28 @@ class BulkActions {
 	private function notices_success( $results ) {
 
 		if ( ! empty( $results['trashed'] ) ) {
-			$notice = sprintf( /* translators: %d - Trashed forms count. */
+			$notice = sprintf( /* translators: %d - trashed forms count. */
 				_n( '%d form was successfully moved to Trash.', '%d forms were successfully moved to Trash.', (int) $results['trashed'], 'wpforms-lite' ),
 				(int) $results['trashed']
 			);
 		}
 
 		if ( ! empty( $results['restored'] ) ) {
-			$notice = sprintf( /* translators: %d - Restored forms count. */
+			$notice = sprintf( /* translators: %d - restored forms count. */
 				_n( '%d form was successfully restored.', '%d forms were successfully restored.', (int) $results['restored'], 'wpforms-lite' ),
 				(int) $results['restored']
 			);
 		}
 
 		if ( ! empty( $results['deleted'] ) ) {
-			$notice = sprintf( /* translators: %d - Deleted forms count. */
+			$notice = sprintf( /* translators: %d - deleted forms count. */
 				_n( '%d form was successfully permanently deleted.', '%d forms were successfully permanently deleted.', (int) $results['deleted'], 'wpforms-lite' ),
 				(int) $results['deleted']
 			);
 		}
 
 		if ( ! empty( $results['duplicated'] ) ) {
-			$notice = sprintf( /* translators: %d - Duplicated forms count. */
+			$notice = sprintf( /* translators: %d - duplicated forms count. */
 				_n( '%d form was successfully duplicated.', '%d forms were successfully duplicated.', (int) $results['duplicated'], 'wpforms-lite' ),
 				(int) $results['duplicated']
 			);

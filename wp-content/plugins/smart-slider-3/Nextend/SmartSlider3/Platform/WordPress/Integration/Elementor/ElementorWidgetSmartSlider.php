@@ -22,7 +22,7 @@ class ElementorWidgetSmartSlider extends Widget_Base {
         return 'eicon-slider-3d';
     }
 
-    protected function _register_controls() {
+    protected function register_controls() {
 
         $this->start_controls_section('section_smart_slider_elementor', [
             'label' => esc_html('Smart Slider'),
@@ -41,7 +41,9 @@ class ElementorWidgetSmartSlider extends Widget_Base {
 
     protected function render() {
         if (Plugin::instance()->editor->is_edit_mode() || Plugin::instance()->preview->is_preview_mode()) {
-            echo Shortcode::renderIframe($this->get_settings('smartsliderid'));
+
+            // PHPCS - Content already escaped
+            echo Shortcode::renderIframe($this->get_settings('smartsliderid')); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         } else {
             $sliderIDorAlias = $this->get_settings('smartsliderid');
             if (is_numeric($sliderIDorAlias)) {
@@ -59,6 +61,8 @@ class ElementorWidgetSmartSlider extends Widget_Base {
     }
 
     protected function content_template() {
-        echo Shortcode::renderIframe('{{{settings.smartsliderid}}}');
+
+        // PHPCS - Content already escaped
+        echo Shortcode::renderIframe('{{{settings.smartsliderid}}}'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 }

@@ -80,11 +80,7 @@
       <div class="intro-background color-background gray" style="background-color: #EEEEEE;">
         <div class="container page-section">
           <div class="row">
-            <div class="card mouse-meet">
-              <div class="card-body">
-                <?php the_content() ?>
-              </div>
-            </div>
+            <?php the_content() ?>
           </div><!-- row -->
         </div>
       </div>
@@ -193,7 +189,7 @@
               <?php $speaker_image = wp_get_attachment_image_src( get_post_thumbnail_id( $guest->ID ), 'single-post-thumbnail' ); ?>
               <?php $speaker_legend = $guest->disney_legend ? 'legend' : ''; ?>
               <?php $speaker_link = $guest->replacement_link ? $guest->replacement_link : get_permalink($guest->ID); ?>
-              <?php if($numguests > 3): ?>
+              <?php if($numguests > 3 && $numguests <= 4): ?>
                 <div class="col-md-3">
               <?php else : ?>
                 <div class="col-md-4 col-sm-6">
@@ -209,7 +205,7 @@
               </div>
             <?php endwhile; ?>
           <?php else : ?>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="card event-card">
                 <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
                 <div class="card-body">
@@ -219,7 +215,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="card event-card">
                 <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
                 <div class="card-body">
@@ -229,17 +225,7 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-3">
-              <div class="card event-card">
-                <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
-                <div class="card-body">
-                  <h5 class="card-title">Coming Soon</h5>
-                  <p class="card-text">Guest Speakers will be announced soon.</p>
-                  <a href="<?php the_permalink($speaker_one->ID); ?>" class="btn btn-info disabled">Learn More</a>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <div class="card event-card">
                 <div class="main-image" style="background-image: url('<?php echo the_field('speaker_placeholder'); ?>')"></div>
                 <div class="card-body">
@@ -267,6 +253,54 @@
     </div> <!-- End Speakers -->
 
     <?php if(!$past) : ?>
+      <!-- Sponsors -->
+      <?php
+        $args = array(
+          'post_type' => 'sponsors',
+          'posts_per_page' => '8',
+          'orderby' => 'sponsor_level',
+          'order' => 'ASC'
+        );
+        $query = new WP_Query( $args );
+       ?>
+       <!-- Sponsors -->
+       <div class="container page-section">
+         <!-- Introduction -->
+         <div class="row intro-paragraph">
+           <div class="col-md-8">
+             <h2>Our Sponsors</h2>
+             <p class="intro">
+               We are so proud to partner with these amazing Sponsors of the Pacific Northwest Mouse Meet.
+               Please consider clicking on their logos to learn more about them and let them know the PNWMM sent you!
+             </p>
+           </div>
+         </div>
+         <!-- Tiles -->
+         <div class="row d-flex justify-content-around">
+           <?php if( $query->have_posts() ) : while( $query->have_posts() ) : $query->the_post(); ?>
+
+             <div class="sponsor">
+               <div class="sponsor-logo d-flex justify-content-center align-items-center">
+                 <?php
+                   $field = get_field_object('sponsor_level');
+                   $value = $field['value'];
+                   $sponsor_file = ($value == 'diamond') ? 'diamond.svg' : 'platinum.svg';
+                 ?>
+                 <!-- div class="sponsor-icon d-flex justify-content-center align-items-center <?php echo $value ?>">
+                   <img src="<?php echo get_stylesheet_directory_uri(); ?>/dist/images/sponsors/<?php echo $sponsor_file ?>" />
+                 </div-->
+                 <img class="logo-image" src="<?php the_field('logo'); ?>" />
+               </div>
+               <h4><a href="<?php the_field('site_link'); ?>" target="_blank"><?php the_title(); ?></a></h4>
+               <!-- p class="intro"><?php echo $field['choices'][ $value ]; ?></p-->
+             </div>
+
+           <?php endwhile; ?>
+         <?php else : ?>
+           <p>We will be announcing our sponsors soon!</p>
+         <?php endif; wp_reset_postdata(); ?>
+         </div>
+       </div>
       <!-- Testimonials -->
       <?php
         $args = array(

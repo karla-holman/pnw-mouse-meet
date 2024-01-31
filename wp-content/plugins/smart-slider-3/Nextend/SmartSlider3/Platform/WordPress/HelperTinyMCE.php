@@ -12,6 +12,7 @@ use Nextend\Framework\Pattern\SingletonTrait;
 use Nextend\SmartSlider3\Application\ApplicationSmartSlider3;
 use Nextend\SmartSlider3\Settings;
 use Nextend\SmartSlider3\SmartSlider3Info;
+use Nextend\Framework\Request\Request;
 
 class HelperTinyMCE {
 
@@ -29,16 +30,16 @@ class HelperTinyMCE {
         if ((!current_user_can('edit_posts') && !current_user_can('edit_pages'))) {
             return;
         }
-        if (in_array(basename($_SERVER['PHP_SELF']), array(
+        if (in_array(basename(Request::$SERVER->getVar('PHP_SELF')), array(
             'post-new.php',
             'page-new.php',
             'post.php',
             'page.php'
         ))) {
 
-            $this->addForced();
-
             if (intval(Settings::get('editor-icon', 1))) {
+                $this->addForced();
+
                 if (get_user_option('rich_editing') == 'true') {
                     add_filter('mce_external_plugins', array(
                         $this,
@@ -105,7 +106,7 @@ class HelperTinyMCE {
         ?>
         <script>
             window.NextendSmartSliderWPTinyMCEModal = function (ed) {
-                _N2.SelectSlider(n2_('Select A Slider'), function (id, alias) {
+                _N2.SelectSlider(n2_('Select Slider'), function (id, alias) {
                     if (alias) {
                         ed.execCommand('mceInsertContent', false, '<div>[smartslider3 alias="' + alias + '"]</div>');
                     } else if (id) {
@@ -116,7 +117,7 @@ class HelperTinyMCE {
 
             if (typeof QTags !== 'undefined') {
                 QTags.addButton('smart-slider-3', 'Smart Slider', function () {
-                    _N2.SelectSlider(n2_('Select A Slider'), function (id, alias) {
+                    _N2.SelectSlider(n2_('Select Slider'), function (id, alias) {
                         if (alias) {
                             QTags.insertContent("\n" + '<div>[smartslider3 alias="' + alias + '"]</div>');
                         } else if (id) {
@@ -127,7 +128,7 @@ class HelperTinyMCE {
             }
 
             window.NextendSmartSliderSelectModal = function ($input) {
-                _N2.SelectSlider(n2_('Select A Slider'), function (id, alias) {
+                _N2.SelectSlider(n2_('Select Slider'), function (id, alias) {
                     var idOrAlias = false;
                     if (alias) {
                         idOrAlias = alias;
@@ -147,7 +148,7 @@ class HelperTinyMCE {
             };
 
             window.NextendSmartSliderSelectModalCallback = function (cb) {
-                _N2.SelectSlider(n2_('Select A Slider'), function (id, alias) {
+                _N2.SelectSlider(n2_('Select Slider'), function (id, alias) {
                     var idOrAlias = false;
                     if (alias) {
                         idOrAlias = alias;

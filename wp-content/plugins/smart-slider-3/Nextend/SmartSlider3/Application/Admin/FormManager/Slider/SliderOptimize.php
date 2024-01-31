@@ -168,12 +168,5 @@ class SliderOptimize extends AbstractSliderTab {
     }
 
     protected function other() {
-        if (defined('JETPACK__VERSION')) {
-            $table = new ContainerTable($this->tab, 'optimize-other', n2_('Other'));
-
-            $row1 = $table->createRow('optimize-other-1');
-        
-            new OnOff($row1, 'optimize-jetpack-photon', n2_('JetPack Photon image optimizer'), 0);
-        }
     }
 }
